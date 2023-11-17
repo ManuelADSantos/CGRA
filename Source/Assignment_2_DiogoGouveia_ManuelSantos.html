@@ -153,452 +153,454 @@
 
 
 <!-- ============================================ Solids Definitions ============================================ -->
-<h1>Solids Definitions</h1>
+<h1 id="Solids Definitions">Solids Definitions</h1>
 
-<canvas id="CubeCanvas" width="400" height="400" style="border:2px solid #000000;">
-      Error: Your browser does not support the HTML canvas tag.
-</canvas>
-    
-<script id="CubeApp">
-
-class cube extends CGRAobject
-{
-    // ===== Constructor
-    constructor(glcontext, color = [1.0, 0.0, 0.0])
-    {
-        // ===== Initialize the parent class
-        super(glcontext); 
-        
-        // ===== Define Constants
-        this.numvertices = 36;
-        this.size = 1;
-        let dim = this.size/2;
-        var vertices = [], colors = [], normals = [];
-        
-        // ===== List vertices
-        var verticesCube = [[ -dim, -dim,  dim],
-                             [-dim,  dim,  dim],
-                             [ dim,  dim,  dim],
-                             [ dim, -dim,  dim],
-                             [-dim, -dim, -dim],
-                             [-dim,  dim, -dim],
-                             [ dim,  dim, -dim],
-                             [ dim, -dim, -dim]];
-                             
-        var normalsCube = [[ 0,  0,  1],  // Front = +Z
-                            [ 1,  0,  0],  // Right = +X
-                            [ 0,  0, -1],  // Back  = -Z
-                            [-1,  0,  0],  // Left  = -X
-                            [ 0,  1,  0],  // Up    = +Y
-                            [ 0, -1,  0]]; // Down  = -Y
-
-        // ===== Lookup tabless
-        var indexes = [
-            0, 1, 2,  2, 3, 0,  // Front face
-            6, 7, 3,  2, 3, 6,  // Right face
-            6, 7, 4,  4, 5, 6,  // Back  face
-            1, 0, 4,  4, 5, 1,  // Left  face
-            1, 6, 2,  3, 4, 0,  // Up    face
-            1, 6, 5,  3, 4, 7]; // Down  face
-
-        var indexes_normals = [
-            0, 0, 0,  0, 0, 0,  // Front face
-            1, 1, 1,  1, 1, 1,  // Right face
-            2, 2, 2,  2, 2, 2,  // Back  face
-            3, 3, 3,  3, 3, 3,  // Left  face
-            4, 4, 4,  4, 4, 4,  // Up    face
-            5, 5, 5,  5, 5, 5]; // Down  face
-        
-        // ===== Create structures to populate buffers
-        for (var i = 0; i < indexes.length; i++)
+<div id="Cubes"></div>
+    <script id="CubeDefinitions">
+        class cube extends CGRAobject
         {
-            vertices = vertices.concat(verticesCube[indexes[i]]);
-            normals = normals.concat(normalsCube[indexes_normals[i]]);
-            colors.push(color);
-        }
-        
-        // ===== Creating and configuring buffers
-        this.vertexbuffer=this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
-        
-        this.colorbuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-
-        this.normalsbuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals), this.gl.STATIC_DRAW);
-    }
-    
-    // ===== Function to dinamically change cube colors
-    setColors(newColor1, newColor2)
-    {
-        this.color1 = [newColor1, newColor1, newColor2].flat();
-        this.color2 = [newColor2, newColor2, newColor1].flat();
-        let colors = [];
-        for (var i=0; i < (this.numvertices/3)/2; i++)
-        {
-            colors.push(this.color1);
-            colors.push(this.color2);
-        }
-        this.colorbuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-    }
-}
-
-class cubeT extends CGRAobject{
-    constructor(glcontext){
-        super(glcontext); // initialize the parent class
-        this.vColors = [];
-        this.vPositions = [];
-        this.texCoords = [];
-        
-        this.Index=0;
-        this.positions = [
-            glm.vec3( -0.5, -0.5,  0.5 ),
-            glm.vec3( -0.5,  0.5,  0.5 ),
-            glm.vec3(  0.5,  0.5,  0.5 ),
-            glm.vec3(  0.5, -0.5,  0.5 ),
-            glm.vec3( -0.5, -0.5, -0.5 ),
-            glm.vec3( -0.5,  0.5, -0.5 ),
-            glm.vec3(  0.5,  0.5, -0.5 ),
-            glm.vec3(  0.5, -0.5, -0.5 )
-        ];
-        
-        this.colors = [
-            glm.vec3( 0.0, 0.0, 0.0 ),  // black
-            glm.vec3( 1.0, 0.0, 0.0 ),  // red
-            glm.vec3( 1.0, 1.0, 0.0 ),  // yellow
-            glm.vec3( 0.0, 1.0, 0.0 ),  // green
-            glm.vec3( 0.0, 0.0, 1.0 ),  // blue
-            glm.vec3( 1.0, 0.0, 1.0 ),  // magenta
-            glm.vec3( 1.0, 1.0, 1.0 ),  // white
-            glm.vec3( 0.0, 1.0, 1.0 )   // cyan
-        ];
-        
-        this.tcoords = [
-            glm.vec2(0.0,0.0),
-            glm.vec2(0.0,1.0),
-            glm.vec2(1.0,1.0),
-            glm.vec2(1.0,0.0)
-        ];
-        
-      
-        this.quad( 1, 0, 3, 2 );
-        this.quad( 2, 3, 7, 6 );
-        this.quad( 3, 0, 4, 7 );
-        this.quad( 6, 5, 1, 2 );
-        this.quad( 4, 5, 6, 7 );
-        this.quad( 5, 4, 0, 1 );
-        
-        this.vertexbuffer=this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-        var a = new Float32Array(this.vPositions);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
-
-        this.colorbuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-        a = new Float32Array(this.vColors);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
-        
-        this.texcoordsbuffer=this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);  
-        a=new Float32Array(this.texCoords);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
-        //console.log("texc=" + this.texCoords+ "  a= "+ a + " len= "+a.length)
-        
-        this.numvertices = 36;
-    }
-    
-     quad(a, b, c, d )
-    {
-  
-        this.vColors = [].concat(this.vColors,this.colors[a].array); 
-        this.vPositions = [].concat(this.vPositions,this.positions[a].array); 
-        this.texCoords = [].concat(this.texCoords,this.tcoords[0].array);
-        
-        this.vColors = [].concat(this.vColors, this.colors[b].array); 
-        this.vPositions = [].concat(this.vPositions,this.positions[b].array); 
-        this.texCoords = [].concat(this.texCoords, this.tcoords[1].array);
-                        
-        this.vColors = [].concat(this.vColors, this.colors[c].array); 
-        this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
-        this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
-      
-        this.vColors = [].concat(this.vColors, this.colors[a].array); 
-        this.vPositions = [].concat(this.vPositions, this.positions[a].array); 
-        this.texCoords = [].concat(this.texCoords, this.tcoords[0].array);
-       
-        this.vColors = [].concat(this.vColors, this.colors[c].array); 
-        this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
-        this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
-       
-        this.vColors = [].concat(this.vColors,this.colors[d].array); 
-        this.vPositions = [].concat(this.vPositions, this.positions[d].array); 
-        this.texCoords = [].concat(this.texCoords, this.tcoords[3].array);
-
-    }
-    
-     settexture(cgratex){
-            this.textureid = cgratex.textureid;
-    }
-    
-    drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0)){
-        this.shaderprog.startUsing();
-        this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
-                                                          "in_texcoords");
-        
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordsbuffer);
-        this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
-                           2, // number of elements per attribute
-                           this.gl.FLOAT,  // Type of elements
-                           false,  // 
-                           0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
-                           0); // Offset from the begining of a single vertex to this attribute
-        this.gl.enableVertexAttribArray(this.texcoordsLocation);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-        this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
-        this.gl.uniform1i(this.textureLocation, 0);
-        // the parent method does the rest
-        super.drawit(viewMat,projectionMat,parentMat4);
-    }  
-    
-}
-
-class cubeTC extends CGRAobject{
-    constructor(glcontext){
-        super(glcontext); // initialize the parent class
-        this.color=glm.vec3(0,1,0);
-        this.vColors = [];
-        this.vPositions = [];
-        this.texCoords = [];
-        
-        this.Index=0;
-        this.positions = [
-            glm.vec3( -0.5, -0.5,  0.5 ),
-            glm.vec3( -0.5,  0.5,  0.5 ),
-            glm.vec3(  0.5,  0.5,  0.5 ),
-            glm.vec3(  0.5, -0.5,  0.5 ),
-            glm.vec3( -0.5, -0.5, -0.5 ),
-            glm.vec3( -0.5,  0.5, -0.5 ),
-            glm.vec3(  0.5,  0.5, -0.5 ),
-            glm.vec3(  0.5, -0.5, -0.5 )
-        ];
-        
-        this.colors = [
-            glm.vec3( 0.0, 0.0, 0.0 ),  // black
-            glm.vec3( 1.0, 0.0, 0.0 ),  // red
-            glm.vec3( 1.0, 1.0, 0.0 ),  // yellow
-            glm.vec3( 0.0, 1.0, 0.0 ),  // green
-            glm.vec3( 0.0, 0.0, 1.0 ),  // blue
-            glm.vec3( 1.0, 0.0, 1.0 ),  // magenta
-            glm.vec3( 1.0, 1.0, 1.0 ),  // white
-            glm.vec3( 0.0, 1.0, 1.0 )   // cyan
-        ];
-        
-        this.tcoords = [
-            glm.vec2(0.0,0.0),
-            glm.vec2(0.0,1.0),
-            glm.vec2(1.0,1.0),
-            glm.vec2(1.0,0.0)
-        ];
-        
-      
-        this.quad( 1, 0, 3, 2 );
-        this.quad( 2, 3, 7, 6 );
-        this.quad( 3, 0, 4, 7 );
-        this.quad( 6, 5, 1, 2 );
-        this.quad( 4, 5, 6, 7 );
-        this.quad( 5, 4, 0, 1 );
-        
-        this.vertexbuffer=this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-        var a = new Float32Array(this.vPositions);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
-
-        this.colorbuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-        a = new Float32Array(this.vColors);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
-        
-        this.texcoordsbuffer=this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);  
-        a=new Float32Array(this.texCoords);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
-        //console.log("texc=" + this.texCoords+ "  a= "+ a + " len= "+a.length)
-        
-        this.numvertices = 36;
-    }
-    
-     quad(a, b, c, d )
-    {
-  
-        this.vColors = [].concat(this.vColors,this.colors[a].array); 
-        this.vPositions = [].concat(this.vPositions,this.positions[a].array); 
-        this.texCoords = [].concat(this.texCoords,this.tcoords[0].array);
-        
-        this.vColors = [].concat(this.vColors, this.colors[b].array); 
-        this.vPositions = [].concat(this.vPositions,this.positions[b].array); 
-        this.texCoords = [].concat(this.texCoords, this.tcoords[1].array);
-                        
-        this.vColors = [].concat(this.vColors, this.colors[c].array); 
-        this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
-        this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
-      
-        this.vColors = [].concat(this.vColors, this.colors[a].array); 
-        this.vPositions = [].concat(this.vPositions, this.positions[a].array); 
-        this.texCoords = [].concat(this.texCoords, this.tcoords[0].array);
-       
-        this.vColors = [].concat(this.vColors, this.colors[c].array); 
-        this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
-        this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
-       
-        this.vColors = [].concat(this.vColors,this.colors[d].array); 
-        this.vPositions = [].concat(this.vPositions, this.positions[d].array); 
-        this.texCoords = [].concat(this.texCoords, this.tcoords[3].array);
-
-    }
-    
-     settexture(cgratex){
-            this.textureid = cgratex.textureid;
-    }
-    setcolor(color){
-            this.color = glm.vec3(color);
-    }
-
-    drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0)){
-        this.shaderprog.startUsing();
-        var colorLocation = this.gl.getUniformLocation(this.shaderprog.shaderProgram,
-                                                          "un_Color");    
-        this.gl.uniform3fv(colorLocation, this.color.array);
-       
-        this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
-                                                          "in_texcoords");
-       
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
-        this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
-                           2, // number of elements per attribute
-                           this.gl.FLOAT,  // Type of elements
-                           false,  // 
-                           0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
-                           0); // Offset from the begining of a single vertex to this attribute
-        this.gl.enableVertexAttribArray(this.texcoordsLocation);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-        this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
-        this.gl.uniform1i(this.textureLocation, 0);
-        // the parent method does the rest
-        super.drawit(viewMat,projectionMat,parentMat4);
-    }  
-    
-}
-
-class CubeApp extends DEECapp
-{
-    counter = 0;
-    initialize()
-    {
-        // ===== Perform initializations
-        var fragsrc = document.getElementById("my-fragment-shader").text;
-        var vertsrc = document.getElementById("my-vertex-shader").text;
-        this.shaderprog = new DEECshader(this.gl);
-        this.shaderprog.srcShaders(vertsrc,fragsrc);
-        
-        
-        
-        this.gl.enable(this.gl.DEPTH_TEST);
-        this.gl.clearColor(0.9, 0.9, 0.9, 1.0);
-        
-        // ===== Instantiate a cube
-        this.myCube = new cube(this.gl, [1, 0, 0]);
-        this.myCube.setShader(this.shaderprog);
-        
-         var fragsrcT = document.getElementById("my-fragment-shaderT").text;
-        var vertsrcT = document.getElementById("my-vertex-shaderT").text;
-        
-        this.shaderprogT = new DEECshader(this.gl);
-        this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
-   
-        
-        this.texture = new CGRAtexture(this.gl);
-        this.texture.load("CubeTex.png");
-        
-        this.myCubeT = new cubeT(this.gl);
-        this.myCubeT.settexture(this.texture);
-        this.myCubeT.setShader(this.shaderprogT);
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
-        //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
-        //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
-        //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        this.projectionM= glm.perspective(glm.radians(45),1.0,0.1,100);      
-        
-        //////////////////////////////////////////////////////////////////////////
-        //glm.vec3(3, 3, 5): A posição da câmera no espaço 3D.                  //
-        //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
-        //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
-        //////////////////////////////////////////////////////////////////////////
-        this.viewM = glm.lookAt(glm.vec3(0,0,5),glm.vec3(0,0,0),glm.vec3(0,1,0));           
-    }
-    
-    render()
-    {
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-        this.counter++;
-
-        this.shaderprog.startUsing();
+            // ===== Constructor
+            constructor(glcontext, color = [1.0, 0.0, 0.0])
+            {
+                // ===== Initialize the parent class
+                super(glcontext); 
                 
-        // ===== Model
-        var model = glm.mat4(glm.mat3(1.0));
-        // ===== Scale
-        var scale = glm.vec3(1.0, 1.0, 1.0);
-        model = glm.scale(model, scale);
-        // ===== Translate
-        var translation = glm.vec3(-1,Math.sin(this.counter/5),-3/5);
-        model = glm.translate(model, translation);
-        // ===== Rotation
-        var rotation = glm.radians(this.counter*5);
-        var axis = glm.vec3(0.0, 1.0, 0.0);
-        model = glm.rotate(model, rotation, axis);
-        // ===== Final Transformation
-        this.myCube.setModelTransformation(model);      
-        
-        // ===== Draw Cube
-        this.myCube.drawit(this.viewM,this.projectionM);
-        
-         // ===== Model
-        var model = glm.mat4(glm.mat3(1.0));
-        // ===== Scale
-        var scale = glm.vec3(1.0, 1.0, 1.0);
-        model = glm.scale(model, scale);
-        // ===== Translate
-        var translation = glm.vec3(1,Math.sin(this.counter/5),-3/5);
-        model = glm.translate(model, translation);
-        // ===== Rotation
-        var rotation = glm.radians(this.counter*5);
-        var axis = glm.vec3(0.0, 1.0, 0.0);
-        model = glm.rotate(model, rotation, axis);
-        // ===== Final Transformation
-        this.myCubeT.setModelTransformation(model);      
-        
-        // ===== Draw Cube
-        this.myCubeT.drawit(this.viewM,this.projectionM);
-        
-        // ===== Play with colors
-        var speed = this.counter/10;
-        
-    }
-}
+                // ===== Define Constants
+                this.numvertices = 36;
+                this.size = 1;
+                let dim = this.size/2;
+                var vertices = [], colors = [], normals = [];
+                
+                // ===== List vertices
+                var verticesCube = [[ -dim, -dim,  dim],
+                                    [-dim,  dim,  dim],
+                                    [ dim,  dim,  dim],
+                                    [ dim, -dim,  dim],
+                                    [-dim, -dim, -dim],
+                                    [-dim,  dim, -dim],
+                                    [ dim,  dim, -dim],
+                                    [ dim, -dim, -dim]];
+                                    
+                var normalsCube = [[ 0,  0,  1],  // Front = +Z
+                                    [ 1,  0,  0],  // Right = +X
+                                    [ 0,  0, -1],  // Back  = -Z
+                                    [-1,  0,  0],  // Left  = -X
+                                    [ 0,  1,  0],  // Up    = +Y
+                                    [ 0, -1,  0]]; // Down  = -Y
 
-var app = new CubeApp('CubeCanvas');
+                // ===== Lookup tabless
+                var indexes = [
+                    0, 1, 2,  2, 3, 0,  // Front face
+                    6, 7, 3,  2, 3, 6,  // Right face
+                    6, 7, 4,  4, 5, 6,  // Back  face
+                    1, 0, 4,  4, 5, 1,  // Left  face
+                    1, 6, 2,  3, 4, 0,  // Up    face
+                    1, 6, 5,  3, 4, 7]; // Down  face
 
-app.run();
-</script>
+                var indexes_normals = [
+                    0, 0, 0,  0, 0, 0,  // Front face
+                    1, 1, 1,  1, 1, 1,  // Right face
+                    2, 2, 2,  2, 2, 2,  // Back  face
+                    3, 3, 3,  3, 3, 3,  // Left  face
+                    4, 4, 4,  4, 4, 4,  // Up    face
+                    5, 5, 5,  5, 5, 5]; // Down  face
+                
+                // ===== Create structures to populate buffers
+                for (var i = 0; i < indexes.length; i++)
+                {
+                    vertices = vertices.concat(verticesCube[indexes[i]]);
+                    normals = normals.concat(normalsCube[indexes_normals[i]]);
+                    colors.push(color);
+                }
+                
+                // ===== Creating and configuring buffers
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
+                
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
 
+                this.normalsbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals), this.gl.STATIC_DRAW);
+            }
+            
+            // ===== Function to dinamically change cube colors
+            setColors(newColor1, newColor2)
+            {
+                this.color1 = [newColor1, newColor1, newColor2].flat();
+                this.color2 = [newColor2, newColor2, newColor1].flat();
+                let colors = [];
+                for (var i=0; i < (this.numvertices/3)/2; i++)
+                {
+                    colors.push(this.color1);
+                    colors.push(this.color2);
+                }
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+            }
+        }
 
-<canvas id="SphereCanvas" width="800" height="800" style="border:2px solid #000000;">
+        class cubeT extends CGRAobject{
+            constructor(glcontext){
+                super(glcontext); // initialize the parent class
+                this.vColors = [];
+                this.vPositions = [];
+                this.texCoords = [];
+                
+                this.Index=0;
+                this.positions = [
+                    glm.vec3( -0.5, -0.5,  0.5 ),
+                    glm.vec3( -0.5,  0.5,  0.5 ),
+                    glm.vec3(  0.5,  0.5,  0.5 ),
+                    glm.vec3(  0.5, -0.5,  0.5 ),
+                    glm.vec3( -0.5, -0.5, -0.5 ),
+                    glm.vec3( -0.5,  0.5, -0.5 ),
+                    glm.vec3(  0.5,  0.5, -0.5 ),
+                    glm.vec3(  0.5, -0.5, -0.5 )
+                ];
+                
+                this.colors = [
+                    glm.vec3( 0.0, 0.0, 0.0 ),  // black
+                    glm.vec3( 1.0, 0.0, 0.0 ),  // red
+                    glm.vec3( 1.0, 1.0, 0.0 ),  // yellow
+                    glm.vec3( 0.0, 1.0, 0.0 ),  // green
+                    glm.vec3( 0.0, 0.0, 1.0 ),  // blue
+                    glm.vec3( 1.0, 0.0, 1.0 ),  // magenta
+                    glm.vec3( 1.0, 1.0, 1.0 ),  // white
+                    glm.vec3( 0.0, 1.0, 1.0 )   // cyan
+                ];
+                
+                this.tcoords = [
+                    glm.vec2(0.0,0.0),
+                    glm.vec2(0.0,1.0),
+                    glm.vec2(1.0,1.0),
+                    glm.vec2(1.0,0.0)
+                ];
+                
+            
+                this.quad( 1, 0, 3, 2 );
+                this.quad( 2, 3, 7, 6 );
+                this.quad( 3, 0, 4, 7 );
+                this.quad( 6, 5, 1, 2 );
+                this.quad( 4, 5, 6, 7 );
+                this.quad( 5, 4, 0, 1 );
+                
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+                var a = new Float32Array(this.vPositions);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                a = new Float32Array(this.vColors);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+                
+                this.texcoordsbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);  
+                a=new Float32Array(this.texCoords);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+                //console.log("texc=" + this.texCoords+ "  a= "+ a + " len= "+a.length)
+                
+                this.numvertices = 36;
+            }
+            
+            quad(a, b, c, d )
+            {
+        
+                this.vColors = [].concat(this.vColors,this.colors[a].array); 
+                this.vPositions = [].concat(this.vPositions,this.positions[a].array); 
+                this.texCoords = [].concat(this.texCoords,this.tcoords[0].array);
+                
+                this.vColors = [].concat(this.vColors, this.colors[b].array); 
+                this.vPositions = [].concat(this.vPositions,this.positions[b].array); 
+                this.texCoords = [].concat(this.texCoords, this.tcoords[1].array);
+                                
+                this.vColors = [].concat(this.vColors, this.colors[c].array); 
+                this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
+                this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
+            
+                this.vColors = [].concat(this.vColors, this.colors[a].array); 
+                this.vPositions = [].concat(this.vPositions, this.positions[a].array); 
+                this.texCoords = [].concat(this.texCoords, this.tcoords[0].array);
+            
+                this.vColors = [].concat(this.vColors, this.colors[c].array); 
+                this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
+                this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
+            
+                this.vColors = [].concat(this.vColors,this.colors[d].array); 
+                this.vPositions = [].concat(this.vPositions, this.positions[d].array); 
+                this.texCoords = [].concat(this.texCoords, this.tcoords[3].array);
+
+            }
+            
+            settexture(cgratex)
+            {
+                    this.textureid = cgratex.textureid;
+            }
+            
+            drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0))
+            {
+                this.shaderprog.startUsing();
+                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                                "in_texcoords");
+                
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordsbuffer);
+                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                                2, // number of elements per attribute
+                                this.gl.FLOAT,  // Type of elements
+                                false,  // 
+                                0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                0); // Offset from the begining of a single vertex to this attribute
+                this.gl.enableVertexAttribArray(this.texcoordsLocation);
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+                this.gl.uniform1i(this.textureLocation, 0);
+                // the parent method does the rest
+                super.drawit(viewMat,projectionMat,parentMat4);
+            }  
+            
+        }
+
+        class cubeTC extends CGRAobject{
+            constructor(glcontext){
+                super(glcontext); // initialize the parent class
+                this.color=glm.vec3(0,1,0);
+                this.vColors = [];
+                this.vPositions = [];
+                this.texCoords = [];
+                
+                this.Index=0;
+                this.positions = [
+                    glm.vec3( -0.5, -0.5,  0.5 ),
+                    glm.vec3( -0.5,  0.5,  0.5 ),
+                    glm.vec3(  0.5,  0.5,  0.5 ),
+                    glm.vec3(  0.5, -0.5,  0.5 ),
+                    glm.vec3( -0.5, -0.5, -0.5 ),
+                    glm.vec3( -0.5,  0.5, -0.5 ),
+                    glm.vec3(  0.5,  0.5, -0.5 ),
+                    glm.vec3(  0.5, -0.5, -0.5 )
+                ];
+                
+                this.colors = [
+                    glm.vec3( 0.0, 0.0, 0.0 ),  // black
+                    glm.vec3( 1.0, 0.0, 0.0 ),  // red
+                    glm.vec3( 1.0, 1.0, 0.0 ),  // yellow
+                    glm.vec3( 0.0, 1.0, 0.0 ),  // green
+                    glm.vec3( 0.0, 0.0, 1.0 ),  // blue
+                    glm.vec3( 1.0, 0.0, 1.0 ),  // magenta
+                    glm.vec3( 1.0, 1.0, 1.0 ),  // white
+                    glm.vec3( 0.0, 1.0, 1.0 )   // cyan
+                ];
+                
+                this.tcoords = [
+                    glm.vec2(0.0,0.0),
+                    glm.vec2(0.0,1.0),
+                    glm.vec2(1.0,1.0),
+                    glm.vec2(1.0,0.0)
+                ];
+                
+            
+                this.quad( 1, 0, 3, 2 );
+                this.quad( 2, 3, 7, 6 );
+                this.quad( 3, 0, 4, 7 );
+                this.quad( 6, 5, 1, 2 );
+                this.quad( 4, 5, 6, 7 );
+                this.quad( 5, 4, 0, 1 );
+                
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+                var a = new Float32Array(this.vPositions);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                a = new Float32Array(this.vColors);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+                
+                this.texcoordsbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);  
+                a=new Float32Array(this.texCoords);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+                //console.log("texc=" + this.texCoords+ "  a= "+ a + " len= "+a.length)
+                
+                this.numvertices = 36;
+            }
+            
+            quad(a, b, c, d )
+            {
+        
+                this.vColors = [].concat(this.vColors,this.colors[a].array); 
+                this.vPositions = [].concat(this.vPositions,this.positions[a].array); 
+                this.texCoords = [].concat(this.texCoords,this.tcoords[0].array);
+                
+                this.vColors = [].concat(this.vColors, this.colors[b].array); 
+                this.vPositions = [].concat(this.vPositions,this.positions[b].array); 
+                this.texCoords = [].concat(this.texCoords, this.tcoords[1].array);
+                                
+                this.vColors = [].concat(this.vColors, this.colors[c].array); 
+                this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
+                this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
+            
+                this.vColors = [].concat(this.vColors, this.colors[a].array); 
+                this.vPositions = [].concat(this.vPositions, this.positions[a].array); 
+                this.texCoords = [].concat(this.texCoords, this.tcoords[0].array);
+            
+                this.vColors = [].concat(this.vColors, this.colors[c].array); 
+                this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
+                this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
+            
+                this.vColors = [].concat(this.vColors,this.colors[d].array); 
+                this.vPositions = [].concat(this.vPositions, this.positions[d].array); 
+                this.texCoords = [].concat(this.texCoords, this.tcoords[3].array);
+
+            }
+            
+            settexture(cgratex){
+                    this.textureid = cgratex.textureid;
+            }
+            setcolor(color){
+                    this.color = glm.vec3(color);
+            }
+
+            drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0)){
+                this.shaderprog.startUsing();
+                var colorLocation = this.gl.getUniformLocation(this.shaderprog.shaderProgram,
+                                                                "un_Color");    
+                this.gl.uniform3fv(colorLocation, this.color.array);
+            
+                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                                "in_texcoords");
+            
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                                2, // number of elements per attribute
+                                this.gl.FLOAT,  // Type of elements
+                                false,  // 
+                                0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                0); // Offset from the begining of a single vertex to this attribute
+                this.gl.enableVertexAttribArray(this.texcoordsLocation);
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+                this.gl.uniform1i(this.textureLocation, 0);
+                // the parent method does the rest
+                super.drawit(viewMat,projectionMat,parentMat4);
+            }  
+            
+        }
+    </script>
+
+    <canvas id="CubeCanvas" width="400" height="400" style="border:2px solid #000000;">
+        Error: Your browser does not support the HTML canvas tag.
+    </canvas>
+    <script id="CubeShow">
+        class CubeApp extends DEECapp
+        {
+            counter = 0;
+            initialize()
+            {
+                // ===== Perform initializations
+                var fragsrc = document.getElementById("my-fragment-shader").text;
+                var vertsrc = document.getElementById("my-vertex-shader").text;
+                this.shaderprog = new DEECshader(this.gl);
+                this.shaderprog.srcShaders(vertsrc,fragsrc);
+                
+                
+                
+                this.gl.enable(this.gl.DEPTH_TEST);
+                this.gl.clearColor(0.9, 0.9, 0.9, 1.0);
+                
+                // ===== Instantiate a cube
+                this.myCube = new cube(this.gl, [1, 0, 0]);
+                this.myCube.setShader(this.shaderprog);
+                
+                var fragsrcT = document.getElementById("my-fragment-shaderT").text;
+                var vertsrcT = document.getElementById("my-vertex-shaderT").text;
+                
+                this.shaderprogT = new DEECshader(this.gl);
+                this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
+        
+                
+                this.texture = new CGRAtexture(this.gl);
+                this.texture.load("CubeTex.png");
+                
+                this.myCubeT = new cubeT(this.gl);
+                this.myCubeT.settexture(this.texture);
+                this.myCubeT.setShader(this.shaderprogT);
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
+                //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
+                //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
+                //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                this.projectionM= glm.perspective(glm.radians(45),1.0,0.1,100);      
+                
+                //////////////////////////////////////////////////////////////////////////
+                //glm.vec3(3, 3, 5): A posição da câmera no espaço 3D.                  //
+                //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
+                //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
+                //////////////////////////////////////////////////////////////////////////
+                this.viewM = glm.lookAt(glm.vec3(0,0,5),glm.vec3(0,0,0),glm.vec3(0,1,0));           
+            }
+            
+            render()
+            {
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+                this.counter++;
+
+                this.shaderprog.startUsing();
+                        
+                // ===== Model
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Scale
+                var scale = glm.vec3(1.0, 1.0, 1.0);
+                model = glm.scale(model, scale);
+                // ===== Translate
+                var translation = glm.vec3(-1,Math.sin(this.counter/5),-3/5);
+                model = glm.translate(model, translation);
+                // ===== Rotation
+                var rotation = glm.radians(this.counter*5);
+                var axis = glm.vec3(0.0, 1.0, 0.0);
+                model = glm.rotate(model, rotation, axis);
+                // ===== Final Transformation
+                this.myCube.setModelTransformation(model);      
+                
+                // ===== Draw Cube
+                this.myCube.drawit(this.viewM,this.projectionM);
+                
+                // ===== Model
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Scale
+                var scale = glm.vec3(1.0, 1.0, 1.0);
+                model = glm.scale(model, scale);
+                // ===== Translate
+                var translation = glm.vec3(1,Math.sin(this.counter/5),-3/5);
+                model = glm.translate(model, translation);
+                // ===== Rotation
+                var rotation = glm.radians(this.counter*5);
+                var axis = glm.vec3(0.0, 1.0, 0.0);
+                model = glm.rotate(model, rotation, axis);
+                // ===== Final Transformation
+                this.myCubeT.setModelTransformation(model);      
+                
+                // ===== Draw Cube
+                this.myCubeT.drawit(this.viewM,this.projectionM);
+                
+                // ===== Play with colors
+                var speed = this.counter/10;
+                
+            }
+        }
+
+        var app = new CubeApp('CubeCanvas');
+        app.run();
+    </script>
+</div>
+
+<canvas id="SphereCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
 </canvas>
     
@@ -2334,6 +2336,7 @@ var app = new DiscApp('DiscCanvas');
 app.run();
 </script>
 
+<h1 id="Composit Solids Definitions">Composit Solids Definitions</h1>
 
 <canvas id="MoonCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
