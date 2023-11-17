@@ -593,20 +593,20 @@ class cube_directional extends CGRAobject
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals), this.gl.STATIC_DRAW);
     } 
     
-    setparameters(Ambient, colorLight, positionLight, viewposition, shiny = 0.1, strength = 0.1)
+    setMaterials(shiny = 0.1, strength = 0.1)
     {    
-        this.ambient = Ambient;
-        this.colorLight = colorLight;
-        this.positionLight = positionLight;
-        this.viewposition = viewposition;
         this.Shininess = shiny;
         this.Strength = strength;
     }
     
     drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0))
-    {    
+    {   
+        // ===== Default drawit takes care of the rest (MVP, in_Position, in_Color and drawArrays)
+        super.drawit(viewMat,projectionMat,parentMat4);
+        
         this.shaderprog.startUsing();
         
+        // ===== Normals into vertex shader
         this.normloc = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"Vertex_Normals");
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.normalsbuffer);
         this.gl.vertexAttribPointer(this.normloc, // Attribute location
@@ -617,37 +617,26 @@ class cube_directional extends CGRAobject
                         0); // Offset from the begining of a single vertex to this attribute
         this.gl.enableVertexAttribArray(this.normloc);
         
-        var NormMatloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"NormalMatrix");
-        var localT = parentMat4['*'](this.modelMat); 
+        // ===== Normals transformation matrix
+        var localT = parentMat4['*'](this.modelMat);
+        this. NormMatloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"NormalMatrix");
         var NormMat = glm.mat3(glm.transpose(glm.inverse(localT)));
-        this.gl.uniformMatrix3fv(NormMatloc,false, NormMat.array);
-        //console.log(NormMat.array)
+        this.gl.uniformMatrix3fv(this.NormMatloc, false, NormMat.array);
+
+        // ===== Model transformation matrix
+        this.Matloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"M");
+        var localT = parentMat4['*'](this.modelMat);
+        this.gl.uniformMatrix4fv(this.Matloc, false, localT.array);
         
-        var Matloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"M");
-        var localT = parentMat4['*'](this.modelMat); 
-        this.gl.uniformMatrix4fv(NormMatloc,false, localT.array);
-        
-        var Ambientloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Ambient");
-        this.gl.uniform3fv(Ambientloc, this.ambient.array);
-        
-        var LightColorloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightColor");
-        this.gl.uniform3fv(LightColorloc, this.colorLight.array);
-        
-        var LightDirloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightDirection");
-        this.gl.uniform3fv(LightDirloc, this.positionLight.array);
-        
-        var ViewPosloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"ViewPos");
-        this.gl.uniform3fv(ViewPosloc, this.viewposition.array);
-        
-        var Shininessloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Shininess");
-        this.gl.uniform1f(Shininessloc, this.Shininess);
-        
-        var Strengthloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Strength");
-        this.gl.uniform1f(Strengthloc, this.Strength);
+        // ===== Shininess value
+        this.Shininessloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Shininess");
+        this.gl.uniform1f(this.Shininessloc, this.Shininess);
+
+        // ===== Strength value
+        this.Strengthloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Strength");
+        this.gl.uniform1f(this.Strengthloc, this.Strength);
         
         this.shaderprog.stopUsing();
-        
-        super.drawit(viewMat,projectionMat,parentMat4);
     }
 }
 </script>
@@ -800,7 +789,6 @@ class sphere_directional extends CGRAobject
 
 <!-- ========== Cube Directional Canvas ========== -->
 <h1>Directional Light</h1>
-<!--
 <canvas id="Directional_Canvas_Cubes" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
 </canvas>   
@@ -826,11 +814,6 @@ class Directional_App_Cubes extends DEECapp
         var vertsrc_dir = document.getElementById("my-vertex-shader-directional").text;
         this.shaderprog_directional = new DEECshader(this.gl);
         this.shaderprog_directional.srcShaders(vertsrc_dir,fragsrc_dir);
-                
-        var ambient_light = glm.vec3(0.5,0.5,0.5);
-        var color_light = glm.vec3(1.0,1.0,1.0);
-        var light_dir = glm.vec3(0.0, 0.0, 1.0);
-        var viewpos = glm.vec3(0,3,6);
         
         // ===== Instantiate cubes
         // - Default Shader
@@ -838,11 +821,31 @@ class Directional_App_Cubes extends DEECapp
         this.myCube.setShader(this.shaderprog);
         
         // - Ambient Shader
-        this.myCube_dir = new cube_directional(this.gl);
+        this.myCube_dir = new cube_directional(this.gl, [1, 0, 0]);
         this.myCube_dir.setShader(this.shaderprog_directional);
-
-        this.myCube_dir.setparameters(ambient_light, color_light, light_dir, viewpos, 0.8, 1);
+        this.myCube_dir.setMaterials(30, 1); // Shininess and Strength
         
+        // ===== Set parameters of light
+        this.shaderprog_directional.startUsing();
+        // -- Ambient Light
+        this.Ambientloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"Ambient");
+        var ambient_light = glm.vec3(0.5,0.5,0.5);
+        this.gl.uniform3fv(this.Ambientloc, ambient_light.array);
+        // -- Directional Light Color
+        this.LightColorloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightColor");
+        var color_light = glm.vec3(0.5,0.5,0.5);
+        this.gl.uniform3fv(this.LightColorloc, color_light.array);
+        // -- Directional Light Direction
+        this.LightDirloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightDirection");
+        var light_dir = glm.vec3(0.0, 2.0, 1.0);
+        this.gl.uniform3fv(this.LightDirloc, light_dir.array);
+        // -- View Position
+        this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"ViewPos");
+        var viewpos = glm.vec3(0,3,6);
+        this.gl.uniform3fv(this.ViewPosloc, viewpos.array);
+        // -- Setup done
+        this.shaderprog_directional.stopUsing();
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
         //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
@@ -905,7 +908,7 @@ var app = new Directional_App_Cubes('Directional_Canvas_Cubes');
 
 app.run();
 </script>
--->
+
 
 <!-- ========== Sphere Directional Canvas ========== -->
 <canvas id="Directional_Canvas_Spheres" width="400" height="400" style="border:2px solid #000000;">
@@ -934,7 +937,7 @@ class Directional_App_Spheres extends DEECapp
         this.shaderprog_directional = new DEECshader(this.gl);
         this.shaderprog_directional.srcShaders(vertsrc_dir,fragsrc_dir);
                         
-        // ===== Instantiate cubes
+        // ===== Instantiate spheres
         // - Default Shader
         this.mySphere = new sphere(this.gl, [0.0, 0.15, 0.85], 30);
         this.mySphere.setShader(this.shaderprog);
