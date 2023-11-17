@@ -3107,7 +3107,6 @@
         </canvas>
 
         <script id="MuseumApp">
-            //////////////////////////////// WALL ////////////////////////////////
             class wallRoom extends CGRAobject
             {
                 constructor(glcontext, color = [0.9, 0.9, 0.9])
@@ -3136,12 +3135,9 @@
                 }
             }
 
-
-            //////////////////////////////// FLOOR ////////////////////////////////
-
             class floorRoom extends CGRAobject
             {
-                    constructor(glcontext, color = [0.9, 0.9, 0.9])
+                constructor(glcontext, color = [0.9, 0.9, 0.9])
                 {
                     super(glcontext);
                     var Tex = new CGRAtexture(glcontext);
@@ -3337,8 +3333,7 @@
                         this.floor = new floorRoom(this.gl,[0.9, 0.7, 0.4]);
                     }        
                 }
-                
-                // ===== Extend drawit
+                //Extend drawit to all museum
                 drawit(viewM, projectionM, parentMat4 = glm.mat4(1.0))
                 {   
                     // ===== Connect to parent
@@ -3537,6 +3532,7 @@
             app.run();
         </script>
     </div>
+
     <!-- Solar System -->
     <div id="SolarSystem">
         <h2> 1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast || R - Spheres | T - Cubes | Y - Cylinders | U - Cones </h2>
@@ -4028,7 +4024,6 @@
                     
                     this.shaderprogT = new DEECshader(this.gl);
                     this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
-
 
                     var fragsrcTC = document.getElementById("my-fragment-shaderTC").text;
                     this.shaderprogTC = new DEECshader(this.gl);
