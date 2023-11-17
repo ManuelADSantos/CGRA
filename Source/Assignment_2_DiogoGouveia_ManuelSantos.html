@@ -3995,416 +3995,414 @@
     - 1 museum room
     - 2 paintings
     </h3>
+
     <canvas id="myScene" width="900" height="900" style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
         
     <script id="myScene">
-
-
-    class myScene extends DEECapp{
-        counter = 0;
-        orbits = 0;
-        speedup = 1;
-        positionX = -15;
-        positionZ = 15;
-        camera_angle = glm.radians(-45);
-        positionY = 0.033;
-        view_flag = 1;
-        SunFlag = 1;
-        ShapeFlag = 1;
-        dayflg = 1;
-        dayTex = new CGRAtexture(this.gl); 
-
-        initialize()
+        class myScene extends DEECapp
         {
-            var fragsrc = document.getElementById("my-fragment-shader").text;
-            var vertsrc = document.getElementById("my-vertex-shader").text;
-            
-            this.shaderprog = new DEECshader(this.gl);
-            this.shaderprog.srcShaders(vertsrc,fragsrc);
-            
-            var fragsrcT = document.getElementById("my-fragment-shaderT").text;
-            var vertsrcT = document.getElementById("my-vertex-shaderT").text;
-            
-            this.shaderprogT = new DEECshader(this.gl);
-            this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
+            counter = 0;
+            orbits = 0;
+            speedup = 1;
+            positionX = -15;
+            positionZ = 15;
+            camera_angle = glm.radians(-45);
+            positionY = 0.033;
+            view_flag = 1;
+            SunFlag = 1;
+            ShapeFlag = 1;
+            dayflg = 1;
+            dayTex = new CGRAtexture(this.gl); 
 
-
-            var fragsrcTC = document.getElementById("my-fragment-shaderTC").text;
-            this.shaderprogTC = new DEECshader(this.gl);
-            this.shaderprogTC.srcShaders(vertsrcT,fragsrcTC);
-    
-            
-            // Initializations
-            this.gl.enable(this.gl.DEPTH_TEST);
-            this.gl.clearColor(0.1,0.5,0.9,1.0);
-            
-            // Create Objects
-            this.solarSystem = new solarSystem(this.gl);
-            this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
-            
-            this.museum = new museumRoom(this.gl);
-            this.museum.setShader(this.shaderprogT);
-            
-            this.expositor = new table(this.gl,[0.3,0.1,0.05]);
-            this.expositor.setShader(this.shaderprogT);
-            
-            this.moon = new moon(this.gl);
-            this.moon.setShader(this.shaderprogT);
-            
-            this.guard = new man(this.gl);
-            this.guard.setShader(this.shaderprogT);
-            
-            this.couple = new couple(this.gl);
-            this.couple.setShader(this.shaderprogT);
-            
-            this.painting = new Painting1(this.gl);
-            this.painting.setShader(this.shaderprogT);
-
-            this.painting1 = new Painting2(this.gl);
-            this.painting1.setShader(this.shaderprogT);
-            
-            var grassTex = new CGRAtexture(this.gl);  
-            grassTex.load("GrassTex.jpg");
-            
-            this.grass = new cubeT(this.gl);
-            this.grass.setShader(this.shaderprogT);
-            
-            this.grass.settexture(grassTex);
-            
-        
-            
-            this.day = new sphereT(this.gl);
-            this.day.setShader(this.shaderprogT);
-            
-        
-            
-            
-            
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
-            //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
-            //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
-            //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            this.projectionM= glm.perspective(glm.radians(100),1.0,0.001,1000);         
-            
-            //////////////////////////////////////////////////////////////////////////
-            //glm.vec3(0, 0, 0): A posição da câmera no espaço 3D.                  //
-            //glm.vec3(0, 0, -1): O ponto para o qual a câmera está direcionada.    //
-            //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
-            //////////////////////////////////////////////////////////////////////////     
-        
-            window.addEventListener("keypress",(evt)=>this.keyprocess(evt),false);
-        }
-        
-        keyprocess(evt)
-        {
-            //console.log('Key pressed. Keycode:'+evt.keyCode + ' Char: \'' + String.fromCharCode(evt.charCode)+'\'');
-            switch (evt.keyCode) {
-                case 27:
-                    alert("You pressed the \"Escape\" key."); 
-                    break;
-                case 49: // 1 Stop
-                    this.speedup = 0;
-                    break;
-                case 50: // 2 Slow
-                    this.speedup = 0.2;
-                    break;
-                case 51: // 3 Middle
-                    this.speedup = 1;
-                    break;
-                case 52: // 4 Fast
-                    this.speedup = 10;
-                    break;
-                case 114: // r
-                    this.ShapeFlag = 1;
-                    this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
-                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
-                    break;
-                case 116: // t
-                    this.ShapeFlag = 2;
-                    this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
-                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
-                    break;
-                case 121: // y
-                    this.ShapeFlag = 3;
-                    this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
-                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
-                    break;
-                case 117: // u
-                    this.ShapeFlag = 4;
-                    this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
-                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
-                    break;
-                case 100: //d
-                    this.camera_angle = this.camera_angle + 0.1;
-                    break;
-                case 97: //a
-                    this.camera_angle = this.camera_angle - 0.1;
-                    break;
-                case 115: // s
-                    this.positionZ-= 2*Math.sin(this.camera_angle);
-                    this.positionX -= 2*Math.cos(this.camera_angle);
-                    break;
-                case 119: //w
-                    this.positionZ+= 2*Math.sin(this.camera_angle);;
-                    this.positionX += 2*Math.cos(this.camera_angle);
-                    break;
-                
-                case 118: //v
-                    if(this.view_flag == 1)
-                        this.view_flag = 0;
-                    else if(this.view_flag == 0)
-                        this.view_flag = 1;
-                    
-                    break;
-
-                case 46: //. reset camera position
-                    if (this.view_flag == 1)
-                    {
-                        this.positionZ = 15;
-                        this.positionX = -15;
-                        this.camera_angle = glm.radians(-45);
-                    }
-                    break;
-                case 109: // m
-                    this.dayflg = 1;
-                    break;
-                case 110: // n
-                    this.dayflg = 0;
-                    break;
-                case 99: // c
-                    this.SunFlag++;
-                    if (this.SunFlag > 4)
-                        this.SunFlag = 1;
-                    this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
-                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
-                    break;
-            }
-        }
-        
-        
-        render(){
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-           
-            
-            if(this.dayflg == 1){
-                this.dayTex.load("DayTex.jpg");
-                this.day.settexture(this.dayTex);
-            }
-            else{
-                this.dayTex.load("NightTex.jpg");
-                this.day.settexture(this.dayTex);
-            }
-            // ===== Update Speed
-            this.orbits = this.orbits + this.speedup;
-            this.counter++;
-            
-            this.shaderprog.startUsing();
-            
-            ////////////////// Transform/Animate Solar System //////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            // ===== Translate
-            //var translation = glm.vec3(0, 0, 0);
-            //model = glm.translate(model, translation);
-            // ===== Scale
-            //var scale = glm.vec3(1);
-            //model = glm.scale(model, scale);
-            // ===== Final Transformation
-            this.solarSystem.setModelTransformation(model);  
-            
-            ////////////////// Transform/Animate Museum //////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            // ===== Translate
-            var translation = glm.vec3(0,5,0);
-            model = glm.translate(model, translation);
-            // ===== Scale
-            var scale = glm.vec3([40.0, 20.0, 40.0]);
-            model = glm.scale(model, scale);
-            // ===== Final Transformation
-            this.museum.setModelTransformation(model);
-            
-            ////////////////// Transform/Animate Expositor //////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            // ===== Translate
-            var translation = glm.vec3(0,-2,0);
-            model = glm.translate(model, translation);
-            // ===== Rotation
-            var rotation = glm.radians(this.counter*3);
-            var axis = glm.vec3(0.0, 1.0, 0.0);
-            //model = glm.rotate(model, rotation, axis);
-            // ===== Scale
-            var scale = glm.vec3([1, 2, 1]);
-            model = glm.scale(model, scale);
-            // ===== Final Transformation
-            this.expositor.setModelTransformation(model);
-            
-            ////////////////// Transform/Animate Moon //////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            // ===== Translate
-            var translation = glm.vec3(-15, 2*Math.sin(this.counter/10), -15);
-            model = glm.translate(model, translation);
-            //var rotation = glm.radians(this.counter*5);
-            //var axis = glm.vec3(0.0, 1.0, 0.0);
-            //model = glm.rotate(model, rotation, axis);
-            // ===== Scale
-            //var scale = glm.vec3(1);
-            //model = glm.scale(model, scale);
-            // ===== Final Transformation
-            this.moon.setModelTransformation(model);
-            
-            ////////////////// Transform/Animate Guard //////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            // ===== Translate
-            var translation = glm.vec3(15 - 2*(Math.sin(this.counter/15)+1), -2, 15 - 2*(Math.sin(this.counter/10)+1));
-            model = glm.translate(model, translation);
-            // ===== Scale
-            var scale = glm.vec3(4);
-            model = glm.scale(model, scale);
-            // ===== Final Transformation
-            this.guard.setModelTransformation(model);
-            
-            ////////////////// Transform/Animate Couple //////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            var translation = glm.vec3(3*Math.sin(this.counter/20), 0, 3*Math.sin(this.counter/20));
-            model = glm.translate(model, translation);
-            // ===== Translate
-            var translation = glm.vec3(-9, -2, 9);
-            model = glm.translate(model, translation);
-            // ===== Rotation
-            var rotation = glm.radians(this.counter*3);
-            var axis = glm.vec3(0.0, 1.0, 0.0);
-            model = glm.rotate(model, rotation, axis);
-            // ===== Scale
-            var scale = glm.vec3(3.5);
-            model = glm.scale(model, scale);
-            // ===== Final Transformation
-            this.couple.setModelTransformation(model);
-            
-            
-            ////////////////// Transform Painting 1 //////////////////
-            // ===== Model
-            var model = glm.mat4(glm.mat3(1.0));
-            // ===== Scale
-            var scale = glm.vec3(4.0, 4.0, 4.0);
-            model = glm.scale(model, scale);
-            // ===== Translate
-            var translation = glm.vec3(2,0,-5);
-
-            model = glm.translate(model, translation);
-            // ===== Final Transformation
-            this.painting.setModelTransformation(model);  
-            
-            
-            
-            ////////////////// Transform Painting 2 //////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            // ===== Scale
-            var scale = glm.vec3(4.0, 4.0, 4.0);
-            model = glm.scale(model, scale);
-            // ===== Translate
-            var translation = glm.vec3(-2,0,-5);
-
-            model = glm.translate(model, translation);
-            // ===== Final Transformation
-            this.painting1.setModelTransformation(model);  
-
-            
-            ////////////////// Trasform Grass//////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            // ===== Scale
-            var scale = glm.vec3(500.0, 1, 500.0);
-            model = glm.scale(model, scale);
-            // ===== Translate
-            var translation = glm.vec3(0,-10,0);
-
-            model = glm.translate(model, translation);
-            // ===== Final Transformation
-            this.grass.setModelTransformation(model);  
-            ////////////////// Trasform SkyDay//////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            // ===== Scale
-            var scale = glm.vec3(500.0, 500, 500.0);
-            model = glm.scale(model, scale);
-            // ===== Translate
-            var translation = glm.vec3(0,0,0);
-            
-            var rotation = glm.radians(this.counter/10);
-            var axis = glm.vec3(0.0, 1.0, 0.0);
-            model = glm.rotate(model, rotation, axis);
-
-            model = glm.translate(model, translation);
-            // ===== Final Transformation
-            this.day.setModelTransformation(model);  
-            
-            
-            if(this.view_flag == 1)
+            initialize()
             {
-                ////////////////// Visiter View //////////////////
-                this.viewM = glm.lookAt(glm.vec3(this.positionX, 0.5, this.positionZ),
-                                        glm.vec3(this.positionX + Math.cos(this.camera_angle), 
-                                                0.5, 
-                                                this.positionZ + Math.sin(this.camera_angle)),
-                                        glm.vec3(0,1,0)); 
+                var fragsrc = document.getElementById("my-fragment-shader").text;
+                var vertsrc = document.getElementById("my-vertex-shader").text;
+                
+                this.shaderprog = new DEECshader(this.gl);
+                this.shaderprog.srcShaders(vertsrc,fragsrc);
+                
+                var fragsrcT = document.getElementById("my-fragment-shaderT").text;
+                var vertsrcT = document.getElementById("my-vertex-shaderT").text;
+                
+                this.shaderprogT = new DEECshader(this.gl);
+                this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
+
+
+                var fragsrcTC = document.getElementById("my-fragment-shaderTC").text;
+                this.shaderprogTC = new DEECshader(this.gl);
+                this.shaderprogTC.srcShaders(vertsrcT,fragsrcTC);
+        
+                
+                // Initializations
+                this.gl.enable(this.gl.DEPTH_TEST);
+                this.gl.clearColor(0.1,0.5,0.9,1.0);
+                
+                // Create Objects
+                this.solarSystem = new solarSystem(this.gl);
+                this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+                
+                this.museum = new museumRoom(this.gl);
+                this.museum.setShader(this.shaderprogT);
+                
+                this.expositor = new table(this.gl,[0.3,0.1,0.05]);
+                this.expositor.setShader(this.shaderprogT);
+                
+                this.moon = new moon(this.gl);
+                this.moon.setShader(this.shaderprogT);
+                
+                this.guard = new man(this.gl);
+                this.guard.setShader(this.shaderprogT);
+                
+                this.couple = new couple(this.gl);
+                this.couple.setShader(this.shaderprogT);
+                
+                this.painting = new Painting1(this.gl);
+                this.painting.setShader(this.shaderprogT);
+
+                this.painting1 = new Painting2(this.gl);
+                this.painting1.setShader(this.shaderprogT);
+                
+                var grassTex = new CGRAtexture(this.gl);  
+                grassTex.load("GrassTex.jpg");
+                
+                this.grass = new cubeT(this.gl);
+                this.grass.setShader(this.shaderprogT);
+                
+                this.grass.settexture(grassTex);
+                
+            
+                
+                this.day = new sphereT(this.gl);
+                this.day.setShader(this.shaderprogT);
+                
+            
+                
+                
+                
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
+                //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
+                //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
+                //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                this.projectionM= glm.perspective(glm.radians(100),1.0,0.001,1000);         
+                
+                //////////////////////////////////////////////////////////////////////////
+                //glm.vec3(0, 0, 0): A posição da câmera no espaço 3D.                  //
+                //glm.vec3(0, 0, -1): O ponto para o qual a câmera está direcionada.    //
+                //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
+                //////////////////////////////////////////////////////////////////////////     
+            
+                window.addEventListener("keypress",(evt)=>this.keyprocess(evt),false);
             }
-            else
-            {   
-                ////////////////// Planet View //////////////////
-                var Earth = glm.mat4(glm.mat3(1));
-                // ===== Scale
-                var scale = glm.vec3(0.127/2, 0.127/2, 0.127/2);
-                Earth = glm.scale(Earth, scale);
-                // ===== Rotation
-                var outer_rotation = this.orbits;
-                var rotation = glm.radians(outer_rotation);
-                var axis = glm.vec3(0.0,1.0,0.0);
-                Earth = glm.rotate(Earth, rotation, axis);
+            
+            keyprocess(evt)
+            {
+                //console.log('Key pressed. Keycode:'+evt.keyCode + ' Char: \'' + String.fromCharCode(evt.charCode)+'\'');
+                switch (evt.keyCode) {
+                    case 27:
+                        alert("You pressed the \"Escape\" key."); 
+                        break;
+                    case 49: // 1 Stop
+                        this.speedup = 0;
+                        break;
+                    case 50: // 2 Slow
+                        this.speedup = 0.2;
+                        break;
+                    case 51: // 3 Middle
+                        this.speedup = 1;
+                        break;
+                    case 52: // 4 Fast
+                        this.speedup = 10;
+                        break;
+                    case 114: // r
+                        this.ShapeFlag = 1;
+                        this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+                        this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+                        break;
+                    case 116: // t
+                        this.ShapeFlag = 2;
+                        this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+                        this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+                        break;
+                    case 121: // y
+                        this.ShapeFlag = 3;
+                        this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+                        this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+                        break;
+                    case 117: // u
+                        this.ShapeFlag = 4;
+                        this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+                        this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+                        break;
+                    case 100: //d
+                        this.camera_angle = this.camera_angle + 0.1;
+                        break;
+                    case 97: //a
+                        this.camera_angle = this.camera_angle - 0.1;
+                        break;
+                    case 115: // s
+                        this.positionZ-= 2*Math.sin(this.camera_angle);
+                        this.positionX -= 2*Math.cos(this.camera_angle);
+                        break;
+                    case 119: //w
+                        this.positionZ+= 2*Math.sin(this.camera_angle);;
+                        this.positionX += 2*Math.cos(this.camera_angle);
+                        break;
+                    
+                    case 118: //v
+                        if(this.view_flag == 1)
+                            this.view_flag = 0;
+                        else if(this.view_flag == 0)
+                            this.view_flag = 1;
+                        
+                        break;
+
+                    case 46: //. reset camera position
+                        if (this.view_flag == 1)
+                        {
+                            this.positionZ = 15;
+                            this.positionX = -15;
+                            this.camera_angle = glm.radians(-45);
+                        }
+                        break;
+                    case 109: // m
+                        this.dayflg = 1;
+                        break;
+                    case 110: // n
+                        this.dayflg = 0;
+                        break;
+                    case 99: // c
+                        this.SunFlag++;
+                        if (this.SunFlag > 4)
+                            this.SunFlag = 1;
+                        this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+                        this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+                        break;
+                }
+            }
+            
+            render()
+            {
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+            
+                if(this.dayflg == 1){
+                    this.dayTex.load("DayTex.jpg");
+                    this.day.settexture(this.dayTex);
+                }
+                else{
+                    this.dayTex.load("NightTex.jpg");
+                    this.day.settexture(this.dayTex);
+                }
+                // ===== Update Speed
+                this.orbits = this.orbits + this.speedup;
+                this.counter++;
+                
+                this.shaderprog.startUsing();
+                
+                ////////////////// Transform/Animate Solar System //////////////////
+                var model = glm.mat4(glm.mat3(1.0));
                 // ===== Translate
-                var translation = glm.vec3(0,0,-50);
-                Earth = glm.translate(Earth, translation);
+                //var translation = glm.vec3(0, 0, 0);
+                //model = glm.translate(model, translation);
+                // ===== Scale
+                //var scale = glm.vec3(1);
+                //model = glm.scale(model, scale);
+                // ===== Final Transformation
+                this.solarSystem.setModelTransformation(model);  
+                
+                ////////////////// Transform/Animate Museum //////////////////
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Translate
+                var translation = glm.vec3(0,5,0);
+                model = glm.translate(model, translation);
+                // ===== Scale
+                var scale = glm.vec3([40.0, 20.0, 40.0]);
+                model = glm.scale(model, scale);
+                // ===== Final Transformation
+                this.museum.setModelTransformation(model);
+                
+                ////////////////// Transform/Animate Expositor //////////////////
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Translate
+                var translation = glm.vec3(0,-2,0);
+                model = glm.translate(model, translation);
                 // ===== Rotation
-                var inner_rotation = this.orbits;
-                var rotation = glm.radians(-inner_rotation);
-                Earth = glm.rotate(Earth, rotation, axis);
-                var axis = glm.vec3(0.0,1.0,0.0);
-                Earth = glm.rotate(Earth, rotation, axis);   
+                var rotation = glm.radians(this.counter*3);
+                var axis = glm.vec3(0.0, 1.0, 0.0);
+                //model = glm.rotate(model, rotation, axis);
+                // ===== Scale
+                var scale = glm.vec3([1, 2, 1]);
+                model = glm.scale(model, scale);
+                // ===== Final Transformation
+                this.expositor.setModelTransformation(model);
                 
-                //var center = this.solarSystem.Earth.center;
-                //console.log("Center: " + center);
-                //var north = this.solarSystem.Earth.north_pole;
-                //console.log("North: " + north);
+                ////////////////// Transform/Animate Moon //////////////////
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Translate
+                var translation = glm.vec3(-15, 2*Math.sin(this.counter/10), -15);
+                model = glm.translate(model, translation);
+                //var rotation = glm.radians(this.counter*5);
+                //var axis = glm.vec3(0.0, 1.0, 0.0);
+                //model = glm.rotate(model, rotation, axis);
+                // ===== Scale
+                //var scale = glm.vec3(1);
+                //model = glm.scale(model, scale);
+                // ===== Final Transformation
+                this.moon.setModelTransformation(model);
                 
-                //this.viewM = glm.lookAt(glm.vec3(center[0], center[1], center[2]),
-                //                        glm.vec3(0,this.positionY,0),
-                //                        glm.vec3(0,1,0));
+                ////////////////// Transform/Animate Guard //////////////////
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Translate
+                var translation = glm.vec3(15 - 2*(Math.sin(this.counter/15)+1), -2, 15 - 2*(Math.sin(this.counter/10)+1));
+                model = glm.translate(model, translation);
+                // ===== Scale
+                var scale = glm.vec3(4);
+                model = glm.scale(model, scale);
+                // ===== Final Transformation
+                this.guard.setModelTransformation(model);
                 
-                this.viewM = glm.lookAt(glm.vec3(Earth[3][0], this.positionY,Earth[3][2]),
-                                        glm.vec3(0,this.positionY,0),
-                                        glm.vec3(0,1,0));
+                ////////////////// Transform/Animate Couple //////////////////
+                var model = glm.mat4(glm.mat3(1.0));
+                var translation = glm.vec3(3*Math.sin(this.counter/20), 0, 3*Math.sin(this.counter/20));
+                model = glm.translate(model, translation);
+                // ===== Translate
+                var translation = glm.vec3(-9, -2, 9);
+                model = glm.translate(model, translation);
+                // ===== Rotation
+                var rotation = glm.radians(this.counter*3);
+                var axis = glm.vec3(0.0, 1.0, 0.0);
+                model = glm.rotate(model, rotation, axis);
+                // ===== Scale
+                var scale = glm.vec3(3.5);
+                model = glm.scale(model, scale);
+                // ===== Final Transformation
+                this.couple.setModelTransformation(model);
+                
+                
+                ////////////////// Transform Painting 1 //////////////////
+                // ===== Model
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Scale
+                var scale = glm.vec3(4.0, 4.0, 4.0);
+                model = glm.scale(model, scale);
+                // ===== Translate
+                var translation = glm.vec3(2,0,-5);
+
+                model = glm.translate(model, translation);
+                // ===== Final Transformation
+                this.painting.setModelTransformation(model);  
+                
+                
+                
+                ////////////////// Transform Painting 2 //////////////////
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Scale
+                var scale = glm.vec3(4.0, 4.0, 4.0);
+                model = glm.scale(model, scale);
+                // ===== Translate
+                var translation = glm.vec3(-2,0,-5);
+
+                model = glm.translate(model, translation);
+                // ===== Final Transformation
+                this.painting1.setModelTransformation(model);  
+
+                
+                ////////////////// Trasform Grass//////////////////
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Scale
+                var scale = glm.vec3(500.0, 1, 500.0);
+                model = glm.scale(model, scale);
+                // ===== Translate
+                var translation = glm.vec3(0,-10,0);
+
+                model = glm.translate(model, translation);
+                // ===== Final Transformation
+                this.grass.setModelTransformation(model);  
+                ////////////////// Trasform SkyDay//////////////////
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Scale
+                var scale = glm.vec3(500.0, 500, 500.0);
+                model = glm.scale(model, scale);
+                // ===== Translate
+                var translation = glm.vec3(0,0,0);
+                
+                var rotation = glm.radians(this.counter/10);
+                var axis = glm.vec3(0.0, 1.0, 0.0);
+                model = glm.rotate(model, rotation, axis);
+
+                model = glm.translate(model, translation);
+                // ===== Final Transformation
+                this.day.setModelTransformation(model);  
+                
+                
+                if(this.view_flag == 1)
+                {
+                    ////////////////// Visiter View //////////////////
+                    this.viewM = glm.lookAt(glm.vec3(this.positionX, 0.5, this.positionZ),
+                                            glm.vec3(this.positionX + Math.cos(this.camera_angle), 
+                                                    0.5, 
+                                                    this.positionZ + Math.sin(this.camera_angle)),
+                                            glm.vec3(0,1,0)); 
+                }
+                else
+                {   
+                    ////////////////// Planet View //////////////////
+                    var Earth = glm.mat4(glm.mat3(1));
+                    // ===== Scale
+                    var scale = glm.vec3(0.127/2, 0.127/2, 0.127/2);
+                    Earth = glm.scale(Earth, scale);
+                    // ===== Rotation
+                    var outer_rotation = this.orbits;
+                    var rotation = glm.radians(outer_rotation);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Earth = glm.rotate(Earth, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,-50);
+                    Earth = glm.translate(Earth, translation);
+                    // ===== Rotation
+                    var inner_rotation = this.orbits;
+                    var rotation = glm.radians(-inner_rotation);
+                    Earth = glm.rotate(Earth, rotation, axis);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Earth = glm.rotate(Earth, rotation, axis);   
+                    
+                    //var center = this.solarSystem.Earth.center;
+                    //console.log("Center: " + center);
+                    //var north = this.solarSystem.Earth.north_pole;
+                    //console.log("North: " + north);
+                    
+                    //this.viewM = glm.lookAt(glm.vec3(center[0], center[1], center[2]),
+                    //                        glm.vec3(0,this.positionY,0),
+                    //                        glm.vec3(0,1,0));
+                    
+                    this.viewM = glm.lookAt(glm.vec3(Earth[3][0], this.positionY,Earth[3][2]),
+                                            glm.vec3(0,this.positionY,0),
+                                            glm.vec3(0,1,0));
+                }
+                
+                
+                // ===== Draw
+                this.solarSystem.drawit(this.viewM,this.projectionM, this.orbits);
+                this.museum.drawit(this.viewM,this.projectionM);
+                this.expositor.drawit(this.viewM,this.projectionM);
+                this.moon.drawit(this.viewM,this.projectionM);
+                this.guard.drawit(this.viewM,this.projectionM);
+                this.couple.drawit(this.viewM,this.projectionM);
+                this.painting.drawit(this.viewM,this.projectionM);
+                this.painting1.drawit(this.viewM,this.projectionM);
+                this.grass.drawit(this.viewM,this.projectionM);
+                this.day.drawit(this.viewM,this.projectionM);
+                
+                
             }
-            
-            
-            // ===== Draw
-            this.solarSystem.drawit(this.viewM,this.projectionM, this.orbits);
-            this.museum.drawit(this.viewM,this.projectionM);
-            this.expositor.drawit(this.viewM,this.projectionM);
-            this.moon.drawit(this.viewM,this.projectionM);
-            this.guard.drawit(this.viewM,this.projectionM);
-            this.couple.drawit(this.viewM,this.projectionM);
-            this.painting.drawit(this.viewM,this.projectionM);
-            this.painting1.drawit(this.viewM,this.projectionM);
-            this.grass.drawit(this.viewM,this.projectionM);
-            this.day.drawit(this.viewM,this.projectionM);
-            
-            
         }
-    }
 
-    var app2 = new myScene('myScene');
+        var app = new myScene('myScene');
 
-    app2.run();
+        app.run();
     </script>
 </div>
