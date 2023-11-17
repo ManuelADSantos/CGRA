@@ -1368,19 +1368,6 @@ class cone extends CGRAobject
             this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals.flat()), this.gl.STATIC_DRAW);
         }
         
-        // Function to dynamically change colors
-        setColors(newColor1, newColor2)
-        {
-            this.Cone_colors = [newColor1, newColor1, newColor2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.Cone_colors);
-            }
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
         
         setMaterials(shiny = 0.1, strength = 0.1)
         {    

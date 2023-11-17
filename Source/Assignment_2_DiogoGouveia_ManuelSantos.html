@@ -948,6 +948,7 @@
                 super.drawit(viewMat,projectionMat,parentMat4);
             } cc
         }
+    
     </script>
     <canvas id="SphereCanvas" width="400" height="400" style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
@@ -1049,938 +1050,679 @@
     </script>
     
     <!-- Cylinders -->
+    <script id="CylinderDefinitions">
+        class cylinder extends CGRAobject
+        {
+            // ===== Constructor
+            constructor(glcontext, color = [0.0, 1.0, 0.0], faces = 10)
+            {
+                // Initialize the parent class
+                super(glcontext); 
+                
+                // ===== Constants
+                // Number of faces (3 to inf)
+                this.sides = faces;
+                this.numvertices = this.sides*6 + this.sides*3*2;
+                this.length = 1; this.radius = 0.5;
+                
+                // ===== Calculate top and bottom bases coordinates
+                let up_side = [], down_side = [];   
+                for (let i = 0; i < this.sides; i++)
+                { 
+                    let theta = i*2*Math.PI/this.sides;
+                    up_side.push([this.radius*Math.cos(theta),
+                                (this.length)/2,
+                                this.radius*Math.sin(theta)]);
+                    
+                    down_side.push([this.radius*Math.cos(theta),
+                                    -1*(this.length)/2,
+                                    this.radius*Math.sin(theta)]);
+                }
+                
+                // ===== Calculate vertices
+                var vertices = [], normals = [];
+                for (let i = 0; i < this.sides; i++)
+                {   
+                    // Lateral
+                    vertices.push(up_side[i]);
+                    normals.push(up_side[i]);
+                    vertices.push(up_side[(i+1)%this.sides]);
+                    normals.push(up_side[(i+1)%this.sides]);
+                    vertices.push(down_side[i]);
+                    normals.push(down_side[i]);
+                    
+                    vertices.push(down_side[i]);
+                    normals.push(down_side[i]);
+                    vertices.push(down_side[(i+1)%this.sides]);
+                    normals.push(down_side[(i+1)%this.sides]);
+                    vertices.push(up_side[(i+1)%this.sides]);
+                    normals.push(up_side[(i+1)%this.sides]);
+                    
+                    // Top
+                    vertices.push(up_side[i]);
+                    normals.push([0,1,0]);
+                    vertices.push(up_side[(i+1)%this.sides]);
+                    normals.push([0,1,0]);
+                    vertices.push([0,(this.length)/2,0]);
+                    normals.push([0,1,0]);
+                    
+                    // Base
+                    vertices.push(down_side[i]);
+                    normals.push([0,-1,0]);
+                    vertices.push(down_side[(i+1)%this.sides]);
+                    normals.push([0,-1,0]);
+                    vertices.push([0,-1*(this.length)/2,0]);
+                    normals.push([0,-1,0]);
+                }
+
+                // ===== Assign colors
+                var colors = [];
+                for (let i=0; i < (this.sides*6)*2; i++)
+                {
+                    colors.push(color);
+                }
+                
+                // ===== Populate vertex and color buffers
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+                
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+
+                this.normalsbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals.flat()), this.gl.STATIC_DRAW);
+            }
+        }
+
+        class cylinderT extends cylinder
+        {
+            // ===== Constructor
+            constructor(glcontext)
+            {
+                // Initialize the parent class
+                super(glcontext); 
+                
+                // ===== Calculate top and bottom bases coordinates
+                var circleT =[];
+                for (let i = 0; i < this.sides; i++)
+                { 
+                    let theta = i*2*Math.PI/this.sides;
+                    circleT.push([0.25*Math.cos(theta)+0.25,
+                                    0.25*Math.sin(theta)+0.25]);
+                }
+                
+                // ===== Calculate vertices
+                var texCoords = [];
+                for (let i = 0; i < this.sides; i++)
+                {   
+                    texCoords.push([0.5+(i)*0.5/this.sides, 0.5]);
+                    texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
+                    texCoords.push([0.5+(i)*0.5/this.sides, 0]);           
+                    
+                    texCoords.push([0.5+(i)*0.5/this.sides, 0]);
+                    texCoords.push([0.5+(i+1)*0.5/this.sides, 0]);
+                    texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
+                    
+                    //TOP BASE
+                    texCoords.push(circleT[i]);
+                    texCoords.push(circleT[(i+1)%this.sides]);
+                    texCoords.push([0.25,0.25]);
+                    
+                    // DOWN BASE
+                    texCoords.push(circleT[i]);
+                    texCoords.push(circleT[(i+1)%this.sides]);
+                    texCoords.push([0.25,0.25]);
+                }
+
+                this.texcoordbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
+            }
+        
+            settexture(cgratex)
+            {
+                this.textureid = cgratex.textureid;
+            }
+                    
+            drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0))
+            {
+                    this.shaderprog.startUsing();
+                    this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                                        "in_texcoords");
+                    
+                    this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+                    this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                                        2, // number of elements per attribute
+                                        this.gl.FLOAT,  // Type of elements
+                                        false,  // 
+                                        0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                        0); // Offset from the begining of a single vertex to this attribute
+                    this.gl.enableVertexAttribArray(this.texcoordsLocation);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                    this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+                    this.gl.uniform1i(this.textureLocation, 0);
+                    
+                // the parent method does the rest
+                super.drawit(viewMat,projectionMat, parentMat4);
+            } 
+        }
+
+        class cylinderTC extends cylinderT
+        {
+            // ===== Constructor
+            constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 1.0], faces = 10)
+            {
+                // Initialize the parent class
+                super(glcontext); 
+
+                this.color=glm.vec3(0,1,0);
+                
+                // ===== Constants
+                // Number of faces (3 to inf)
+                this.sides = faces;
+                this.numvertices = this.sides*6 + this.sides*3*2;
+                this.length = 1; this.radius = 0.5;
+                
+                // ===== Calculate top and bottom bases coordinates
+                let up_side = [], down_side = [], circleT =[];
+                for (let i = 0; i < this.sides; i++)
+                { 
+                    let theta = i*2*Math.PI/this.sides;
+                    up_side.push([this.radius*Math.cos(theta),
+                                (this.length)/2,
+                                this.radius*Math.sin(theta)]);
+                    
+                    down_side.push([this.radius*Math.cos(theta),
+                                    -1*(this.length)/2,
+                                    this.radius*Math.sin(theta)]);
+                    
+                    circleT.push([0.25*Math.cos(theta)+0.25,
+                                    0.25*Math.sin(theta)+0.25]);
+                    
+                    
+                }
+                
+                // ===== Calculate vertices
+                var vertices = [];
+                var texCoords = [];
+                for (let i = 0; i < this.sides; i++)
+                {   
+                    
+                    //LAT
+                    vertices.push(up_side[i]);
+                    vertices.push(up_side[(i+1)%this.sides]);
+                    vertices.push(down_side[i]);
+        
+                    texCoords.push([0.5+(i)*0.5/this.sides, 0.5]);
+                    texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
+                    texCoords.push([0.5+(i)*0.5/this.sides, 0]);           
+                    
+                    vertices.push(down_side[i]);
+                    vertices.push(down_side[(i+1)%this.sides]);
+                    vertices.push(up_side[(i+1)%this.sides]);
+                    
+                    texCoords.push([0.5+(i)*0.5/this.sides, 0]);
+                    texCoords.push([0.5+(i+1)*0.5/this.sides, 0]);
+                    texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
+                    
+                    //TOP BASE
+                    
+                    vertices.push(up_side[i]);
+                    vertices.push(up_side[(i+1)%this.sides]);
+                    vertices.push([0,(this.length)/2,0]);
+                    
+                    texCoords.push(circleT[i]);
+                    texCoords.push(circleT[(i+1)%this.sides]);
+                    texCoords.push([0.25,0.25]);
+                    
+                    // DOWN BASE
+                    
+                    vertices.push(down_side[i]);
+                    vertices.push(down_side[(i+1)%this.sides]);
+                    vertices.push([0,-1*(this.length)/2,0]);
+                    
+                    texCoords.push(circleT[i]);
+                    texCoords.push(circleT[(i+1)%this.sides]);
+                    texCoords.push([0.25,0.25]);
+                    
+
+                }
+
+                // ===== Assign colors
+                var colors = [];
+                this.color1 = [col1, col1, col2].flat();
+                this.color2 = [col2, col2, col1].flat();
+                for (let i=0; i < (this.sides*6)/3; i++)
+                {
+                    colors.push(this.color1);
+                    colors.push(this.color2);
+                }
+
+                
+                // ===== Populate vertex and color buffers
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+                
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+                
+                this.texcoordbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
+            }
+            
+            // ===== Function to dynamically change the cylinder colors
+            setColors(newColor1, newColor2)
+            {
+                this.color1 = [newColor1, newColor1, newColor2].flat();
+                this.color2 = [newColor2, newColor2, newColor1].flat();
+                let colors = [];
+                for (var i=0; i < (this.numvertices/3)/2; i++)
+                {
+                    colors.push(this.color1);
+                    colors.push(this.color2);
+                }
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+            }
+            
+            settexture(cgratex){
+                    this.textureid = cgratex.textureid;
+            }
+
+            setcolor(color){
+                    this.color = glm.vec3(color);
+            }
+                    
+            drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0)){
+                    this.shaderprog.startUsing();
+                    var colorLocation = this.gl.getUniformLocation(this.shaderprog.shaderProgram,
+                                                                "un_Color");    
+                this.gl.uniform3fv(colorLocation, this.color.array);
+            
+                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                                "in_texcoords");
+            
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                                2, // number of elements per attribute
+                                this.gl.FLOAT,  // Type of elements
+                                false,  // 
+                                0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                0); // Offset from the begining of a single vertex to this attribute
+                this.gl.enableVertexAttribArray(this.texcoordsLocation);
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+                this.gl.uniform1i(this.textureLocation, 0);
+                
+                    
+                // the parent method does the rest
+                super.drawit(viewMat,projectionMat, parentMat4);
+                    } 
+        }
+
+    </script>
     <canvas id="CylinderCanvas" width="400" height="400" style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="CylinderApp">
-
-
-    class cylinder extends CGRAobject
-    {
-        // ===== Constructor
-        constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 1.0], faces = 10)
+        class CylinderApp extends DEECapp
         {
-            // Initialize the parent class
-            super(glcontext); 
-            
-            // ===== Constants
-            // Number of faces (3 to inf)
-            this.sides = faces;
-            this.numvertices = this.sides*6 + this.sides*3*2;
-            this.length = 1; this.radius = 0.5;
-            
-            // ===== Calculate top and bottom bases coordinates
-            let up_side = [], down_side = [];   
-            for (let i = 0; i < this.sides; i++)
-            { 
-                let theta = i*2*Math.PI/this.sides;
-                up_side.push([this.radius*Math.cos(theta),
-                            (this.length)/2,
-                            this.radius*Math.sin(theta)]);
-                
-                down_side.push([this.radius*Math.cos(theta),
-                                -1*(this.length)/2,
-                                this.radius*Math.sin(theta)]);
-            }
-            
-            // ===== Calculate vertices
-            var vertices = [];
-            for (let i = 0; i < this.sides; i++)
-            {   
-                vertices.push(up_side[i]);
-                vertices.push(up_side[(i+1)%this.sides]);
-                vertices.push(down_side[i]);
-                
-                vertices.push(down_side[i]);
-                vertices.push(down_side[(i+1)%this.sides]);
-                vertices.push(up_side[(i+1)%this.sides]);
-                
-                vertices.push(up_side[i]);
-                vertices.push(up_side[(i+1)%this.sides]);
-                vertices.push([0,(this.length)/2,0]);
-                
-                vertices.push(down_side[i]);
-                vertices.push(down_side[(i+1)%this.sides]);
-                vertices.push([0,-1*(this.length)/2,0]);
-            }
-
-            // ===== Assign colors
-            var colors = [];
-            this.color1 = [col1, col1, col2].flat();
-            this.color2 = [col2, col2, col1].flat();
-            for (let i=0; i < (this.sides*6)/3; i++)
+            counter=0;
+            initialize()
             {
-                colors.push(this.color1);
-                colors.push(this.color2);
-            }
-            /*var alpha = 0;
-            for (let i=0; i < this.numvertices; i++)
-            {
-                colors.push(col1[0]*alpha + (1*alpha)*col2[0]);
-                colors.push(col1[1]*alpha + (1*alpha)*col2[1]);
-                colors.push(col1[2]*alpha + (1*alpha)*col2[2]);
-                alpha += 1.0/this.numvertices;
-            }*/
-            
-            // ===== Populate vertex and color buffers
-            this.vertexbuffer=this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
-            
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
+                // ===== Perform initializations
+                var fragsrc = document.getElementById("my-fragment-shader").text;
+                var vertsrc = document.getElementById("my-vertex-shader").text;
+                this.shaderprog = new DEECshader(this.gl);
+                this.shaderprog.srcShaders(vertsrc,fragsrc);
+                this.gl.enable(this.gl.DEPTH_TEST);
+                this.gl.clearColor(0.9, 0.9, 0.9, 1.0);
+                
+                // ===== Create cylinder
+                this.my_Cylinder = new cylinder(this.gl);
+                this.my_Cylinder.setShader(this.shaderprog);
+                
+                
+                var fragsrcT = document.getElementById("my-fragment-shaderT").text;
+                var vertsrcT = document.getElementById("my-vertex-shaderT").text;
+                
+                this.shaderprogT = new DEECshader(this.gl);
+                this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
         
-        // ===== Function to dynamically change the cylinder colors
-        setColors(newColor1, newColor2)
-        {
-            this.color1 = [newColor1, newColor1, newColor2].flat();
-            this.color2 = [newColor2, newColor2, newColor1].flat();
-            let colors = [];
-            for (var i=0; i < (this.numvertices/3)/2; i++)
+                
+                this.texture = new CGRAtexture(this.gl);
+                this.texture.load("CyTex.png");
+                
+                this.my_CylinderT = new cylinderT(this.gl,[0.9, 0, 0] ,[1, 1, 0],10);
+                this.my_CylinderT.settexture(this.texture);
+                this.my_CylinderT.setShader(this.shaderprogT);
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
+                //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
+                //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
+                //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                this.projectionM= glm.perspective(glm.radians(45),1.0,0.1,10);      
+                
+                //////////////////////////////////////////////////////////////////////////
+                //glm.vec3(2, 1, 0): A posição da câmera no espaço 3D.                  //
+                //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
+                //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
+                //////////////////////////////////////////////////////////////////////////
+                this.viewM = glm.lookAt(glm.vec3(5,0,0),glm.vec3(0,0,0),glm.vec3(0,1,0));           
+            }
+            
+            render()
             {
-                colors.push(this.color1);
-                colors.push(this.color2);
-            }
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
-    }
-
-
-    class cylinderT extends CGRAobject
-    {
-        // ===== Constructor
-        constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 1.0], faces = 10)
-        {
-            // Initialize the parent class
-            super(glcontext); 
-            
-            // ===== Constants
-            // Number of faces (3 to inf)
-            this.sides = faces;
-            this.numvertices = this.sides*6 + this.sides*3*2;
-            this.length = 1; this.radius = 0.5;
-            
-            // ===== Calculate top and bottom bases coordinates
-            let up_side = [], down_side = [], circleT =[];
-            for (let i = 0; i < this.sides; i++)
-            { 
-                let theta = i*2*Math.PI/this.sides;
-                up_side.push([this.radius*Math.cos(theta),
-                            (this.length)/2,
-                            this.radius*Math.sin(theta)]);
-                
-                down_side.push([this.radius*Math.cos(theta),
-                                -1*(this.length)/2,
-                                this.radius*Math.sin(theta)]);
-                
-                circleT.push([0.25*Math.cos(theta)+0.25,
-                                0.25*Math.sin(theta)+0.25]);
-                
-                
-            }
-            
-            // ===== Calculate vertices
-            var vertices = [];
-            var texCoords = [];
-            for (let i = 0; i < this.sides; i++)
-            {   
-                
-                //LAT
-                vertices.push(up_side[i]);
-                vertices.push(up_side[(i+1)%this.sides]);
-                vertices.push(down_side[i]);
-    
-                texCoords.push([0.5+(i)*0.5/this.sides, 0.5]);
-                texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
-                texCoords.push([0.5+(i)*0.5/this.sides, 0]);           
-                
-                vertices.push(down_side[i]);
-                vertices.push(down_side[(i+1)%this.sides]);
-                vertices.push(up_side[(i+1)%this.sides]);
-                
-                texCoords.push([0.5+(i)*0.5/this.sides, 0]);
-                texCoords.push([0.5+(i+1)*0.5/this.sides, 0]);
-                texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
-                
-                //TOP BASE
-                
-                vertices.push(up_side[i]);
-                vertices.push(up_side[(i+1)%this.sides]);
-                vertices.push([0,(this.length)/2,0]);
-                
-                texCoords.push(circleT[i]);
-                texCoords.push(circleT[(i+1)%this.sides]);
-                texCoords.push([0.25,0.25]);
-                
-                // DOWN BASE
-                
-                vertices.push(down_side[i]);
-                vertices.push(down_side[(i+1)%this.sides]);
-                vertices.push([0,-1*(this.length)/2,0]);
-                
-                texCoords.push(circleT[i]);
-                texCoords.push(circleT[(i+1)%this.sides]);
-                texCoords.push([0.25,0.25]);
-                
-
-            }
-
-            // ===== Assign colors
-            var colors = [];
-            this.color1 = [col1, col1, col2].flat();
-            this.color2 = [col2, col2, col1].flat();
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.color1);
-                colors.push(this.color2);
-            }
-
-            
-            // ===== Populate vertex and color buffers
-            this.vertexbuffer=this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
-            
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-            
-            this.texcoordbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
-        }
-        
-        // ===== Function to dynamically change the cylinder colors
-        setColors(newColor1, newColor2)
-        {
-            this.color1 = [newColor1, newColor1, newColor2].flat();
-            this.color2 = [newColor2, newColor2, newColor1].flat();
-            let colors = [];
-            for (var i=0; i < (this.numvertices/3)/2; i++)
-            {
-                colors.push(this.color1);
-                colors.push(this.color2);
-            }
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
-        
-        settexture(cgratex){
-                this.textureid = cgratex.textureid;
-        }
-                
-        drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0)){
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+                this.counter++;
                 this.shaderprog.startUsing();
-                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
-                                                                    "in_texcoords");
                 
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
-                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
-                                    2, // number of elements per attribute
-                                    this.gl.FLOAT,  // Type of elements
-                                    false,  // 
-                                    0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
-                                    0); // Offset from the begining of a single vertex to this attribute
-                this.gl.enableVertexAttribArray(this.texcoordsLocation);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
-                this.gl.uniform1i(this.textureLocation, 0);
+                // ===== Model
+                var model = glm.mat4(glm.mat3(1.0));
+                // ===== Scale
+                var scale = glm.vec3(1.0);
+                model = glm.scale(model, scale);
+                var translation = glm.vec3(0,0,-1);
+                model = glm.translate(model, translation);
+                // ===== Rotation
+                var rotation = glm.radians(this.counter);
+                var axis = glm.vec3(0.0, 0.0, 1.0);
+                model = glm.rotate(model, rotation, axis);
+                // ===== Final Transformation
+                this.my_Cylinder.setModelTransformation(model); 
                 
-            // the parent method does the rest
-            super.drawit(viewMat,projectionMat, parentMat4);
-                } 
-    }
+                // ==== Draw
+                this.my_Cylinder.drawit(this.viewM,this.projectionM);
 
-
-    class cylinderTC extends CGRAobject
-    {
-        // ===== Constructor
-        constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 1.0], faces = 10)
-        {
-            // Initialize the parent class
-            super(glcontext); 
-
-            this.color=glm.vec3(0,1,0);
-            
-            // ===== Constants
-            // Number of faces (3 to inf)
-            this.sides = faces;
-            this.numvertices = this.sides*6 + this.sides*3*2;
-            this.length = 1; this.radius = 0.5;
-            
-            // ===== Calculate top and bottom bases coordinates
-            let up_side = [], down_side = [], circleT =[];
-            for (let i = 0; i < this.sides; i++)
-            { 
-                let theta = i*2*Math.PI/this.sides;
-                up_side.push([this.radius*Math.cos(theta),
-                            (this.length)/2,
-                            this.radius*Math.sin(theta)]);
                 
-                down_side.push([this.radius*Math.cos(theta),
-                                -1*(this.length)/2,
-                                this.radius*Math.sin(theta)]);
+                var model = glm.mat4(glm.mat3(1.0));
+                        var scale = glm.vec3(1.0);
+                model = glm.scale(model, scale);
+                var translation = glm.vec3(0,0,1);
+                model = glm.translate(model, translation);
+                // ===== Rotation
+                var rotation = glm.radians(this.counter);
+                var axis = glm.vec3(0.0, 0.0, 1.0);
+                model = glm.rotate(model, rotation, axis);
+                // ===== Final Transformation
+                this.my_CylinderT.setModelTransformation(model);
                 
-                circleT.push([0.25*Math.cos(theta)+0.25,
-                                0.25*Math.sin(theta)+0.25]);
-                
+                // ===== Draw cone
+                this.my_CylinderT.drawit(this.viewM,this.projectionM);
                 
             }
-            
-            // ===== Calculate vertices
-            var vertices = [];
-            var texCoords = [];
-            for (let i = 0; i < this.sides; i++)
-            {   
-                
-                //LAT
-                vertices.push(up_side[i]);
-                vertices.push(up_side[(i+1)%this.sides]);
-                vertices.push(down_side[i]);
-    
-                texCoords.push([0.5+(i)*0.5/this.sides, 0.5]);
-                texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
-                texCoords.push([0.5+(i)*0.5/this.sides, 0]);           
-                
-                vertices.push(down_side[i]);
-                vertices.push(down_side[(i+1)%this.sides]);
-                vertices.push(up_side[(i+1)%this.sides]);
-                
-                texCoords.push([0.5+(i)*0.5/this.sides, 0]);
-                texCoords.push([0.5+(i+1)*0.5/this.sides, 0]);
-                texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
-                
-                //TOP BASE
-                
-                vertices.push(up_side[i]);
-                vertices.push(up_side[(i+1)%this.sides]);
-                vertices.push([0,(this.length)/2,0]);
-                
-                texCoords.push(circleT[i]);
-                texCoords.push(circleT[(i+1)%this.sides]);
-                texCoords.push([0.25,0.25]);
-                
-                // DOWN BASE
-                
-                vertices.push(down_side[i]);
-                vertices.push(down_side[(i+1)%this.sides]);
-                vertices.push([0,-1*(this.length)/2,0]);
-                
-                texCoords.push(circleT[i]);
-                texCoords.push(circleT[(i+1)%this.sides]);
-                texCoords.push([0.25,0.25]);
-                
-
-            }
-
-            // ===== Assign colors
-            var colors = [];
-            this.color1 = [col1, col1, col2].flat();
-            this.color2 = [col2, col2, col1].flat();
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.color1);
-                colors.push(this.color2);
-            }
-
-            
-            // ===== Populate vertex and color buffers
-            this.vertexbuffer=this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
-            
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-            
-            this.texcoordbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
-        }
-        
-        // ===== Function to dynamically change the cylinder colors
-        setColors(newColor1, newColor2)
-        {
-            this.color1 = [newColor1, newColor1, newColor2].flat();
-            this.color2 = [newColor2, newColor2, newColor1].flat();
-            let colors = [];
-            for (var i=0; i < (this.numvertices/3)/2; i++)
-            {
-                colors.push(this.color1);
-                colors.push(this.color2);
-            }
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
-        
-        settexture(cgratex){
-                this.textureid = cgratex.textureid;
         }
 
-        setcolor(color){
-                this.color = glm.vec3(color);
-        }
-                
-        drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0)){
-                this.shaderprog.startUsing();
-                var colorLocation = this.gl.getUniformLocation(this.shaderprog.shaderProgram,
-                                                            "un_Color");    
-            this.gl.uniform3fv(colorLocation, this.color.array);
-        
-            this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
-                                                            "in_texcoords");
-        
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
-            this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
-                            2, // number of elements per attribute
-                            this.gl.FLOAT,  // Type of elements
-                            false,  // 
-                            0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
-                            0); // Offset from the begining of a single vertex to this attribute
-            this.gl.enableVertexAttribArray(this.texcoordsLocation);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-            this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
-            this.gl.uniform1i(this.textureLocation, 0);
-            
-                
-            // the parent method does the rest
-            super.drawit(viewMat,projectionMat, parentMat4);
-                } 
-    }
+        var app = new CylinderApp('CylinderCanvas');
 
-
-    class CylinderApp extends DEECapp
-    {
-        counter=0;
-        initialize()
-        {
-            // ===== Perform initializations
-            var fragsrc = document.getElementById("my-fragment-shader").text;
-            var vertsrc = document.getElementById("my-vertex-shader").text;
-            this.shaderprog = new DEECshader(this.gl);
-            this.shaderprog.srcShaders(vertsrc,fragsrc);
-            this.gl.enable(this.gl.DEPTH_TEST);
-            this.gl.clearColor(0.9, 0.9, 0.9, 1.0);
-            
-            // ===== Create cylinder
-            this.my_Cylinder = new cylinder(this.gl);
-            this.my_Cylinder.setShader(this.shaderprog);
-            
-            
-            var fragsrcT = document.getElementById("my-fragment-shaderT").text;
-            var vertsrcT = document.getElementById("my-vertex-shaderT").text;
-            
-            this.shaderprogT = new DEECshader(this.gl);
-            this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
-    
-            
-            this.texture = new CGRAtexture(this.gl);
-            this.texture.load("CyTex.png");
-            
-            this.my_CylinderT = new cylinderT(this.gl,[0.9, 0, 0] ,[1, 1, 0],10);
-            this.my_CylinderT.settexture(this.texture);
-            this.my_CylinderT.setShader(this.shaderprogT);
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
-            //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
-            //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
-            //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            this.projectionM= glm.perspective(glm.radians(45),1.0,0.1,10);      
-            
-            //////////////////////////////////////////////////////////////////////////
-            //glm.vec3(2, 1, 0): A posição da câmera no espaço 3D.                  //
-            //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
-            //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
-            //////////////////////////////////////////////////////////////////////////
-            this.viewM = glm.lookAt(glm.vec3(5,0,0),glm.vec3(0,0,0),glm.vec3(0,1,0));           
-        }
-        
-        render()
-        {
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-            this.counter++;
-            this.shaderprog.startUsing();
-            
-            // ===== Model
-            var model = glm.mat4(glm.mat3(1.0));
-            // ===== Scale
-            var scale = glm.vec3(1.0);
-            model = glm.scale(model, scale);
-            var translation = glm.vec3(0,0,-1);
-            model = glm.translate(model, translation);
-            // ===== Rotation
-            var rotation = glm.radians(this.counter);
-            var axis = glm.vec3(0.0, 0.0, 1.0);
-            model = glm.rotate(model, rotation, axis);
-            // ===== Final Transformation
-            this.my_Cylinder.setModelTransformation(model); 
-            
-            // ==== Draw
-            this.my_Cylinder.drawit(this.viewM,this.projectionM);
-
-            
-            var model = glm.mat4(glm.mat3(1.0));
-                    var scale = glm.vec3(1.0);
-            model = glm.scale(model, scale);
-            var translation = glm.vec3(0,0,1);
-            model = glm.translate(model, translation);
-            // ===== Rotation
-            var rotation = glm.radians(this.counter);
-            var axis = glm.vec3(0.0, 0.0, 1.0);
-            model = glm.rotate(model, rotation, axis);
-            // ===== Final Transformation
-            this.my_CylinderT.setModelTransformation(model);
-            
-            // ===== Draw cone
-            this.my_CylinderT.drawit(this.viewM,this.projectionM);
-            
-        }
-    }
-
-    var app = new CylinderApp('CylinderCanvas');
-
-    app.run();
+        app.run();
     </script>
 
     <!-- Cones -->
+    <script id="ConeDefinitions"> 
+        class cone extends CGRAobject
+        {
+            // ===== Contructor
+            constructor(glcontext, color = [0.0, 1.0, 0.0], faces = 10)
+            {
+                // ===== Initialize the parent class
+                super(glcontext); 
+                
+                // ===== Constants
+                // Number of faces (3 to inf)
+                this.sides = faces;
+                this.numvertices = this.sides*3*2;
+                this.length = 1; this.radius = 0.5;
+                
+                // ===== Calculate base
+                let base = [];   
+                for (let i = 0; i < this.sides; i++)
+                { 
+                    let theta = i*2*Math.PI/this.sides;
+                    base.push(
+                        [this.radius*Math.cos(theta),
+                        -1*(this.length)/2,
+                        this.radius*Math.sin(theta)]);
+                }
+                
+                // ===== Calculate vertices
+                var vertices = [], normals = [];
+                for (let i = 0; i < this.sides; i++)
+                {   
+                    vertices.push(base[i]);
+                    normals.push([0,-1,0]);
+                    vertices.push(base[(i+1)%this.sides]);
+                    normals.push([0,-1,0]);
+                    vertices.push([0,-1*(this.length)/2,0]);
+                    normals.push([0,-1,0]);
+                    
+                    vertices.push(base[i]);
+                    vertices.push(base[(i+1)%this.sides]);
+                    vertices.push([0,(this.length)/2,0]);
+                    
+                    var a = glm.vec3(base[(i+1)%this.sides][0] - base[i][0],
+                                    base[(i+1)%this.sides][1] - base[i][1],
+                                    base[(i+1)%this.sides][2] - base[i][2]);
+
+                    var b = glm.vec3(0 - base[i][0],
+                                    (this.length)/2 - base[i][1],
+                                    0 - base[i][2]);
+
+                    var c = glm.cross(b,a);
+
+                    normals.push(c.array);
+                    normals.push(c.array);
+                    normals.push(c.array);
+                }
+                
+                // ===== Assign colors
+                let colors = [];
+                for (let i=0; i < (this.sides*6); i++)
+                {
+                    colors.push(color);
+                }
+                
+                // ===== Populate buffers
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+                
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+
+                this.normalsbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals.flat()), this.gl.STATIC_DRAW);
+            }
+
+            setMaterials(shiny = 0.1, strength = 0.1)
+            {    
+                this.Shininess = shiny;
+                this.Strength = strength;
+            }
+        }
+
+        class coneT extends cone
+        {
+            // ===== Contructor
+            constructor(glcontext)
+            {
+                // ===== Initialize the parent class
+                super(glcontext); 
+                
+                var texCoords = [];
+                let baseT = [];
+                for (let i = 0; i < this.sides; i++)
+                { 
+                    let theta = i*2*Math.PI/this.sides;
+                    baseT.push(
+                        [this.radius*Math.cos(theta)+0.5,
+                        this.radius*Math.sin(theta)+0.5]);
+                }
+                
+                for (let i = 0; i < this.sides; i++)
+                {   
+                    texCoords.push(baseT[i]);
+                    texCoords.push(baseT[(i+1)%this.sides]);
+                    texCoords.push([0.5,0.5]);
+                    
+                    texCoords.push(baseT[i]);
+                    texCoords.push(baseT[(i+1)%this.sides]);
+                    texCoords.push([0.5,0.5]);
+                }
+                
+                this.texcoordbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
+            }
+            
+            // Function to dynamically change colors
+            setColors(newColor1, newColor2)
+            {
+                this.Cone_colors = [newColor1, newColor1, newColor2].flat();
+                let colors = [];
+                for (let i=0; i < (this.sides*6)/3; i++)
+                {
+                    colors.push(this.Cone_colors);
+                }
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+            }
+            
+            
+                    
+                    settexture(cgratex){
+                            this.textureid = cgratex.textureid;
+                    }
+                    
+                    drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0)){
+                    this.shaderprog.startUsing();
+                    this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                                        "in_texcoords");
+                    
+                    this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+                    this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                                        2, // number of elements per attribute
+                                        this.gl.FLOAT,  // Type of elements
+                                        false,  // 
+                                        0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                        0); // Offset from the begining of a single vertex to this attribute
+                    this.gl.enableVertexAttribArray(this.texcoordsLocation);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                    this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+                    this.gl.uniform1i(this.textureLocation, 0);
+                    
+                    // the parent method does the rest
+                    super.drawit(viewMat,projectionMat, parentMat4);
+                    } 
+        }
+        
+    </script>
     <canvas id="ConeCanvas" width="400" height="400" style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="ConeApp">
-
-    class cone extends CGRAobject
-    {
-        // ===== Contructor
-        constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 0.0], faces = 10)
+        class ConeApp extends DEECapp
         {
-            // ===== Initialize the parent class
-            super(glcontext); 
-            
-            // ===== Constants
-            // Number of faces (3 to inf)
-            this.sides = faces;
-            this.numvertices = this.sides*3*2;
-            this.length = 1; this.radius = 0.5;
-            
-            // ===== Calculate base
-            let base = [];   
-            for (let i = 0; i < this.sides; i++)
-            { 
-                let theta = i*2*Math.PI/this.sides;
-                base.push(
-                    [this.radius*Math.cos(theta),
-                    -1*(this.length)/2,
-                    this.radius*Math.sin(theta)]);
-            }
-            
-            // ===== Calculate vertices
-            var vertices = [];
-            for (let i = 0; i < this.sides; i++)
-            {   
-                vertices.push(base[i]);
-                vertices.push(base[(i+1)%this.sides]);
-                vertices.push([0,-1*(this.length)/2,0]);
-                
-                vertices.push(base[i]);
-                vertices.push(base[(i+1)%this.sides]);
-                vertices.push([0,(this.length)/2,0]);
-            }
-            
-            // ===== Assign colors
-            this.Cone_colors = [col1, col1, col2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
+            counter=0;
+            initialize()
             {
-                colors.push(this.Cone_colors);
-            }
-            
-
-            
-            // ===== Populate buffers
-            this.vertexbuffer=this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
-            
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-            
-
-        }
-        
-        // Function to dynamically change colors
-        setColors(newColor1, newColor2)
-        {
-            this.Cone_colors = [newColor1, newColor1, newColor2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.Cone_colors);
-            }
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
-    }
-
-
-
-    class coneT extends CGRAobject
-    {
-        // ===== Contructor
-        constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 0.0], faces = 10)
-        {
-            // ===== Initialize the parent class
-            super(glcontext); 
-            
-            // ===== Constants
-            // Number of faces (3 to inf)
-            this.sides = faces;
-            this.numvertices = this.sides*3*2;
-            this.length = 1; this.radius = 0.5;
-            
-            // ===== Calculate base
-            let base = [];
-            var texCoords = [];
-            let baseT = [];
-            for (let i = 0; i < this.sides; i++)
-            { 
-                let theta = i*2*Math.PI/this.sides;
-                base.push(
-                    [this.radius*Math.cos(theta),
-                    -1*(this.length)/2,
-                    this.radius*Math.sin(theta)]);
-                baseT.push(
-                    [this.radius*Math.cos(theta)+0.5,
-                    this.radius*Math.sin(theta)+0.5]);
-            }
-            
-            // ===== Calculate vertices
-            var vertices = [];
-            
-            
-            for (let i = 0; i < this.sides; i++)
-            {   
-                vertices.push(base[i]);
-                vertices.push(base[(i+1)%this.sides]);
-                vertices.push([0,-1*(this.length)/2,0]);
+                // ===== Perform initializations
+                var fragsrc = document.getElementById("my-fragment-shader").text;
+                var vertsrc = document.getElementById("my-vertex-shader").text;
+                this.shaderprog = new DEECshader(this.gl);
+                this.shaderprog.srcShaders(vertsrc,fragsrc);
+                this.gl.enable(this.gl.DEPTH_TEST);
+                this.gl.clearColor(0.9, 0.9, 0.9, 1.0);
                 
-                texCoords.push(baseT[i]);
-                texCoords.push(baseT[(i+1)%this.sides]);
-                texCoords.push([0.5,0.5]);
+                // ===== Create cone
+                this.my_cone = new cone(this.gl, [0, 0, 0.9], 10);
+                this.my_cone.setShader(this.shaderprog);
                 
-                vertices.push(base[i]);
-                vertices.push(base[(i+1)%this.sides]);
-                vertices.push([0,(this.length)/2,0]);
-                
-                texCoords.push(baseT[i]);
-                texCoords.push(baseT[(i+1)%this.sides]);
-                texCoords.push([0.5,0.5]);
-            }
-            
-            // ===== Assign colors
-            this.Cone_colors = [col1, col1, col2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.Cone_colors);
-            }
-            
-            
-            // ===== Populate buffers
 
-            this.vertexbuffer=this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
-            
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-            
-                    
-            this.texcoordbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
                 
-            
-
-        }
-        
-        // Function to dynamically change colors
-        setColors(newColor1, newColor2)
-        {
-            this.Cone_colors = [newColor1, newColor1, newColor2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.Cone_colors);
-            }
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
-        
+                var fragsrcT = document.getElementById("my-fragment-shaderT").text;
+                var vertsrcT = document.getElementById("my-vertex-shaderT").text;
+                
+                this.shaderprogT = new DEECshader(this.gl);
+                this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
         
                 
-                settexture(cgratex){
-                        this.textureid = cgratex.textureid;
-                }
+                this.texture = new CGRAtexture(this.gl);
+                this.texture.load("ConeTex.png");
                 
-                drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0)){
+                this.my_coneT = new coneT(this.gl,[0.9, 0, 0] ,[1, 1, 0],30);
+                this.my_coneT.settexture(this.texture);
+                this.my_coneT.setShader(this.shaderprogT);
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
+                //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
+                //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
+                //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                this.projectionM= glm.perspective(glm.radians(45),1.0,0.1,10);      
+                
+                //////////////////////////////////////////////////////////////////////////
+                //glm.vec3(2, 1, 0): A posição da câmera no espaço 3D.                  //
+                //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
+                //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
+                //////////////////////////////////////////////////////////////////////////
+                this.viewM = glm.lookAt(glm.vec3(5,0,0),glm.vec3(0,0,0),glm.vec3(0,1,0));           
+            
+            }
+            
+            render()
+            {
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+                this.counter++;
+                
                 this.shaderprog.startUsing();
-                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
-                                                                    "in_texcoords");
                 
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
-                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
-                                    2, // number of elements per attribute
-                                    this.gl.FLOAT,  // Type of elements
-                                    false,  // 
-                                    0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
-                                    0); // Offset from the begining of a single vertex to this attribute
-                this.gl.enableVertexAttribArray(this.texcoordsLocation);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
-                this.gl.uniform1i(this.textureLocation, 0);
                 
-                // the parent method does the rest
-                super.drawit(viewMat,projectionMat, parentMat4);
-                } 
-    }
-
-    class coneTC extends CGRAobject
-    {
-        // ===== Contructor
-        constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 0.0], faces = 10)
-        {
-            // ===== Initialize the parent class
-            super(glcontext); 
-            this.color=glm.vec3(0,1,0);
-            
-            // ===== Constants
-            // Number of faces (3 to inf)
-            this.sides = faces;
-            this.numvertices = this.sides*3*2;
-            this.length = 1; this.radius = 0.5;
-            
-            // ===== Calculate base
-            let base = [];
-            var texCoords = [];
-            let baseT = [];
-            for (let i = 0; i < this.sides; i++)
-            { 
-                let theta = i*2*Math.PI/this.sides;
-                base.push(
-                    [this.radius*Math.cos(theta),
-                    -1*(this.length)/2,
-                    this.radius*Math.sin(theta)]);
-                baseT.push(
-                    [this.radius*Math.cos(theta)+0.5,
-                    this.radius*Math.sin(theta)+0.5]);
+                ////////////////// Transform/Animate Couple //////////////////
+                var model = glm.mat4(glm.mat3(1.0));
+                var translation = glm.vec3(0,0,-1);
+                model = glm.translate(model, translation);
+                // ===== Rotation
+                var rotation = glm.radians(this.counter);
+                var axis = glm.vec3(0.0, 0.0, 1.0);
+                model = glm.rotate(model, rotation, axis);
+                // ===== Final Transformation
+                this.my_cone.setModelTransformation(model);
+                
+                // ===== Draw cone
+                this.my_cone.drawit(this.viewM,this.projectionM);
+                
+                var model = glm.mat4(glm.mat3(1.0));
+                var translation = glm.vec3(0,0,1);
+                model = glm.translate(model, translation);
+                // ===== Rotation
+                var rotation = glm.radians(this.counter);
+                var axis = glm.vec3(0.0, 0.0, 1.0);
+                model = glm.rotate(model, rotation, axis);
+                // ===== Final Transformation
+                this.my_coneT.setModelTransformation(model);
+                
+                // ===== Draw cone
+            this.my_coneT.drawit(this.viewM,this.projectionM);
             }
-            
-            // ===== Calculate vertices
-            var vertices = [];
-            
-            
-            for (let i = 0; i < this.sides; i++)
-            {   
-                vertices.push(base[i]);
-                vertices.push(base[(i+1)%this.sides]);
-                vertices.push([0,-1*(this.length)/2,0]);
-                
-                texCoords.push(baseT[i]);
-                texCoords.push(baseT[(i+1)%this.sides]);
-                texCoords.push([0.5,0.5]);
-                
-                vertices.push(base[i]);
-                vertices.push(base[(i+1)%this.sides]);
-                vertices.push([0,(this.length)/2,0]);
-                
-                texCoords.push(baseT[i]);
-                texCoords.push(baseT[(i+1)%this.sides]);
-                texCoords.push([0.5,0.5]);
-            }
-            
-            // ===== Assign colors
-            this.Cone_colors = [col1, col1, col2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.Cone_colors);
-            }
-            
-            
-            // ===== Populate buffers
-
-            this.vertexbuffer=this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
-            
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-            
-                    
-            this.texcoordbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
-                
-            
-
         }
-        
-        // Function to dynamically change colors
-        setColors(newColor1, newColor2)
-        {
-            this.Cone_colors = [newColor1, newColor1, newColor2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.Cone_colors);
-            }
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
-        
-        setcolor(color){
-                this.color = glm.vec3(color);
-        }
-                
-                settexture(cgratex){
-                        this.textureid = cgratex.textureid;
-                }
-                
-                drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0)){
-                this.shaderprog.startUsing();
-                var colorLocation = this.gl.getUniformLocation(this.shaderprog.shaderProgram,
-                                                            "un_Color");    
-            this.gl.uniform3fv(colorLocation, this.color.array);
-        
-            this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
-                                                            "in_texcoords");
-        
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
-            this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
-                            2, // number of elements per attribute
-                            this.gl.FLOAT,  // Type of elements
-                            false,  // 
-                            0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
-                            0); // Offset from the begining of a single vertex to this attribute
-            this.gl.enableVertexAttribArray(this.texcoordsLocation);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-            this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
-            this.gl.uniform1i(this.textureLocation, 0);
-                
-                // the parent method does the rest
-                super.drawit(viewMat,projectionMat, parentMat4);
-                } 
-    }
 
+        var app = new ConeApp('ConeCanvas');
 
-
-
-
-
-    class ConeApp extends DEECapp
-    {
-        counter=0;
-        initialize()
-        {
-            // ===== Perform initializations
-            var fragsrc = document.getElementById("my-fragment-shader").text;
-            var vertsrc = document.getElementById("my-vertex-shader").text;
-            this.shaderprog = new DEECshader(this.gl);
-            this.shaderprog.srcShaders(vertsrc,fragsrc);
-            this.gl.enable(this.gl.DEPTH_TEST);
-            this.gl.clearColor(0.9, 0.9, 0.9, 1.0);
-            
-            // ===== Create cone
-            this.my_cone = new cone(this.gl, [0.9, 0, 0] ,[1, 1, 0], 10);
-            this.my_cone.setShader(this.shaderprog);
-            
-
-            
-            var fragsrcT = document.getElementById("my-fragment-shaderT").text;
-            var vertsrcT = document.getElementById("my-vertex-shaderT").text;
-            
-            this.shaderprogT = new DEECshader(this.gl);
-            this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
-    
-            
-            this.texture = new CGRAtexture(this.gl);
-            this.texture.load("ConeTex.png");
-            
-            this.my_coneT = new coneT(this.gl,[0.9, 0, 0] ,[1, 1, 0],30);
-            this.my_coneT.settexture(this.texture);
-            this.my_coneT.setShader(this.shaderprogT);
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
-            //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
-            //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
-            //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            this.projectionM= glm.perspective(glm.radians(45),1.0,0.1,10);      
-            
-            //////////////////////////////////////////////////////////////////////////
-            //glm.vec3(2, 1, 0): A posição da câmera no espaço 3D.                  //
-            //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
-            //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
-            //////////////////////////////////////////////////////////////////////////
-            this.viewM = glm.lookAt(glm.vec3(5,0,0),glm.vec3(0,0,0),glm.vec3(0,1,0));           
-        
-        }
-        
-        render()
-        {
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-            this.counter++;
-            
-            this.shaderprog.startUsing();
-            
-            
-            ////////////////// Transform/Animate Couple //////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            var translation = glm.vec3(0,0,-1);
-            model = glm.translate(model, translation);
-            // ===== Rotation
-            var rotation = glm.radians(this.counter);
-            var axis = glm.vec3(0.0, 0.0, 1.0);
-            model = glm.rotate(model, rotation, axis);
-            // ===== Final Transformation
-            this.my_cone.setModelTransformation(model);
-            
-            // ===== Draw cone
-            this.my_cone.drawit(this.viewM,this.projectionM);
-            
-            var model = glm.mat4(glm.mat3(1.0));
-            var translation = glm.vec3(0,0,1);
-            model = glm.translate(model, translation);
-            // ===== Rotation
-            var rotation = glm.radians(this.counter);
-            var axis = glm.vec3(0.0, 0.0, 1.0);
-            model = glm.rotate(model, rotation, axis);
-            // ===== Final Transformation
-            this.my_coneT.setModelTransformation(model);
-            
-            // ===== Draw cone
-        this.my_coneT.drawit(this.viewM,this.projectionM);
-        }
-    }
-
-    var app = new ConeApp('ConeCanvas');
-
-    app.run();
+        app.run();
     </script>
 
     <!-- Discs -->
@@ -1988,267 +1730,249 @@
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="DiscApp">
-
-    class disc extends CGRAobject
-    {
-        // ===== Constructor
-        constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 0.0], faces = 10)
+        class disc extends CGRAobject
         {
-            // ===== Initialize the parent class
-            super(glcontext); 
-            
-            // ===== Constants
-            // Number of faces (3 to inf)
-            this.sides = faces;
-            this.numvertices = this.sides*3;
-            this.radius = 0.5;
-            
-            // ===== Calculate vertices
-            let base = [];   
-            for (let i = 0; i < this.sides; i++)
-            { 
-                let theta = i*2*Math.PI/this.sides;
-                base.push(
-                    [this.radius*Math.cos(theta),
-                    0.0,
-                    this.radius*Math.sin(theta)]);
-            }
-            
-            // ===== Assign vertices
-            var vertices = [];
-            for (let i = 0; i < this.sides; i++)
-            {   
-                vertices.push(base[i]);
-                vertices.push(base[(i+1)%this.sides]);
-                vertices.push([0,0,0]);
-            }
-            
-            // ===== Assign colors
-            this.Disc_colors = [col1, col1, col2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
+            // ===== Constructor
+            constructor(glcontext, color = [0.0, 1.0, 0.0], faces = 10)
             {
-                colors.push(this.Disc_colors);
-            }        
-            
-            // ===== Populate buffers
-            this.vertexbuffer=this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
-            
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
-        
-        // ===== Function to dinamically change colors of disc
-        setColors(newColor1, newColor2)
-        {
-            this.Disc_colors = [newColor1, newColor1, newColor2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.Disc_colors);
-            }
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
-    }
-
-
-    class discT extends CGRAobject
-    {
-        // ===== Constructor
-        constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 0.0], faces = 10)
-        {
-            // ===== Initialize the parent class
-            super(glcontext); 
-            
-            // ===== Constants
-            // Number of faces (3 to inf)
-            this.sides = faces;
-            this.numvertices = this.sides*3;
-            this.radius = 0.5;
-            
-            // ===== Calculate vertices
-            let base = []; 
-            let baseT = [];
-            for (let i = 0; i < this.sides; i++)
-            { 
-                let theta = i*2*Math.PI/this.sides;
-                base.push(
-                    [this.radius*Math.cos(theta),
-                    0.0,
-                    this.radius*Math.sin(theta)]);
-                baseT.push(
-                    [this.radius*Math.cos(theta)+0.5,
-                    this.radius*Math.sin(theta)+0.5]);
-            }
-            
-            // ===== Assign vertices
-            var vertices = [], texCoords = [];
-            for (let i = 0; i < this.sides; i++)
-            {   
-                vertices.push(base[i]);
-                vertices.push(base[(i+1)%this.sides]);
-                vertices.push([0.0,0.0,0.0]);
+                // ===== Initialize the parent class
+                super(glcontext); 
                 
-                texCoords.push(baseT[i]);
-                texCoords.push(baseT[(i+1)%this.sides]);
-                texCoords.push([0.5,0.5]);
-            }
-            
-            // ===== Assign colors
-            this.Disc_colors = [col1, col1, col2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.Disc_colors);
-            }        
-            
-            // ===== Populate buffers
-            this.vertexbuffer=this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
-            
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-            
-            this.texcoordbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
-        }
-        
-        // ===== Function to dinamically change colors of disc
-        setColors(newColor1, newColor2)
-        {
-            this.Disc_colors = [newColor1, newColor1, newColor2].flat();
-            let colors = [];
-            for (let i=0; i < (this.sides*6)/3; i++)
-            {
-                colors.push(this.Disc_colors);
-            }
-            this.colorbuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        }
-        
-        settexture(cgratex){
-                        this.textureid = cgratex.textureid;
+                // ===== Constants
+                // Number of faces (3 to inf)
+                this.sides = faces;
+                this.numvertices = this.sides*3;
+                this.radius = 0.5;
+                
+                // ===== Calculate vertices
+                let base = [];   
+                for (let i = 0; i < this.sides; i++)
+                { 
+                    let theta = i*2*Math.PI/this.sides;
+                    base.push(
+                        [this.radius*Math.cos(theta),
+                        0.0,
+                        this.radius*Math.sin(theta)]);
                 }
                 
-                drawit(viewMat, projectionMat){
+                // ===== Assign vertices
+                var vertices = [];
+                for (let i = 0; i < this.sides; i++)
+                {   
+                    vertices.push(base[i]);
+                    vertices.push(base[(i+1)%this.sides]);
+                    vertices.push([0,0,0]);
+                }
+                
+                // ===== Assign colors
+                let colors = [];
+                for (let i=0; i < (this.sides*6); i++)
+                {
+                    colors.push(color);
+                }        
+                
+                // ===== Populate buffers
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+                
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+            }
+        }
+
+        class discT extends CGRAobject
+        {
+            // ===== Constructor
+            constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 0.0], faces = 10)
+            {
+                // ===== Initialize the parent class
+                super(glcontext); 
+                
+                // ===== Constants
+                // Number of faces (3 to inf)
+                this.sides = faces;
+                this.numvertices = this.sides*3;
+                this.radius = 0.5;
+                
+                // ===== Calculate vertices
+                let base = []; 
+                let baseT = [];
+                for (let i = 0; i < this.sides; i++)
+                { 
+                    let theta = i*2*Math.PI/this.sides;
+                    base.push(
+                        [this.radius*Math.cos(theta),
+                        0.0,
+                        this.radius*Math.sin(theta)]);
+                    baseT.push(
+                        [this.radius*Math.cos(theta)+0.5,
+                        this.radius*Math.sin(theta)+0.5]);
+                }
+                
+                // ===== Assign vertices
+                var vertices = [], texCoords = [];
+                for (let i = 0; i < this.sides; i++)
+                {   
+                    vertices.push(base[i]);
+                    vertices.push(base[(i+1)%this.sides]);
+                    vertices.push([0.0,0.0,0.0]);
+                    
+                    texCoords.push(baseT[i]);
+                    texCoords.push(baseT[(i+1)%this.sides]);
+                    texCoords.push([0.5,0.5]);
+                }
+                
+                // ===== Assign colors
+                this.Disc_colors = [col1, col1, col2].flat();
+                let colors = [];
+                for (let i=0; i < (this.sides*6)/3; i++)
+                {
+                    colors.push(this.Disc_colors);
+                }        
+                
+                // ===== Populate buffers
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+                
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+                
+                this.texcoordbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
+            }
+            
+            // ===== Function to dinamically change colors of disc
+            setColors(newColor1, newColor2)
+            {
+                this.Disc_colors = [newColor1, newColor1, newColor2].flat();
+                let colors = [];
+                for (let i=0; i < (this.sides*6)/3; i++)
+                {
+                    colors.push(this.Disc_colors);
+                }
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+            }
+            
+            settexture(cgratex){
+                            this.textureid = cgratex.textureid;
+                    }
+                    
+                    drawit(viewMat, projectionMat){
+                    this.shaderprog.startUsing();
+                    this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                                        "in_texcoords");
+                    
+                    this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+                    this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                                        2, // number of elements per attribute
+                                        this.gl.FLOAT,  // Type of elements
+                                        false,  // 
+                                        0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                        0); // Offset from the begining of a single vertex to this attribute
+                    this.gl.enableVertexAttribArray(this.texcoordsLocation);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                    this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+                    this.gl.uniform1i(this.textureLocation, 0);
+                    
+                    // the parent method does the rest
+                    super.drawit(viewMat,projectionMat);
+                    } 
+        }
+
+        class DiscApp extends DEECapp
+        {
+            counter=0;
+            initialize()
+            {
+                // ===== Perform other initializations
+                var fragsrc = document.getElementById("my-fragment-shader").text;
+                var vertsrc = document.getElementById("my-vertex-shader").text;
+                this.shaderprog = new DEECshader(this.gl);
+                this.shaderprog.srcShaders(vertsrc,fragsrc);
+                this.gl.enable(this.gl.DEPTH_TEST);
+                this.gl.clearColor(0.9,0.9,0.9,1.0);
+                
+                // ===== Create cone
+                this.my_disc = new disc(this.gl, [0.9, 0, 0.5], 7);
+                this.my_disc.setShader(this.shaderprog);
+                
+                var fragsrcT = document.getElementById("my-fragment-shaderT").text;
+                var vertsrcT = document.getElementById("my-vertex-shaderT").text;
+                
+                this.shaderprogT = new DEECshader(this.gl);
+                this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
+        
+                
+                this.texture = new CGRAtexture(this.gl);
+                this.texture.load("DiscTex.png");
+                
+                this.my_discT = new discT(this.gl,[0.9, 0, 0] ,[1, 1, 0],30);
+                this.my_discT.settexture(this.texture);
+                this.my_discT.setShader(this.shaderprogT);
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
+                //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
+                //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
+                //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                this.projectionM= glm.perspective(glm.radians(45),1.0,0.1,10);      
+                
+                //////////////////////////////////////////////////////////////////////////
+                //glm.vec3(2, 1, 0): A posição da câmera no espaço 3D.                  //
+                //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
+                //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
+                //////////////////////////////////////////////////////////////////////////
+                this.viewM = glm.lookAt(glm.vec3(4,1,0),glm.vec3(0,0,0),glm.vec3(0,1,0));           
+            
+            }
+            
+            render()
+            {
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+                this.counter++;
+                
                 this.shaderprog.startUsing();
-                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
-                                                                    "in_texcoords");
                 
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
-                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
-                                    2, // number of elements per attribute
-                                    this.gl.FLOAT,  // Type of elements
-                                    false,  // 
-                                    0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
-                                    0); // Offset from the begining of a single vertex to this attribute
-                this.gl.enableVertexAttribArray(this.texcoordsLocation);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
-                this.gl.uniform1i(this.textureLocation, 0);
+        ////////////////// Transform/Animate Couple //////////////////
+                var model = glm.mat4(glm.mat3(1.0));
+                var translation = glm.vec3(0,0,-1);
+                model = glm.translate(model, translation);
+                // ===== Rotation
+                var rotation = glm.radians(this.counter);
+                var axis = glm.vec3(0.0, 0.0, 1.0);
+                model = glm.rotate(model, rotation, axis);
+                // ===== Final Transformation
+                this.my_disc.setModelTransformation(model);
                 
-                // the parent method does the rest
-                super.drawit(viewMat,projectionMat);
-                } 
-    }
-
-
-    class DiscApp extends DEECapp
-    {
-        counter=0;
-        initialize()
-        {
-            // ===== Perform other initializations
-            var fragsrc = document.getElementById("my-fragment-shader").text;
-            var vertsrc = document.getElementById("my-vertex-shader").text;
-            this.shaderprog = new DEECshader(this.gl);
-            this.shaderprog.srcShaders(vertsrc,fragsrc);
-            this.gl.enable(this.gl.DEPTH_TEST);
-            this.gl.clearColor(0.9,0.9,0.9,1.0);
-            
-            // ===== Create cone
-            this.my_disc = new disc(this.gl, [0.9, 0, 0.5] ,[0, 1, 1], 7);
-            this.my_disc.setShader(this.shaderprog);
-            
-            var fragsrcT = document.getElementById("my-fragment-shaderT").text;
-            var vertsrcT = document.getElementById("my-vertex-shaderT").text;
-            
-            this.shaderprogT = new DEECshader(this.gl);
-            this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
-    
-            
-            this.texture = new CGRAtexture(this.gl);
-            this.texture.load("DiscTex.png");
-            
-            this.my_discT = new discT(this.gl,[0.9, 0, 0] ,[1, 1, 0],30);
-            this.my_discT.settexture(this.texture);
-            this.my_discT.setShader(this.shaderprogT);
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
-            //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
-            //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
-            //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            this.projectionM= glm.perspective(glm.radians(45),1.0,0.1,10);      
-            
-            //////////////////////////////////////////////////////////////////////////
-            //glm.vec3(2, 1, 0): A posição da câmera no espaço 3D.                  //
-            //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
-            //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
-            //////////////////////////////////////////////////////////////////////////
-            this.viewM = glm.lookAt(glm.vec3(4,1,0),glm.vec3(0,0,0),glm.vec3(0,1,0));           
-        
+                // ===== Draw cone
+                this.my_disc.drawit(this.viewM,this.projectionM);
+                
+                var model = glm.mat4(glm.mat3(1.0));
+                var translation = glm.vec3(0,0,1);
+                model = glm.translate(model, translation);
+                // ===== Rotation
+                var rotation = glm.radians(this.counter);
+                var axis = glm.vec3(0.0, 0.0, 1.0);
+                model = glm.rotate(model, rotation, axis);
+                // ===== Final Transformation
+                this.my_discT.setModelTransformation(model);
+                
+                // ===== Draw cone
+                this.my_discT.drawit(this.viewM,this.projectionM);
+            }
         }
-        
-        render()
-        {
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-            this.counter++;
-            
-            this.shaderprog.startUsing();
-            
-    ////////////////// Transform/Animate Couple //////////////////
-            var model = glm.mat4(glm.mat3(1.0));
-            var translation = glm.vec3(0,0,-1);
-            model = glm.translate(model, translation);
-            // ===== Rotation
-            var rotation = glm.radians(this.counter);
-            var axis = glm.vec3(0.0, 0.0, 1.0);
-            model = glm.rotate(model, rotation, axis);
-            // ===== Final Transformation
-            this.my_disc.setModelTransformation(model);
-            
-            // ===== Draw cone
-            this.my_disc.drawit(this.viewM,this.projectionM);
-            
-            var model = glm.mat4(glm.mat3(1.0));
-            var translation = glm.vec3(0,0,1);
-            model = glm.translate(model, translation);
-            // ===== Rotation
-            var rotation = glm.radians(this.counter);
-            var axis = glm.vec3(0.0, 0.0, 1.0);
-            model = glm.rotate(model, rotation, axis);
-            // ===== Final Transformation
-            this.my_discT.setModelTransformation(model);
-            
-            // ===== Draw cone
-            this.my_discT.drawit(this.viewM,this.projectionM);
-        }
-    }
 
-    var app = new DiscApp('DiscCanvas');
+        var app = new DiscApp('DiscCanvas');
 
-    app.run();
+        app.run();
     </script>
 </div>
 
