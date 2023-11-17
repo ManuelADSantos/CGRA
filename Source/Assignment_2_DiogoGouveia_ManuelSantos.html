@@ -1,55 +1,61 @@
-<script id="deec_shader" src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecshader.js"></script>
-<script id="deec_app" src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecapp.js"></script>
-<script id="cgra_object" src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgraobject.js"></script>
-<script id="git" src='https://git.io/glm-js.min.js'></script>
+# CGRA 2st Assignment
 
+Diogo Seabra Mota Henriques de Gouveia - 2018279473
+
+Manuel Alberto Dionísio dos Santos - 2019231352
+%%html               
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecshader.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecapp.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgraobject.js"></script>
+<script src='https://git.io/glm-js.min.js'></script>
+%%html
 <script id="my-vertex-shader" type="x-shader/x-vertex">
-    precision mediump float;
+precision mediump float;
 
-    attribute  vec3 in_Position;
-    attribute  vec3 in_Color;
-    uniform mat4 MVP;
+attribute  vec3 in_Position;
+attribute  vec3 in_Color;
+uniform mat4 MVP;
 
-    varying  vec3 ex_Color;
+varying  vec3 ex_Color;
 
-    void main(void)
-    {  
-        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+void main(void)
+{  
+    gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
 
-        ex_Color = in_Color;
-    }
+    ex_Color = in_Color;
+}
 </script>
-
+%%html
 <script id="my-fragment-shader" type="x-shader/x-fragment">
-    precision mediump float;
+precision mediump float;
 
-    varying  vec3 ex_Color;
+varying  vec3 ex_Color;
 
-    void main(void)
-    {  
-        gl_FragColor = vec4(ex_Color,1.0);   
-    }
+void main(void)
+{  
+    gl_FragColor = vec4(ex_Color,1.0);   
+}
 </script>
-
+%%html
 <script id="my-vertex-shaderT" type="x-shader/x-vertex">
-    precision mediump float;
+precision mediump float;
 
-    attribute  vec3 in_Position;
-    attribute  vec3 in_Color;
-    attribute vec2 in_texcoords;
-    uniform mat4 MVP;
+attribute  vec3 in_Position;
+attribute  vec3 in_Color;
+attribute vec2 in_texcoords;
+uniform mat4 MVP;
 
-    varying  vec3 ex_Color;
-    varying  vec2 vTextureCoord;
+varying  vec3 ex_Color;
+varying  vec2 vTextureCoord;
 
-    void main() {
-    
-        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
-        vTextureCoord = in_texcoords;
-        ex_Color = in_Color;
-    }
+void main() {
+  
+    gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+    vTextureCoord = in_texcoords;
+    ex_Color = in_Color;
+}
 </script>
-
+%%html
 <script id="my-fragment-shaderT" type="x-shader/x-fragment">
 precision mediump float;
 varying  vec2 vTextureCoord;
@@ -62,6 +68,7 @@ void main() {
 }
 </script>
 %%js
+<script>
 class CGRAtexture{
     constructor(glcontext){
         this.gl = glcontext;
@@ -112,6 +119,8 @@ class CGRAtexture{
         this.pixels.onload = () => this.loaded();
     }
 }
+
+</script>
 # ================== B.1 ==================
 # Cube
 To create an unitary cube (centered in the origin and of size 1), we identified the 8 vertices of it in space. Ex: [x = 0,5 ; y = 0,5 ; z = 0,5].
@@ -1100,7 +1109,7 @@ class CylinderApp extends DEECapp
    
         
         this.texture = new CGRAtexture(this.gl);
-        this.texture.load("CylTex.png");
+        this.texture.load("CyTex.png");
         
         this.my_CylinderT = new cylinderT(this.gl,[0.9, 0, 0] ,[1, 1, 0],10);
         this.my_CylinderT.settexture(this.texture);
@@ -3634,7 +3643,7 @@ class myScene extends DEECapp{
     positionY = 0.033;
     view_flag = 1;
     
-    dayflg = 0;
+    dayflg = 1;
     dayTex = new CGRAtexture(this.gl); 
 
     initialize()
@@ -3794,7 +3803,7 @@ class myScene extends DEECapp{
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         
         if(this.dayflg == 1){
-            this.dayTex.load("DaySkyTex.jpg");
+            this.dayTex.load("DayTex.jpg");
             this.day.settexture(this.dayTex);
         }
         else{
