@@ -164,15 +164,16 @@
 class cube extends CGRAobject
 {
     // ===== Constructor
-    constructor(glcontext, col1 = [1.0, 0.0, 0.0], col2 = col1)
+    constructor(glcontext, color = [1.0, 0.0, 0.0])
     {
         // ===== Initialize the parent class
         super(glcontext); 
         
-        // ===== Define COnstants
+        // ===== Define Constants
         this.numvertices = 36;
         this.size = 1;
         let dim = this.size/2;
+        var vertices = [], colors = [], normals = [];
         
         // ===== List vertices
         var verticesCube = [[ -dim, -dim,  dim],
@@ -182,10 +183,16 @@ class cube extends CGRAobject
                              [-dim, -dim, -dim],
                              [-dim,  dim, -dim],
                              [ dim,  dim, -dim],
-                             [ dim, -dim, -dim]]; 
+                             [ dim, -dim, -dim]];
+                             
+        var normalsCube = [[ 0,  0,  1],  // Front = +Z
+                            [ 1,  0,  0],  // Right = +X
+                            [ 0,  0, -1],  // Back  = -Z
+                            [-1,  0,  0],  // Left  = -X
+                            [ 0,  1,  0],  // Up    = +Y
+                            [ 0, -1,  0]]; // Down  = -Y
 
-        // ===== Lookup table
-        var vertices = [];
+        // ===== Lookup tabless
         var indexes = [
             0, 1, 2,  2, 3, 0,  // Front face
             6, 7, 3,  2, 3, 6,  // Right face
@@ -193,23 +200,22 @@ class cube extends CGRAobject
             1, 0, 4,  4, 5, 1,  // Left  face
             1, 6, 2,  3, 4, 0,  // Up    face
             1, 6, 5,  3, 4, 7]; // Down  face
+
+        var indexes_normals = [
+            0, 0, 0,  0, 0, 0,  // Front face
+            1, 1, 1,  1, 1, 1,  // Right face
+            2, 2, 2,  2, 2, 2,  // Back  face
+            3, 3, 3,  3, 3, 3,  // Left  face
+            4, 4, 4,  4, 4, 4,  // Up    face
+            5, 5, 5,  5, 5, 5]; // Down  face
         
-        // ===== Create structure to populate buffer
+        // ===== Create structures to populate buffers
         for (var i = 0; i < indexes.length; i++)
         {
             vertices = vertices.concat(verticesCube[indexes[i]]);
-        } 
-
-        // ===== Assigning colors
-        var colors = [];
-        this.color1 = [col1, col1, col2].flat();
-        this.color2 = [col2, col2, col1].flat();
-        for (var i=0; i < (this.numvertices/3)/2; i++)
-        {
-            colors.push(this.color1);
-            colors.push(this.color2);
+            normals = normals.concat(normalsCube[indexes_normals[i]]);
+            colors.push(color);
         }
-        
         
         // ===== Creating and configuring buffers
         this.vertexbuffer=this.gl.createBuffer();
@@ -219,6 +225,10 @@ class cube extends CGRAobject
         this.colorbuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+
+        this.normalsbuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals), this.gl.STATIC_DRAW);
     }
     
     // ===== Function to dinamically change cube colors
