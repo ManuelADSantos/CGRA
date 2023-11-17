@@ -4120,15 +4120,23 @@
                     break;
                 case 114: // r
                     this.ShapeFlag = 1;
+                    this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                     break;
                 case 116: // t
                     this.ShapeFlag = 2;
+                    this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                     break;
                 case 121: // y
                     this.ShapeFlag = 3;
+                    this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                     break;
                 case 117: // u
                     this.ShapeFlag = 4;
+                    this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                     break;
                 case 100: //d
                     this.camera_angle = this.camera_angle + 0.1;
@@ -4171,6 +4179,8 @@
                     this.SunFlag++;
                     if (this.SunFlag > 4)
                         this.SunFlag = 1;
+                    this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                     break;
             }
         }
@@ -4179,8 +4189,7 @@
         render(){
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-            this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
-            this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+           
             
             if(this.dayflg == 1){
                 this.dayTex.load("DayTex.jpg");
