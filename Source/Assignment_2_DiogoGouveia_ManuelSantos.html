@@ -3,172 +3,162 @@
 Diogo Seabra Mota Henriques de Gouveia - 2018279473
 
 Manuel Alberto Dionísio dos Santos - 2019231352
-%%html               
-<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecshader.js"></script>
-<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecapp.js"></script>
-<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgraobject.js"></script>
-<script src='https://git.io/glm-js.min.js'></script>
-%%html
-<script id="my-vertex-shader" type="x-shader/x-vertex">
-precision mediump float;
-
-attribute  vec3 in_Position;
-attribute  vec3 in_Color;
-uniform mat4 MVP;
-
-varying  vec3 ex_Color;
-
-void main(void)
-{  
-    gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
-
-    ex_Color = in_Color;
-}
-</script>
-%%html
-<script id="my-fragment-shader" type="x-shader/x-fragment">
-precision mediump float;
-
-varying  vec3 ex_Color;
-
-void main(void)
-{  
-    gl_FragColor = vec4(ex_Color,1.0);   
-}
-</script>
-%%html
-<script id="my-vertex-shaderT" type="x-shader/x-vertex">
-precision mediump float;
-
-attribute  vec3 in_Position;
-attribute  vec3 in_Color;
-attribute vec2 in_texcoords;
-uniform mat4 MVP;
-
-varying  vec3 ex_Color;
-varying  vec2 vTextureCoord;
-
-void main() {
-  
-    gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
-    vTextureCoord = in_texcoords;
-    ex_Color = in_Color;
-}
-</script>
-%%html
-<script id="my-fragment-shaderT" type="x-shader/x-fragment">
-precision mediump float;
-varying  vec2 vTextureCoord;
-varying  vec3 ex_Color;
-
-uniform sampler2D uSampler;
-
-void main() {
-     gl_FragColor = texture2D(uSampler, vTextureCoord);
-}
-</script>
 
 %%html
-% What if you want to try this shader ???
-<script id="my-fragment-shaderTC" type="x-shader/x-fragment">
-precision mediump float;
-varying  vec2 vTextureCoord;
-varying  vec3 ex_Color;
-uniform vec3 un_Color;
-
-uniform sampler2D uSampler;
-
-void main() {
-     gl_FragColor = vec4(un_Color * texture2D(uSampler, vTextureCoord).rgb,1.0);
-}
-</script>
+<!-- ============================================ Base Scripts ============================================ -->
+<div id="Base Scripts">            
+    <script id="deec_shader" src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecshader.js"></script>
+    <script id="deec_app" src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecapp.js"></script>
+    <script id="cgra_object" src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgraobject.js"></script>
+    <script id="git" src='https://git.io/glm-js.min.js'></script>
+</div>
 
 
+<!-- ============================================ Base Scripts ============================================ -->
+<div id="Shaders">
+    <div id="DefaultShaders">
+        <script id="my-vertex-shader" type="x-shader/x-vertex">
+            precision mediump float;
 
-%%js
-<script>
-class CGRAtexture{
-    constructor(glcontext){
-        this.gl = glcontext;
-        this.textureid = this.gl.createTexture();
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-        this.level = 0;
-        this.internalFormat = this.gl.RGBA;
-        this.width = 2;
-        this.height = 2;
-        this.border = 0;
-        this.srcFormat = this.gl.RGBA;
-        this.srcType = this.gl.UNSIGNED_BYTE;
-        this.pixels = new Uint8Array([255, 255, 255, 255, 
-                                      0,0,0,255,  
-                                      0,0,0,255, 
-                                      255,255,255,255]);  
-        this.gl.texImage2D(this.gl.TEXTURE_2D, this.level, this.internalFormat,
-                this.width, this.height, this.border, this.srcFormat, this.srcType,
-                this.pixels);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-        //this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-    }
+            attribute  vec3 in_Position;
+            attribute  vec3 in_Color;
+            uniform mat4 MVP;
+
+            varying  vec3 ex_Color;
+
+            void main(void)
+            {  
+                gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+
+                ex_Color = in_Color;
+            }
+        </script>
+
+        <script id="my-fragment-shader" type="x-shader/x-fragment">
+            precision mediump float;
+
+            varying  vec3 ex_Color;
+
+            void main(void)
+            {  
+                gl_FragColor = vec4(ex_Color,1.0);   
+            }
+        </script>
+    </div>
     
-    loaded(){
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.internalFormat,
-                this.srcFormat, this.srcType, this.pixels);
-        var ispowerof2 = ((this.pixels.width & 1) + (this.pixels.height & 1))==0;
-        console.log("width="+this.pixels.width+" height="+this.pixels.height);
-        if (ispowerof2) {
-           // Yes, it's a power of 2. Generate mipmaps.
-           this.gl.generateMipmap(this.gl.TEXTURE_2D);
-        } else {
-           // No, it's not a power of 2. Turn off mipmaps and set
-           // wrapping to clamp to edge
-           this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-           this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-           this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+    <div id="TextureShaders">
+        <script id="my-vertex-shaderT" type="x-shader/x-vertex">
+            precision mediump float;
+
+            attribute  vec3 in_Position;
+            attribute  vec3 in_Color;
+            attribute vec2 in_texcoords;
+            uniform mat4 MVP;
+
+            varying  vec3 ex_Color;
+            varying  vec2 vTextureCoord;
+
+            void main() {
+            
+                gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+                vTextureCoord = in_texcoords;
+                ex_Color = in_Color;
+            }
+        </script>
+
+        <script id="my-fragment-shaderT" type="x-shader/x-fragment">
+            precision mediump float;
+            varying  vec2 vTextureCoord;
+            varying  vec3 ex_Color;
+
+            uniform sampler2D uSampler;
+
+            void main() {
+                gl_FragColor = texture2D(uSampler, vTextureCoord);
+            }
+        </script>
+    </div>
+
+    <div id="TextureColorShaders">
+        <script id="my-fragment-shaderTC" type="x-shader/x-fragment">
+            precision mediump float;
+            varying  vec2 vTextureCoord;
+            varying  vec3 ex_Color;
+            uniform vec3 un_Color;
+
+            uniform sampler2D uSampler;
+
+            void main() {
+                gl_FragColor = vec4(un_Color * texture2D(uSampler, vTextureCoord).rgb,1.0);
+            }
+        </script>
+    </div>
+</div>
+
+
+<!-- ============================================ CGRA Texture ============================================ -->
+<div id="CGRA_Texture">
+    <script>
+        class CGRAtexture
+        {
+            constructor(glcontext)
+            {
+                this.gl = glcontext;
+                this.textureid = this.gl.createTexture();
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                this.level = 0;
+                this.internalFormat = this.gl.RGBA;
+                this.width = 2;
+                this.height = 2;
+                this.border = 0;
+                this.srcFormat = this.gl.RGBA;
+                this.srcType = this.gl.UNSIGNED_BYTE;
+                this.pixels = new Uint8Array([255, 255, 255, 255, 
+                                            0,0,0,255,  
+                                            0,0,0,255, 
+                                            255,255,255,255]);  
+                this.gl.texImage2D(this.gl.TEXTURE_2D, this.level, this.internalFormat,
+                        this.width, this.height, this.border, this.srcFormat, this.srcType,
+                        this.pixels);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+                //this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+            }
+            
+            loaded()
+            {
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.internalFormat,
+                        this.srcFormat, this.srcType, this.pixels);
+                var ispowerof2 = ((this.pixels.width & 1) + (this.pixels.height & 1))==0;
+                //console.log("width="+this.pixels.width+" height="+this.pixels.height);
+                if (ispowerof2) {
+                // Yes, it's a power of 2. Generate mipmaps.
+                this.gl.generateMipmap(this.gl.TEXTURE_2D);
+                } else {
+                // No, it's not a power of 2. Turn off mipmaps and set
+                // wrapping to clamp to edge
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+                    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+                }
+            }
+
+            load(url)
+            {
+                this.pixels = new Image();
+                this.pixels.src = url;
+                this.pixels.onload = () => this.loaded();
+            }
         }
-    }
-    load(url){
-        this.pixels = new Image();
-        this.pixels.src = url;
-        this.pixels.onload = () => this.loaded();
-    }
-}
+    </script>
+</div>
 
-</script>
-# ================== B.1 ==================
-# Cube
-To create an unitary cube (centered in the origin and of size 1), we identified the 8 vertices of it in space. Ex: [x = 0,5 ; y = 0,5 ; z = 0,5].
 
-After that, we created a lookup table of all the 36 vertices necessary to create a cube solely composed of triangles. By traversing it, we populated the vertex buffer.
-
-To populate the colors buffer, we did a similar aproach, but instead of the lookup table, we just pushed 2 intercalated vectors of colors into the buffer.
-
-We also created a method to dinamically change the cube colors.
-
-Finally, we instantiated a cube object and appiled transformations to it.
-%%js
-class cubeTexture extends CGRAtexture
-{
-    constructor(glcontext)
-    {
-        super(glcontext);
-        
-        this.pixel = new Uint8Array([  255, 0, 0, 255,
-                                       255, 0, 255, 255,
-                                       0, 0, 255, 255,
-                                       255, 0, 255, 255]);
-        
-        this.gl.texImage2D(this.gl.TEXTURE_2D, this.level, this.internalFormat,
-                this.width, this.height, this.border, this.srcFormat, this.srcType,
-                this.pixel);   
-    }
-}
-%%html
-
+<!-- ============================================ Solids Definitions ============================================ -->
 <canvas id="CubeCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
 </canvas>
@@ -607,7 +597,7 @@ To create a sphere of diameter 1, we created N slices of it, composed of N quadr
 We pushd each slice into the vertex buffer and at the same time the corresponding colors to the color buffer
 
 Finally, we instantiated a sphere object and moved the camera around it.
-%%html
+
 
 <canvas id="SphereCanvas" width="800" height="800" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -1147,7 +1137,7 @@ To create a cylinder of base 1, we created 2 bases (up and down) and conected ea
 We also created a method to dinamically change the cylinder colors.
 
 Finally, we instantiated a cylinder object and rotated it around the Z axis.
-%%html
+
 
 <canvas id="CylinderCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -1653,7 +1643,7 @@ app.run();
 # Cone
 
 The procedure to create the cone is in everything similar to the one to create a cylinder, but without the top base.
-%%html
+
 
 <canvas id="ConeCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -2090,7 +2080,7 @@ app.run();
 # Disc
 
 The procedure to create the cone is in everything similar to the one to create a cylinder or a cone, but just needs to create a base.
-%%html
+
 
 <canvas id="DiscCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -2361,7 +2351,7 @@ app.run();
 </script>
 # Compound Shape
 ## Moon with Flag
-%%html
+
 
 <canvas id="MoonCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -2579,7 +2569,7 @@ app.run();
 
 
 ## Couple
-%%html
+
 
 <canvas id="CoupleCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -2796,7 +2786,7 @@ app.run();
 
 
 # Table
-%%html
+
 
 <canvas id="TableCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -2987,7 +2977,7 @@ var app = new TableApp('TableCanvas');
 app.run();
 </script>
 ## Paintings
-%%html
+
 
 <canvas id="PaintingCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -3177,7 +3167,7 @@ app.run();
 ## Museum = Floor +  Walls +  Door + Windows
 
 W - Front | A - Left | S - Back | D - Right | . - Reset
-%%html
+
 
 <canvas id="MuseumCanvas" width="600" height="600" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -3622,7 +3612,7 @@ app.run();
 1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast
 
 R - Spheres | T - Cubes | Y - Cylinders | U - Cones
-%%html
+
 
 <canvas id="myCCanvas_solarSystem" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -4085,7 +4075,7 @@ W - Front | A - Left | S - Back | D - Right | . - Reset
 1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast
 
 R - Spheres | T - Cubes | Y - Cylinders | U - Cones
-%%html
+
 
 <canvas id="SolarSystemScene" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -4268,7 +4258,7 @@ Contains:
 - 1 couple
 - 1 museum room
 - 2 paintings
-%%html
+
 
 <canvas id="myScene" width="900" height="900" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
