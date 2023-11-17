@@ -3532,12 +3532,13 @@
 
         <h1>Solar System</h1>
         <h2>1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast || R - Spheres | T - Cubes | Y - Cylinders | U - Cones</h2>
-        
-        <canvas id="SolarSystem_Base" width="600" height="600" style="border:2px solid #000000;">
-            Error: Your browser does not support the HTML canvas tag.
+
+        <canvas id="SolarSystem_Canvas" width="600" height="600" style="border:2px solid #000000;">
+        Error: Your browser does not support the HTML canvas tag.
         </canvas>
-        
+
         <script id="SolarSystem_Base_App">
+            
             class solarSystem extends CGRAobject
             {
                 form = 1;
@@ -3662,211 +3663,211 @@
                     this.Neptune.setShader(shaderT);
                     this.SaturnDisc.setShader(shaderT);
                 }
-                
+
                 drawit(viewM, projectM, counter, parentMat4 = glm.mat4(1.0))
-                {
-                    var globalMat = parentMat4['*'](this.modelMat);
-                    
-                    ////////////////////////SUN//////////////////////////////
-                    var Sun = glm.mat4(glm.mat3(1.0));
-                    // ===== Scale
-                    var scale = glm.vec3(2.5,2.5, 2.5);
-                    Sun = glm.scale(Sun, scale);
-                    // ===== Rotation
-                    var rotation = glm.radians(-counter);
-                    var axis = glm.vec3(0.0,1.0,0.0);
-                    Sun = glm.rotate(Sun, rotation, axis);
-                    // ===== Translate
-                    var translation = glm.vec3(0,0,0);
-                    Sun = glm.translate(Sun, translation);
-                    // ===== Final Transformation
-                    this.Sun.setModelTransformation(Sun);      
-                    // ===== Draw
-                    this.Sun.drawit(viewM,projectM, globalMat);
-                    
-                    
-                    //////////////////////MERCURY///////////////////////////////////
-                    var Mercury = glm.mat4(glm.mat3(1));
-                    // ===== Scale
-                    var scale = glm.vec3(0.024, 0.024, 0.024);
-                    Mercury = glm.scale(Mercury, scale);
-                    // ===== Rotation
-                    var outer_rotation = counter*365/85;
-                    var rotation = glm.radians(outer_rotation);
-                    var axis = glm.vec3(0.0,1.0,0.0);
-                    Mercury = glm.rotate(Mercury, rotation, axis);
-                    // ===== Translate
-                    var translation = glm.vec3(0,0,-70);
-                    Mercury = glm.translate(Mercury, translation);
-                    // ===== Rotation
-                    Mercury = glm.rotate(Mercury, rotation, axis);
-                    // ===== Final Transformation
-                    this.Mercury.setModelTransformation(Mercury);      
-                    // ===== Draw
-                    this.Mercury.drawit(viewM,projectM, globalMat);
-                    
-                    
-                    /////////////////////VENUS/////////////////////////////////////
-                    var Venus = glm.mat4(glm.mat3(1));
-                    // ===== Scale
-                    var scale = glm.vec3(0.121/2, 0.121/2, 0.121/2);
-                    Venus = glm.scale(Venus, scale);
-                    // ===== Rotation
-                    var outer_rotation = counter*365/224;
-                    var rotation = glm.radians(outer_rotation);
-                    var axis = glm.vec3(0.0,1.0,0.0);
-                    Venus = glm.rotate(Venus, rotation, axis);
-                    // ===== Translate
-                    var translation = glm.vec3(0,0,-40);
-                    Venus = glm.translate(Venus, translation);
-                    // ===== Rotation
-                    var inner_rotation = counter/365;
-                    var rotation = glm.radians(inner_rotation);
-                    Venus = glm.rotate(Venus, rotation, axis);
-                    // ===== Final Transformation
-                    this.Venus.setModelTransformation(Venus);      
-                    // ===== Draw
-                    this.Venus.drawit(viewM,projectM, globalMat);
-                    
-                    
-                    ///////////////////////EARTH/////////////////////////////////////
-                    var Earth = glm.mat4(glm.mat3(1));
-                    // ===== Scale
-                    var scale = glm.vec3(0.127/2, 0.127/2, 0.127/2);
-                    Earth = glm.scale(Earth, scale);
-                    // ===== Rotation
-                    var outer_rotation = counter*365/365;
-                    var rotation = glm.radians(outer_rotation);
-                    var axis = glm.vec3(0.0,1.0,0.0);
-                    Earth = glm.rotate(Earth, rotation, axis);
-                    // ===== Translate
-                    var translation = glm.vec3(0,0,-50);
-                    Earth = glm.translate(Earth, translation);
-                    // ===== Rotation
-                    var inner_rotation = counter/365;
-                    var rotation = glm.radians(inner_rotation);
-                    Earth = glm.rotate(Earth, rotation, axis);
-                    // ===== Final Transformation
-                    this.Earth.setModelTransformation(Earth);      
-                    // ===== Draw
-                    this.Earth.drawit(viewM,projectM, globalMat);
-                    if(this.form == 1)
-                        this.Earth.update_pos(globalMat);
-                    
-                    
-                    ///////////////////////MARS/////////////////////////////////
-                    var Mars = glm.mat4(glm.mat3(1));
-                    // ===== Scale
-                    var scale = glm.vec3(0.067/2, 0.067/2, 0.067/2);
-                    Mars = glm.scale(Mars, scale);
-                    // ===== Rotation
-                    var outer_rotation = counter*365/(365*1.88);
-                    var rotation = glm.radians(outer_rotation);
-                    var axis = glm.vec3(0.0,1.0,0.0);
-                    Mars = glm.rotate(Mars, rotation, axis);
-                    // ===== Translate
-                    var translation = glm.vec3(0,0,-120);
-                    Mars = glm.translate(Mars, translation);
-                    // ===== Rotation
-                    Mars = glm.rotate(Mars, rotation, axis);
-                    // ===== Final Transformation
-                    this.Mars.setModelTransformation(Mars);      
-                    // ===== Draw
-                    this.Mars.drawit(viewM,projectM, globalMat);
-                    
-                    
-                    //////////////////////JUPITER///////////////////////////////
-                    var Jupiter = glm.mat4(glm.mat3(1));
-                    // ===== Scale
-                    var scale = glm.vec3(1.42/2, 1.42/2, 1.42/2);
-                    Jupiter = glm.scale(Jupiter, scale);
-                    // ===== Rotation
-                    var outer_rotation = counter/11.86;
-                    var rotation = glm.radians(outer_rotation);
-                    var axis = glm.vec3(0.0,1.0,0.0);
-                    Jupiter = glm.rotate(Jupiter, rotation, axis);
-                    // ===== Translate
-                    var translation = glm.vec3(0,0,-8);
-                    Jupiter = glm.translate(Jupiter, translation);
-                    // ===== Rotation
-                    Jupiter = glm.rotate(Jupiter, rotation, axis);
-                    // ===== Final Transformation
-                    this.Jupiter.setModelTransformation(Jupiter);      
-                    // ===== Draw
-                    this.Jupiter.drawit(viewM,projectM, globalMat);
-                    
-                    
-                    //////////////////////SATURN///////////////////////////////
+            {
+                var globalMat = parentMat4['*'](this.modelMat);
                 
-                    var Saturn = glm.mat4(glm.mat3(1));
-                    // ===== Scale
-                    var scale = glm.vec3(1.2/2, 1.2/2, 1.2/2);
-                    Saturn = glm.scale(Saturn, scale);
-                    // ===== Rotation
-                    var outer_rotation = counter/29.46;
-                    var rotation = glm.radians(outer_rotation);
-                    var axis = glm.vec3(0.0,1.0,0.0);
-                    Saturn = glm.rotate(Saturn, rotation, axis);
-                    // ===== Translate
-                    var translation = glm.vec3(0,0,-12);
-                    Saturn = glm.translate(Saturn, translation);
-                    // ===== Rotation
-                    Saturn = glm.rotate(Saturn, rotation, axis);
-                    // ===== Final Transformation
-                    this.Saturn.setModelTransformation(Saturn);
-                    var scale = glm.vec3(1.5, 1.5, 1.5);
-                    Saturn = glm.scale(Saturn, scale);
-                    this.SaturnDisc.setModelTransformation(Saturn);
-                    
-                    // ===== Draw
-                    this.Saturn.drawit(viewM,projectM, globalMat);
-                    this.SaturnDisc.drawit(viewM,projectM, globalMat);
-                    
-                    
-                    
-                    //////////////////////URANUS/////////////////////////////
-                    var Uranus = glm.mat4(glm.mat3(1));
-                    // ===== Scale
-                    var scale = glm.vec3(0.51/2, 0.51/2, 0.51/2);
-                    Uranus = glm.scale(Uranus, scale);
-                    // ===== Rotation
-                    var outer_rotation = counter/84.01;
-                    var rotation = glm.radians(outer_rotation);
-                    var axis = glm.vec3(0.0,1.0,0.0);
-                    Uranus = glm.rotate(Uranus, rotation, axis);
-                    // ===== Translate
-                    var translation = glm.vec3(0,0,-36);
-                    Uranus = glm.translate(Uranus, translation);
-                    // ===== Rotation
-                    Uranus = glm.rotate(Uranus, rotation, axis);
-                    // ===== Final Transformation
-                    this.Uranus.setModelTransformation(Uranus);      
-                    // ===== Draw
-                    this.Uranus.drawit(viewM,projectM, globalMat);
-                    
-                    
-                    /////////////////////NEPTUNE////////////////////////////
-                    var Neptune = glm.mat4(glm.mat3(1));
-                    // ===== Scale
-                    var scale = glm.vec3(0.495/2, 0.495/2, 0.495/2);
-                    Neptune = glm.scale(Neptune, scale);
-                    // ===== Rotation
-                    var outer_rotation = counter/164.79;
-                    var rotation = glm.radians(outer_rotation);
-                    var axis = glm.vec3(0.0,1.0,0.0);
-                    Neptune = glm.rotate(Neptune, rotation, axis);
-                    // ===== Translate
-                    var translation = glm.vec3(0,0,-44);
-                    Neptune = glm.translate(Neptune, translation);
-                    // ===== Rotation
-                    Neptune = glm.rotate(Neptune, rotation, axis);
-                    // ===== Final Transformation
-                    this.Neptune.setModelTransformation(Neptune);      
-                    // ===== Draw
-                    this.Neptune.drawit(viewM,projectM, globalMat);  
-                }
+                ////////////////////////SUN//////////////////////////////
+                var Sun = glm.mat4(glm.mat3(1.0));
+                // ===== Scale
+                var scale = glm.vec3(2.5,2.5, 2.5);
+                Sun = glm.scale(Sun, scale);
+                // ===== Rotation
+                var rotation = glm.radians(-counter);
+                var axis = glm.vec3(0.0,1.0,0.0);
+                Sun = glm.rotate(Sun, rotation, axis);
+                // ===== Translate
+                var translation = glm.vec3(0,0,0);
+                Sun = glm.translate(Sun, translation);
+                // ===== Final Transformation
+                this.Sun.setModelTransformation(Sun);      
+                // ===== Draw
+                this.Sun.drawit(viewM,projectM, globalMat);
+                
+                
+                //////////////////////MERCURY///////////////////////////////////
+                var Mercury = glm.mat4(glm.mat3(1));
+                // ===== Scale
+                var scale = glm.vec3(0.024, 0.024, 0.024);
+                Mercury = glm.scale(Mercury, scale);
+                // ===== Rotation
+                var outer_rotation = counter*365/85;
+                var rotation = glm.radians(outer_rotation);
+                var axis = glm.vec3(0.0,1.0,0.0);
+                Mercury = glm.rotate(Mercury, rotation, axis);
+                // ===== Translate
+                var translation = glm.vec3(0,0,-70);
+                Mercury = glm.translate(Mercury, translation);
+                // ===== Rotation
+                Mercury = glm.rotate(Mercury, rotation, axis);
+                // ===== Final Transformation
+                this.Mercury.setModelTransformation(Mercury);      
+                // ===== Draw
+                this.Mercury.drawit(viewM,projectM, globalMat);
+                
+                
+                /////////////////////VENUS/////////////////////////////////////
+                var Venus = glm.mat4(glm.mat3(1));
+                // ===== Scale
+                var scale = glm.vec3(0.121/2, 0.121/2, 0.121/2);
+                Venus = glm.scale(Venus, scale);
+                // ===== Rotation
+                var outer_rotation = counter*365/224;
+                var rotation = glm.radians(outer_rotation);
+                var axis = glm.vec3(0.0,1.0,0.0);
+                Venus = glm.rotate(Venus, rotation, axis);
+                // ===== Translate
+                var translation = glm.vec3(0,0,-40);
+                Venus = glm.translate(Venus, translation);
+                // ===== Rotation
+                var inner_rotation = counter/365;
+                var rotation = glm.radians(inner_rotation);
+                Venus = glm.rotate(Venus, rotation, axis);
+                // ===== Final Transformation
+                this.Venus.setModelTransformation(Venus);      
+                // ===== Draw
+                this.Venus.drawit(viewM,projectM, globalMat);
+                
+                
+                ///////////////////////EARTH/////////////////////////////////////
+                var Earth = glm.mat4(glm.mat3(1));
+                // ===== Scale
+                var scale = glm.vec3(0.127/2, 0.127/2, 0.127/2);
+                Earth = glm.scale(Earth, scale);
+                // ===== Rotation
+                var outer_rotation = counter*365/365;
+                var rotation = glm.radians(outer_rotation);
+                var axis = glm.vec3(0.0,1.0,0.0);
+                Earth = glm.rotate(Earth, rotation, axis);
+                // ===== Translate
+                var translation = glm.vec3(0,0,-50);
+                Earth = glm.translate(Earth, translation);
+                // ===== Rotation
+                var inner_rotation = counter/365;
+                var rotation = glm.radians(inner_rotation);
+                Earth = glm.rotate(Earth, rotation, axis);
+                // ===== Final Transformation
+                this.Earth.setModelTransformation(Earth);      
+                // ===== Draw
+                this.Earth.drawit(viewM,projectM, globalMat);
+                if(this.form == 1)
+                    this.Earth.update_pos(globalMat);
+                
+                
+                ///////////////////////MARS/////////////////////////////////
+                var Mars = glm.mat4(glm.mat3(1));
+                // ===== Scale
+                var scale = glm.vec3(0.067/2, 0.067/2, 0.067/2);
+                Mars = glm.scale(Mars, scale);
+                // ===== Rotation
+                var outer_rotation = counter*365/(365*1.88);
+                var rotation = glm.radians(outer_rotation);
+                var axis = glm.vec3(0.0,1.0,0.0);
+                Mars = glm.rotate(Mars, rotation, axis);
+                // ===== Translate
+                var translation = glm.vec3(0,0,-120);
+                Mars = glm.translate(Mars, translation);
+                // ===== Rotation
+                Mars = glm.rotate(Mars, rotation, axis);
+                // ===== Final Transformation
+                this.Mars.setModelTransformation(Mars);      
+                // ===== Draw
+                this.Mars.drawit(viewM,projectM, globalMat);
+                
+                
+                //////////////////////JUPITER///////////////////////////////
+                var Jupiter = glm.mat4(glm.mat3(1));
+                // ===== Scale
+                var scale = glm.vec3(1.42/2, 1.42/2, 1.42/2);
+                Jupiter = glm.scale(Jupiter, scale);
+                // ===== Rotation
+                var outer_rotation = counter/11.86;
+                var rotation = glm.radians(outer_rotation);
+                var axis = glm.vec3(0.0,1.0,0.0);
+                Jupiter = glm.rotate(Jupiter, rotation, axis);
+                // ===== Translate
+                var translation = glm.vec3(0,0,-8);
+                Jupiter = glm.translate(Jupiter, translation);
+                // ===== Rotation
+                Jupiter = glm.rotate(Jupiter, rotation, axis);
+                // ===== Final Transformation
+                this.Jupiter.setModelTransformation(Jupiter);      
+                // ===== Draw
+                this.Jupiter.drawit(viewM,projectM, globalMat);
+                
+                
+                //////////////////////SATURN///////////////////////////////
+
+                var Saturn = glm.mat4(glm.mat3(1));
+                // ===== Scale
+                var scale = glm.vec3(1.2/2, 1.2/2, 1.2/2);
+                Saturn = glm.scale(Saturn, scale);
+                // ===== Rotation
+                var outer_rotation = counter/29.46;
+                var rotation = glm.radians(outer_rotation);
+                var axis = glm.vec3(0.0,1.0,0.0);
+                Saturn = glm.rotate(Saturn, rotation, axis);
+                // ===== Translate
+                var translation = glm.vec3(0,0,-12);
+                Saturn = glm.translate(Saturn, translation);
+                // ===== Rotation
+                Saturn = glm.rotate(Saturn, rotation, axis);
+                // ===== Final Transformation
+                this.Saturn.setModelTransformation(Saturn);
+                var scale = glm.vec3(1.5, 1.5, 1.5);
+                Saturn = glm.scale(Saturn, scale);
+                this.SaturnDisc.setModelTransformation(Saturn);
+                
+                // ===== Draw
+                this.Saturn.drawit(viewM,projectM, globalMat);
+                this.SaturnDisc.drawit(viewM,projectM, globalMat);
+                
+                
+                
+                //////////////////////URANUS/////////////////////////////
+                var Uranus = glm.mat4(glm.mat3(1));
+                // ===== Scale
+                var scale = glm.vec3(0.51/2, 0.51/2, 0.51/2);
+                Uranus = glm.scale(Uranus, scale);
+                // ===== Rotation
+                var outer_rotation = counter/84.01;
+                var rotation = glm.radians(outer_rotation);
+                var axis = glm.vec3(0.0,1.0,0.0);
+                Uranus = glm.rotate(Uranus, rotation, axis);
+                // ===== Translate
+                var translation = glm.vec3(0,0,-36);
+                Uranus = glm.translate(Uranus, translation);
+                // ===== Rotation
+                Uranus = glm.rotate(Uranus, rotation, axis);
+                // ===== Final Transformation
+                this.Uranus.setModelTransformation(Uranus);      
+                // ===== Draw
+                this.Uranus.drawit(viewM,projectM, globalMat);
+                
+                
+                /////////////////////NEPTUNE////////////////////////////
+                var Neptune = glm.mat4(glm.mat3(1));
+                // ===== Scale
+                var scale = glm.vec3(0.495/2, 0.495/2, 0.495/2);
+                Neptune = glm.scale(Neptune, scale);
+                // ===== Rotation
+                var outer_rotation = counter/164.79;
+                var rotation = glm.radians(outer_rotation);
+                var axis = glm.vec3(0.0,1.0,0.0);
+                Neptune = glm.rotate(Neptune, rotation, axis);
+                // ===== Translate
+                var translation = glm.vec3(0,0,-44);
+                Neptune = glm.translate(Neptune, translation);
+                // ===== Rotation
+                Neptune = glm.rotate(Neptune, rotation, axis);
+                // ===== Final Transformation
+                this.Neptune.setModelTransformation(Neptune);      
+                // ===== Draw
+                this.Neptune.drawit(viewM,projectM, globalMat);  
             }
-            
+            }
+
             class SolarSystem_Base_App extends DEECapp
             {
                 counter=0;
@@ -3913,13 +3914,14 @@
                     //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
                     //////////////////////////////////////////////////////////////////////////
                     this.viewMa = glm.lookAt(glm.vec3(0,0,5),glm.vec3(0,0,0),glm.vec3(0,1,0));           
-                
+
                     window.addEventListener("keypress",(evt)=>this.keyprocess(evt),false);
                 }
-                
+
                 keyprocess(evt)
                 {
-                    switch (evt.keyCode) {
+                    switch (evt.keyCode)
+                    {
                         case 27:
                             alert("You pressed the \"Escape\" key."); 
                             break;
@@ -3957,23 +3959,23 @@
                             break;
                     }
                 }
-                               
+                                
                 render()
-                {
-                    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-                    this.counter = this.counter + this.speedup;
-                    
-                    this.shaderprog.startUsing();
-                    
-                    this.solarSystem.drawit(this.viewMa,this.projectionMa, this.counter);        
-                }
+            {
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+                this.counter = this.counter + this.speedup;
+                
+                this.shaderprog.startUsing();
+                
+                this.solarSystem.drawit(this.viewMa,this.projectionMa, this.counter);        
+            }
             }
 
-            var app = new SolarSystem_Base_App('SolarSystem_Base');
-
+            var app = new SolarSystem_Base_App('SolarSystem_Canvas');
             app.run();
-        </script>
-   </div>
+        </script> 
+    </div>
+
 </div>
 
 
