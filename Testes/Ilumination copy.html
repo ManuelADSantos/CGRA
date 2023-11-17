@@ -848,7 +848,7 @@ class cone extends CGRAobject
         // === Uniforms
         uniform vec3 Ambient;           // -> Ambient light color
         uniform vec3 LightColor;        // -> Directional light color
-        uniform vec3 LightDirection;    // -> Directional light direction
+        uniform vec3 LightPosition;    // -> Directional light direction
         uniform vec3 ViewPos;
         uniform float Shininess;        // -> Shininess of the material (exponent for sharping highlights)
         uniform float Strength;         // -> Strength of the reflection (Ks - specular coefficient)
@@ -856,6 +856,7 @@ class cone extends CGRAobject
         void main(void)
         {
             // -- Auxiliar vectors
+            vec3 LightDirection = LightPosition - vec3(Position);
             vec3 ViewerDir = normalize(ViewPos - vec3(Position));
             vec3 HalfVector = normalize(LightDirection + ViewerDir);
             
@@ -1478,9 +1479,9 @@ class cone extends CGRAobject
             var color_light = glm.vec3(0.5,0.5,0.5);
             this.gl.uniform3fv(this.LightColorloc, color_light.array);
             // -- Directional Light Direction
-            this.LightDirloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightDirection");
-            var light_dir = glm.vec3(0.0, 2.0, 1.0);
-            this.gl.uniform3fv(this.LightDirloc, light_dir.array);
+            this.LightPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightPosition");
+            var light_pos = glm.vec3(0.0, 2.0, 1.0);
+            this.gl.uniform3fv(this.LightPosloc, light_pos.array);
             // -- View Position
             this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"ViewPos");
             var viewpos = glm.vec3(0,3,6);
@@ -1599,9 +1600,9 @@ class cone extends CGRAobject
             var color_light = glm.vec3(0.5,0.5,0.5);
             this.gl.uniform3fv(this.LightColorloc, color_light.array);
             // -- Directional Light Direction
-            this.LightDirloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightDirection");
-            var light_dir = glm.vec3(0.0, 2.0, 1.0);
-            this.gl.uniform3fv(this.LightDirloc, light_dir.array);
+            this.LightPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightPosition");
+            var light_pos = glm.vec3(0.0, 2.0, 1.0);
+            this.gl.uniform3fv(this.LightPosloc, light_por.array);
             // -- View Position
             this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"ViewPos");
             var viewpos = glm.vec3(0,2,4);
@@ -1719,9 +1720,9 @@ class cone extends CGRAobject
             var color_light = glm.vec3(0.5,0.5,0.5);
             this.gl.uniform3fv(this.LightColorloc, color_light.array);
             // -- Directional Light Direction
-            this.LightDirloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightDirection");
-            var light_dir = glm.vec3(0.0, 2.0, 1.0);
-            this.gl.uniform3fv(this.LightDirloc, light_dir.array);
+            this.LightPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightPosition");
+            var light_pos = glm.vec3(0.0, 2.0, 1.0);
+            this.gl.uniform3fv(this.LightPosloc, light_pos.array);
             // -- View Position
             this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"ViewPos");
             var viewpos = glm.vec3(0,2,4);
@@ -1839,9 +1840,9 @@ class cone extends CGRAobject
             var color_light = glm.vec3(0.5,0.5,0.5);
             this.gl.uniform3fv(this.LightColorloc, color_light.array);
             // -- Directional Light Direction
-            this.LightDirloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightDirection");
-            var light_dir = glm.vec3(0.0, 2.0, 1.0);
-            this.gl.uniform3fv(this.LightDirloc, light_dir.array);
+            this.LightPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightPosition");
+            var light_pos = glm.vec3(0.0, 2.0, 1.0);
+            this.gl.uniform3fv(this.LightPosloc, light_pos.array);
             // -- View Position
             this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"ViewPos");
             var viewpos = glm.vec3(0,2,4);

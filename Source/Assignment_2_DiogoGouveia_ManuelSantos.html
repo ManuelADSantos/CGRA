@@ -10,6 +10,7 @@
 
 <!-- ============================================ Base Scripts ============================================ -->
 <div id="Shaders">
+    <!-- Default Shaders-->
     <div id="DefaultShaders">
         <script id="my-vertex-shader" type="x-shader/x-vertex">
             precision mediump float;
@@ -27,7 +28,6 @@
                 ex_Color = in_Color;
             }
         </script>
-
         <script id="my-fragment-shader" type="x-shader/x-fragment">
             precision mediump float;
 
@@ -40,7 +40,8 @@
         </script>
     </div>
     
-    <div id="Texture_Light_Shaders">
+    <!-- Textures and Colors-->
+    <div id="Just_Texture_Shaders">
         <script id="my-vertex-shaderT" type="x-shader/x-vertex">
             precision mediump float;
 
@@ -59,7 +60,6 @@
                 ex_Color = in_Color;
             }
         </script>
-
         <script id="my-fragment-shaderT" type="x-shader/x-fragment">
             precision mediump float;
             varying  vec2 vTextureCoord;
@@ -73,7 +73,7 @@
         </script>
     </div>
 
-    <div id="TextureColorShaders">
+    <div id="TextureColor_Shaders">
         <script id="my-fragment-shaderTC" type="x-shader/x-fragment">
             precision mediump float;
             varying  vec2 vTextureCoord;
@@ -91,17 +91,19 @@
 
     <!-- Texture + Color + Directional Light -->
     <div id="TCL_dir">
-        <script id="my-vertex-shader-directional" type="x-shader/x-vertex">
+        <script id="my-vertex-shader-TCL-dir" type="x-shader/x-vertex">
             precision mediump float;
     
             // === Inputs
             attribute  vec3 in_Position;
             attribute  vec3 in_Color;
             attribute  vec3 Vertex_Normals;
+            attribute vec2 in_texcoords;
             // === Outputs to fragment shader
             varying  vec3 Color;
             varying  vec3 Normal;
             varying  vec4 Position;
+            varying  vec2 vTextureCoord;
             // === Uniforms
             uniform mat4 MVP;
             uniform mat3 NormalMatrix;
@@ -112,28 +114,34 @@
                 Color = in_Color;
                 Normal = normalize(NormalMatrix * Vertex_Normals);
                 Position = M * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+                vTextureCoord = in_texcoords;
                 
                 gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
             }
         </script>
-        <script id="my-fragment-shader-directional" type="x-shader/x-fragment">
+        <script id="my-fragment-shader-TCL-dir" type="x-shader/x-fragment">
             precision mediump float;
     
             // === Inputs from vertex shader
             varying  vec3 Color;         // -> Color of the vertex
             varying  vec3 Normal;        // -> Normal of the vertex
             varying  vec4 Position;      // -> Position of the vertex
+            varying  vec2 vTextureCoord;
             // === Uniforms
             uniform vec3 Ambient;           // -> Ambient light color
             uniform vec3 LightColor;        // -> Directional light color
-            uniform vec3 LightDirection;    // -> Directional light direction
+            uniform vec3 LightPosition;    // -> Directional light direction
             uniform vec3 ViewPos;
             uniform float Shininess;        // -> Shininess of the material (exponent for sharping highlights)
             uniform float Strength;         // -> Strength of the reflection (Ks - specular coefficient)
+            uniform vec3 un_Color;
+
+            uniform sampler2D uSampler;
             
             void main(void)
             {
                 // -- Auxiliar vectors
+                vec3 LightDirection = LightPosition - vec3(Position);
                 vec3 ViewerDir = normalize(ViewPos - vec3(Position));
                 vec3 HalfVector = normalize(LightDirection + ViewerDir);
                 
@@ -148,7 +156,7 @@
                 vec3 scatteredLight = Ambient + LightColor * (diffused_part);
                 vec3 reflectedLight = LightColor * (specular_part * Strength);
     
-                vec3 rgb = min(Color * scatteredLight + reflectedLight, vec3(1.0));
+                vec3 rgb = min((un_Color * (texture2D(uSampler, vTextureCoord).rgb) * scatteredLight + reflectedLight), vec3(1.0));
                 
                 gl_FragColor = vec4(rgb, 1.0);
             }
@@ -157,17 +165,19 @@
 
     <!-- Texture + Color + Point Light -->
     <div id="TCL_point">
-        <script id="my-vertex-shader-pontual" type="x-shader/x-vertex">
+        <script id="my-vertex-shader-TCL-point" type="x-shader/x-vertex">
             precision mediump float;
     
             // === Inputs
             attribute  vec3 in_Position;
             attribute  vec3 in_Color;
             attribute  vec3 Vertex_Normals;
+            attribute vec2 in_texcoords;
             // === Outputs to fragment shader
             varying  vec3 Color;
             varying  vec3 Normal;
             varying  vec4 Position;
+            varying  vec2 vTextureCoord;
             // === Uniforms
             uniform mat4 MVP;
             uniform mat3 NormalMatrix;
@@ -178,11 +188,12 @@
                 Color = in_Color;
                 Normal = normalize(NormalMatrix * Vertex_Normals);
                 Position = MV * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+                vTextureCoord = in_texcoords;
                 
                 gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
             }
         </script>
-        <script id="my-fragment-shader-pontual" type="x-shader/x-fragment">
+        <script id="my-fragment-shader-TCL-point" type="x-shader/x-fragment">
             precision mediump float;
         
             // === Inputs from vertex shader
@@ -202,6 +213,8 @@
             uniform float LinearAttenuation;
             uniform float QuadraticAttenuation;
             
+            uniform sampler2D uSampler;
+
             void main(void)
             {
                 // -- Auxiliar vectors
@@ -226,7 +239,7 @@
                 vec3 scatteredLight = Ambient + LightColor * (diffused_part * attenuation);
                 vec3 reflectedLight = LightColor * (specular_part * attenuation);
         
-                vec3 rgb = min((Color * scatteredLight + reflectedLight), vec3(1.0));
+                vec3 rgb = min((un_Color * (texture2D(uSampler, vTextureCoord).rgb) * scatteredLight + reflectedLight), vec3(1.0));
                 
                 gl_FragColor = vec4(rgb, 1.0);
             }
@@ -235,17 +248,19 @@
 
     <!-- Texture + Directional Light -->
     <div id="TL_dir">
-        <script id="my-vertex-shader-directional" type="x-shader/x-vertex">
+        <script id="my-vertex-shader-TL-dir" type="x-shader/x-vertex">
             precision mediump float;
     
             // === Inputs
             attribute  vec3 in_Position;
             attribute  vec3 in_Color;
             attribute  vec3 Vertex_Normals;
+            attribute vec2 in_texcoords;
             // === Outputs to fragment shader
             varying  vec3 Color;
             varying  vec3 Normal;
             varying  vec4 Position;
+            varying  vec2 vTextureCoord;
             // === Uniforms
             uniform mat4 MVP;
             uniform mat3 NormalMatrix;
@@ -256,21 +271,23 @@
                 Color = in_Color;
                 Normal = normalize(NormalMatrix * Vertex_Normals);
                 Position = M * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
-                
+                vTextureCoord = in_texcoords;
+
                 gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
             }
         </script>
-        <script id="my-fragment-shader-directional" type="x-shader/x-fragment">
+        <script id="my-fragment-shader-TL-dir" type="x-shader/x-fragment">
             precision mediump float;
     
             // === Inputs from vertex shader
             varying  vec3 Color;         // -> Color of the vertex
             varying  vec3 Normal;        // -> Normal of the vertex
             varying  vec4 Position;      // -> Position of the vertex
+            varying  vec2 vTextureCoord
             // === Uniforms
             uniform vec3 Ambient;           // -> Ambient light color
             uniform vec3 LightColor;        // -> Directional light color
-            uniform vec3 LightDirection;    // -> Directional light direction
+            uniform vec3 LightPosition;    // -> Directional light direction
             uniform vec3 ViewPos;
             uniform float Shininess;        // -> Shininess of the material (exponent for sharping highlights)
             uniform float Strength;         // -> Strength of the reflection (Ks - specular coefficient)
@@ -278,6 +295,7 @@
             void main(void)
             {
                 // -- Auxiliar vectors
+                vec3 LightDirection = LightPosition - vec3(Position);
                 vec3 ViewerDir = normalize(ViewPos - vec3(Position));
                 vec3 HalfVector = normalize(LightDirection + ViewerDir);
                 
@@ -292,7 +310,7 @@
                 vec3 scatteredLight = Ambient + LightColor * (diffused_part);
                 vec3 reflectedLight = LightColor * (specular_part * Strength);
     
-                vec3 rgb = min(Color * scatteredLight + reflectedLight, vec3(1.0));
+                vec3 rgb = min(texture2D(uSampler, vTextureCoord) * scatteredLight + reflectedLight, vec3(1.0));
                 
                 gl_FragColor = vec4(rgb, 1.0);
             }
@@ -301,17 +319,19 @@
 
     <!-- Texture + Point Light -->
     <div id="TL_point">
-        <script id="my-vertex-shader-pontual" type="x-shader/x-vertex">
+        <script id="my-vertex-shader-TL-point" type="x-shader/x-vertex">
             precision mediump float;
     
             // === Inputs
             attribute  vec3 in_Position;
             attribute  vec3 in_Color;
             attribute  vec3 Vertex_Normals;
+            attribute vec2 in_texcoords;
             // === Outputs to fragment shader
             varying  vec3 Color;
             varying  vec3 Normal;
             varying  vec4 Position;
+            varying  vec2 vTextureCoord;
             // === Uniforms
             uniform mat4 MVP;
             uniform mat3 NormalMatrix;
@@ -322,17 +342,19 @@
                 Color = in_Color;
                 Normal = normalize(NormalMatrix * Vertex_Normals);
                 Position = MV * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+                vTextureCoord = in_texcoords;
                 
                 gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
             }
         </script>
-        <script id="my-fragment-shader-pontual" type="x-shader/x-fragment">
+        <script id="my-fragment-shader-TL-point" type="x-shader/x-fragment">
             precision mediump float;
         
             // === Inputs from vertex shader
             varying  vec3 Color;         // -> Color of the vertex
             varying  vec3 Normal;        // -> Normal of the vertex
             varying  vec4 Position;      // -> Position of the vertex
+            varying  vec2 vTextureCoord;
             // === Uniforms
             uniform vec3 Ambient;           // -> Ambient light color
             uniform vec3 LightColor;        // -> Directional light color
@@ -346,6 +368,8 @@
             uniform float LinearAttenuation;
             uniform float QuadraticAttenuation;
             
+            uniform sampler2D uSampler;
+
             void main(void)
             {
                 // -- Auxiliar vectors
@@ -370,7 +394,7 @@
                 vec3 scatteredLight = Ambient + LightColor * (diffused_part * attenuation);
                 vec3 reflectedLight = LightColor * (specular_part * attenuation);
         
-                vec3 rgb = min((Color * scatteredLight + reflectedLight), vec3(1.0));
+                vec3 rgb = min((texture2D(uSampler, vTextureCoord) * scatteredLight + reflectedLight), vec3(1.0));
                 
                 gl_FragColor = vec4(rgb, 1.0);
             }
@@ -741,11 +765,8 @@
     <script id="SphereDefinitions">
         class sphere extends CGRAobject
         {
-            center = glm.vec4(0, 0, 0, 1); 
-            north_pole = glm.vec4(0, 0.5, 0, 1); 
-            
             // ===== Constructor
-            constructor(glcontext, col = [1.0, 1.0, 1.0], col2 = col, faces = 10)
+            constructor(glcontext, col = [1.0, 1.0, 1.0], faces = 10)
             {
                 // Initialize the parent class
                 super(glcontext); 
@@ -824,19 +845,6 @@
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
                 this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
                 
-            }
-            
-            // ===== Funcion to register center and north of sphere (WIP)
-            update_pos(parentMat4 = glm.mat4(1.0))
-            {
-                var globalMat = parentMat4['*'](this.modelMat);
-                
-                //console.log(globalMat);
-                
-                this.center = globalMat['*'](this.center);
-                //console.log("Center: " + this.center);
-                this.north_pole = globalMat['*'](this.north_pole);
-                //console.log("North: " + this.center);
             }
         }
 
@@ -1182,7 +1190,7 @@
                 this.gl.clearColor(0.9,0.9,0.9,1.0);
                 
                 // ===== Create sphere
-                this.my_Sphere = new sphere(this.gl,[0.95, 0.95, 0], [0,0,0] , 20);
+                this.my_Sphere = new sphere(this.gl,[0.95, 0.95, 0], 20);
                 this.my_Sphere.setShader(this.shaderprog);
                 
                 var fragsrcT = document.getElementById("my-fragment-shaderT").text;
