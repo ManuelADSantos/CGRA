@@ -284,7 +284,7 @@ class sphere extends CGRAobject
 class cone extends CGRAobject
 {
     // ===== Contructor
-    constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 0.0], faces = 10)
+    constructor(glcontext, color = [0.0, 1.0, 0.0], faces = 10)
     {
         // Initialize the parent class
         super(glcontext);
@@ -320,14 +320,11 @@ class cone extends CGRAobject
         }
         
         // ===== Assign colors
-        this.Cone_colors = [col1, col1, col2].flat();
         let colors = [];
-        for (let i=0; i < (this.sides*6)/3; i++)
+        for (let i=0; i < (this.sides*6); i++)
         {
-            colors.push(this.Cone_colors);
+            colors.push(color);
         }
-        
-
         
         // ===== Populate buffers
         this.vertexbuffer=this.gl.createBuffer();
@@ -337,8 +334,6 @@ class cone extends CGRAobject
         this.colorbuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-        
-
     }
     
     // Function to dynamically change colors
@@ -357,7 +352,6 @@ class cone extends CGRAobject
 }
 </script>
 </div>
-
 
 <!-- ======================================================================================================================= -->
 <div id="Ambient">
@@ -642,11 +636,11 @@ class cone extends CGRAobject
         
         // ===== Instantiate cubes
         // - Default Shader
-        this.myCylinder = new cylinder(this.gl, [0.75, 0.75, 0.2], 30);
+        this.myCylinder = new cylinder(this.gl, [0.75, 0.75, 0.2], 15);
         this.myCylinder.setShader(this.shaderprog);
         
         // - Ambient Shader
-        this.myCylinder_amb = new cylinder(this.gl, [0.75, 0.75, 0.2], 30);
+        this.myCylinder_amb = new cylinder(this.gl, [0.75, 0.75, 0.2], 15);
         this.myCylinder_amb.setShader(this.shaderprog_amb);
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -709,6 +703,108 @@ class cone extends CGRAobject
     }
 
     var app = new Ambient_App_Cylinders('Ambient_Canvas_Cylinders');
+
+    app.run();
+    </script>
+
+    <!-- ========== Cone Ambient Canvas ========== -->
+    <canvas id="Ambient_Canvas_Cones" width="400" height="400" style="border:2px solid #000000;">
+        Error: Your browser does not support the HTML canvas tag.
+    </canvas>   
+    <script id="Ambient_App_Cones">
+    class Ambient_App_Cones extends DEECapp
+    {
+    counter = 0;
+    initialize()
+    {
+        // ===== Perform initializations
+        this.gl.enable(this.gl.DEPTH_TEST);
+        this.gl.clearColor(0.9, 0.9, 0.9, 1.0);
+        
+        // ===== Initialize shaders
+        // - Default Shader
+        var fragsrc = document.getElementById("my-fragment-shader").text;
+        var vertsrc = document.getElementById("my-vertex-shader").text;
+        this.shaderprog = new DEECshader(this.gl);
+        this.shaderprog.srcShaders(vertsrc,fragsrc);
+        
+        // - Ambient Shader
+        var fragsrc_amb = document.getElementById("my-fragment-shader-ambient").text;
+        var vertsrc_amb = document.getElementById("my-vertex-shader-ambient").text;
+        this.shaderprog_amb = new DEECshader(this.gl);
+        this.shaderprog_amb.srcShaders(vertsrc_amb,fragsrc_amb);
+        
+        this.light_Loc = this.gl.getUniformLocation(this.shaderprog_amb.shaderProgram, "Ambient");
+        
+        // ===== Instantiate cubes
+        // - Default Shader
+        this.myCone = new cone(this.gl, [0.2, 0.75, 0.2], 15);
+        this.myCone.setShader(this.shaderprog);
+        
+        // - Ambient Shader
+        this.myCone_amb = new cone(this.gl, [0.2, 0.75, 0.2], 15);
+        this.myCone_amb.setShader(this.shaderprog_amb);
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
+        //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
+        //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
+        //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        this.projectionM= glm.perspective(glm.radians(45),1.0,0.1,100);      
+        
+        //////////////////////////////////////////////////////////////////////////
+        //glm.vec3(3, 3, 5): A posição da câmera no espaço 3D.                  //
+        //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
+        //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
+        //////////////////////////////////////////////////////////////////////////
+        this.viewM = glm.lookAt(glm.vec3(0,2,4),glm.vec3(0,0,0),glm.vec3(0,1,0));         
+    }
+    
+    render()
+    {
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+        this.counter++;
+        
+        // ============= No Light
+        // ===== Model
+        var model = glm.mat4(glm.mat3(1.0));
+        // ===== Translations
+        var translation = glm.vec3(0.75, 0.0, 0.0);
+        model = glm.translate(model, translation);
+        // ===== Rotation
+        var rotation = glm.radians(this.counter*3);
+        var axis = glm.vec3(0.0, 1.0, 0.0);
+        model = glm.rotate(model, rotation, axis);
+        // ===== Final Transformation
+        this.myCone.setModelTransformation(model); 
+        
+        this.shaderprog.startUsing();
+        // ===== Draw Cube Amb
+        this.myCone.drawit(this.viewM,this.projectionM);
+        
+        
+        // ============= Ambient Light
+        // ===== Model
+        var model = glm.mat4(glm.mat3(1.0));
+        // ===== Translations
+        var translation = glm.vec3(-0.75, 0.0, 0.0);
+        model = glm.translate(model, translation);
+        // ===== Rotation
+        var rotation = glm.radians(this.counter*3);
+        var axis = glm.vec3(0.0, 1.0, 0.0);
+        model = glm.rotate(model, rotation, axis);
+        // ===== Final Transformation
+        this.myCone_amb.setModelTransformation(model); 
+        
+        this.shaderprog_amb.startUsing();
+        this.gl.uniform4f(this.light_Loc,0.5, 0.5, 0.5, 1.0);
+        // ===== Draw Cube Def
+        this.myCone_amb.drawit(this.viewM,this.projectionM);       
+    }
+    }
+
+    var app = new Ambient_App_Cones('Ambient_Canvas_Cones');
 
     app.run();
     </script>
@@ -1058,6 +1154,271 @@ class cone extends CGRAobject
     }
     </script>
 
+    <!-- ========== Cylinder Directional ========== -->
+    <script id="Cylinder_Directional">
+    class cylinder_directional extends CGRAobject
+    {
+        // ===== Constructor
+        constructor(glcontext, color = [0.0, 1.0, 0.0], faces = 10)
+        {
+            // Initialize the parent class
+            super(glcontext); 
+            
+            // ===== Constants
+            // Number of faces (3 to inf)
+            this.sides = faces;
+            this.numvertices = this.sides*6 + this.sides*3*2;
+            this.length = 1; this.radius = 0.5;
+            
+            // ===== Calculate top and bottom bases coordinates
+            let up_side = [], down_side = [];   
+            for (let i = 0; i < this.sides; i++)
+            { 
+                let theta = i*2*Math.PI/this.sides;
+                up_side.push([this.radius*Math.cos(theta),
+                            (this.length)/2,
+                            this.radius*Math.sin(theta)]);
+                
+                down_side.push([this.radius*Math.cos(theta),
+                                -1*(this.length)/2,
+                                this.radius*Math.sin(theta)]);
+            }
+            
+            // ===== Calculate vertices and normals
+            var vertices = [], normals = [];
+            for (let i = 0; i < this.sides; i++)
+            {   
+                // Lateral
+                vertices.push(up_side[i]);
+                normals.push(up_side[i]);
+                vertices.push(up_side[(i+1)%this.sides]);
+                normals.push(up_side[(i+1)%this.sides]);
+                vertices.push(down_side[i]);
+                normals.push(down_side[i]);
+                
+                vertices.push(down_side[i]);
+                normals.push(down_side[i]);
+                vertices.push(down_side[(i+1)%this.sides]);
+                normals.push(down_side[(i+1)%this.sides]);
+                vertices.push(up_side[(i+1)%this.sides]);
+                normals.push(up_side[(i+1)%this.sides]);
+                
+                // Top
+                vertices.push(up_side[i]);
+                normals.push([0,1,0]);
+                vertices.push(up_side[(i+1)%this.sides]);
+                normals.push([0,1,0]);
+                vertices.push([0,(this.length)/2,0]);
+                normals.push([0,1,0]);
+                
+                // Base
+                vertices.push(down_side[i]);
+                normals.push([0,-1,0]);
+                vertices.push(down_side[(i+1)%this.sides]);
+                normals.push([0,-1,0]);
+                vertices.push([0,-1*(this.length)/2,0]);
+                normals.push([0,-1,0]);
+            }
+
+            // ===== Assign colors
+            var colors = [];
+            for (let i=0; i < (this.sides*6)*2; i++)
+            {
+                colors.push(color);
+            }
+            
+            // ===== Populate vertex and color buffers
+            this.vertexbuffer=this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+            
+            this.colorbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+
+            this.normalsbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals.flat()), this.gl.STATIC_DRAW);
+        }
+        
+        setMaterials(shiny = 0.1, strength = 0.1)
+        {    
+            this.Shininess = shiny;
+            this.Strength = strength;
+        }
+        
+        drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0))
+        {   
+            // ===== Default drawit takes care of the rest (MVP, in_Position, in_Color and drawArrays)
+            super.drawit(viewMat,projectionMat,parentMat4);
+            
+            this.shaderprog.startUsing();
+            
+            // ===== Normals into vertex shader
+            this.normloc = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"Vertex_Normals");
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.normalsbuffer);
+            this.gl.vertexAttribPointer(this.normloc, // Attribute location
+                        3, // number of elements per attribute
+                        this.gl.FLOAT,  // Type of elements
+                        this.gl.FALSE,  // 
+                        3*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                            0); // Offset from the begining of a single vertex to this attribute
+            this.gl.enableVertexAttribArray(this.normloc);
+            
+            // ===== Normals transformation matrix
+            var localT = parentMat4['*'](this.modelMat);
+            this. NormMatloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"NormalMatrix");
+            var NormMat = glm.mat3(glm.transpose(glm.inverse(localT)));
+            this.gl.uniformMatrix3fv(this.NormMatloc, false, NormMat.array);
+
+            // ===== Model transformation matrix
+            this.Matloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"M");
+            var localT = parentMat4['*'](this.modelMat);
+            this.gl.uniformMatrix4fv(this.Matloc, false, localT.array);
+            
+            // ===== Shininess value
+            this.Shininessloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Shininess");
+            this.gl.uniform1f(this.Shininessloc, this.Shininess);
+
+            // ===== Strength value
+            this.Strengthloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Strength");
+            this.gl.uniform1f(this.Strengthloc, this.Strength);
+            
+            this.shaderprog.stopUsing();
+        }
+    }
+    </script>
+    
+    <!-- ========== Cone Directional ========== -->
+    <script id="Cone_Directional">
+    class cone_directional extends CGRAobject
+    {
+        // ===== Contructor
+        constructor(glcontext, color = [0.0, 1.0, 0.0], faces = 10)
+        {
+            // Initialize the parent class
+            super(glcontext);
+
+            // ===== Constants
+            // Number of faces (3 to inf)
+            this.sides = faces;
+            this.numvertices = this.sides*3*2;
+            this.length = 1; this.radius = 0.5;
+            
+            // ===== Calculate base
+            let base = [];   
+            for (let i = 0; i < this.sides; i++)
+            { 
+                let theta = i*2*Math.PI/this.sides;
+                base.push(
+                    [this.radius*Math.cos(theta),
+                    -1*(this.length)/2,
+                    this.radius*Math.sin(theta)]);
+            }
+            
+            // ===== Calculate vertices and normals
+            var vertices = [], normals = [];
+            for (let i = 0; i < this.sides; i++)
+            {   
+                vertices.push(base[i]);
+                normals.push([0,-1,0]);
+                vertices.push(base[(i+1)%this.sides]);
+                normals.push([0,-1,0]);
+                vertices.push([0,-1*(this.length)/2,0]);
+                normals.push([0,-1,0]);
+                
+                vertices.push(base[i]);
+                vertices.push(base[(i+1)%this.sides]);
+                vertices.push([0,(this.length)/2,0]);
+                
+                
+
+                console.log(teste);
+            }
+            
+            // ===== Assign colors
+            let colors = [];
+            for (let i=0; i < (this.sides*6); i++)
+            {
+                colors.push(color);
+            }
+            
+            // ===== Populate buffers
+            this.vertexbuffer=this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+            
+            this.colorbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+
+            this.normalsbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals.flat()), this.gl.STATIC_DRAW);
+        }
+        
+        // Function to dynamically change colors
+        setColors(newColor1, newColor2)
+        {
+            this.Cone_colors = [newColor1, newColor1, newColor2].flat();
+            let colors = [];
+            for (let i=0; i < (this.sides*6)/3; i++)
+            {
+                colors.push(this.Cone_colors);
+            }
+            this.colorbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+        }
+        
+        setMaterials(shiny = 0.1, strength = 0.1)
+        {    
+            this.Shininess = shiny;
+            this.Strength = strength;
+        }
+        
+        drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0))
+        {   
+            // ===== Default drawit takes care of the rest (MVP, in_Position, in_Color and drawArrays)
+            super.drawit(viewMat,projectionMat,parentMat4);
+            
+            this.shaderprog.startUsing();
+            
+            // ===== Normals into vertex shader
+            this.normloc = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"Vertex_Normals");
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.normalsbuffer);
+            this.gl.vertexAttribPointer(this.normloc, // Attribute location
+                        3, // number of elements per attribute
+                        this.gl.FLOAT,  // Type of elements
+                        this.gl.FALSE,  // 
+                        3*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                            0); // Offset from the begining of a single vertex to this attribute
+            this.gl.enableVertexAttribArray(this.normloc);
+            
+            // ===== Normals transformation matrix
+            var localT = parentMat4['*'](this.modelMat);
+            this. NormMatloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"NormalMatrix");
+            var NormMat = glm.mat3(glm.transpose(glm.inverse(localT)));
+            this.gl.uniformMatrix3fv(this.NormMatloc, false, NormMat.array);
+
+            // ===== Model transformation matrix
+            this.Matloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"M");
+            var localT = parentMat4['*'](this.modelMat);
+            this.gl.uniformMatrix4fv(this.Matloc, false, localT.array);
+            
+            // ===== Shininess value
+            this.Shininessloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Shininess");
+            this.gl.uniform1f(this.Shininessloc, this.Shininess);
+
+            // ===== Strength value
+            this.Strengthloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Strength");
+            this.gl.uniform1f(this.Strengthloc, this.Strength);
+            
+            this.shaderprog.stopUsing();
+        }
+    }
+    </script>
+
     <!-- ========== Cube Directional Canvas ========== -->
     <h1>Directional Light</h1>
     <canvas id="Directional_Canvas_Cubes" width="400" height="400" style="border:2px solid #000000;">
@@ -1180,7 +1541,6 @@ class cone extends CGRAobject
     app.run();
     </script>
 
-
     <!-- ========== Sphere Directional Canvas ========== -->
     <canvas id="Directional_Canvas_Spheres" width="400" height="400" style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
@@ -1297,6 +1657,246 @@ class cone extends CGRAobject
     }
 
     var app = new Directional_App_Spheres('Directional_Canvas_Spheres');
+
+    app.run();
+    </script>
+
+    <!-- ========== Cylinder Directional Canvas ========== -->
+    <canvas id="Directional_Canvas_Cylinders" width="400" height="400" style="border:2px solid #000000;">
+        Error: Your browser does not support the HTML canvas tag.
+    </canvas>
+    <script id="Directional_App_Cylinders">
+    class Directional_App_Cylinders extends DEECapp
+    {
+        counter = 0;
+        initialize()
+        {
+            // ===== Perform initializations
+            this.gl.enable(this.gl.DEPTH_TEST);
+            this.gl.clearColor(0.9, 0.9, 0.9, 1.0);
+            
+            // ===== Initialize shaders
+            // - Default Shader
+            var fragsrc = document.getElementById("my-fragment-shader").text;
+            var vertsrc = document.getElementById("my-vertex-shader").text;
+            this.shaderprog = new DEECshader(this.gl);
+            this.shaderprog.srcShaders(vertsrc,fragsrc);
+            
+            // - Directional Shader
+            var fragsrc_dir = document.getElementById("my-fragment-shader-directional").text;
+            var vertsrc_dir = document.getElementById("my-vertex-shader-directional").text;
+            this.shaderprog_directional = new DEECshader(this.gl);
+            this.shaderprog_directional.srcShaders(vertsrc_dir,fragsrc_dir);
+                            
+            // ===== Instantiate spheres
+            // - Default Shader
+            this.myCylinder = new cylinder(this.gl, [0.75, 0.75, 0.2], 15);
+            this.myCylinder.setShader(this.shaderprog);
+            
+            // - Directional Shader
+            this.myCylinder_directional = new cylinder_directional(this.gl, [0.75, 0.75, 0.2], 15);
+            this.myCylinder_directional.setShader(this.shaderprog_directional);
+            this.myCylinder_directional.setMaterials(5, 0.5); // Shininess and Strength
+
+            // ===== Set parameters of light
+            this.shaderprog_directional.startUsing();
+            // -- Ambient Light
+            this.Ambientloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"Ambient");
+            var ambient_light = glm.vec3(0.5,0.5,0.5);
+            this.gl.uniform3fv(this.Ambientloc, ambient_light.array);
+            // -- Directional Light Color
+            this.LightColorloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightColor");
+            var color_light = glm.vec3(0.5,0.5,0.5);
+            this.gl.uniform3fv(this.LightColorloc, color_light.array);
+            // -- Directional Light Direction
+            this.LightDirloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightDirection");
+            var light_dir = glm.vec3(0.0, 2.0, 1.0);
+            this.gl.uniform3fv(this.LightDirloc, light_dir.array);
+            // -- View Position
+            this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"ViewPos");
+            var viewpos = glm.vec3(0,2,4);
+            this.gl.uniform3fv(this.ViewPosloc, viewpos.array);
+            // -- Setup done
+            this.shaderprog_directional.stopUsing();
+            
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
+            //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
+            //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
+            //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            this.projectionM = glm.perspective(glm.radians(45),1.0,0.1,100);      
+            
+            //////////////////////////////////////////////////////////////////////////
+            //glm.vec3(3, 3, 5): A posição da câmera no espaço 3D.                  //
+            //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
+            //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
+            //////////////////////////////////////////////////////////////////////////
+            this.viewM = glm.lookAt(viewpos,glm.vec3(0,0,0),glm.vec3(0,1,0));           
+        }
+        
+        render()
+        {
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+            this.counter++;
+        
+            // ============= No Light
+            // ===== Model
+            var model = glm.mat4(glm.mat3(1.0));
+            // ===== Translations
+            var translation = glm.vec3(0.75, 0.0, 0.0);
+            model = glm.translate(model, translation);
+            // ===== Rotation
+            var rotation = glm.radians(this.counter);
+            var axis = glm.vec3(1.0, 0.0, 0.0);
+            model = glm.rotate(model, rotation, axis);
+            // ===== Final Transformation
+            this.myCylinder.setModelTransformation(model); 
+            
+            // ===== Draw Sphere 
+            this.myCylinder.drawit(this.viewM,this.projectionM);
+            
+            
+            // ============= Directional Light
+            // ===== Model
+            var model = glm.mat4(glm.mat3(1.0));
+            // ===== Translations
+            var translation = glm.vec3(-0.75, 0.0, 0.0);
+            model = glm.translate(model, translation);
+            // ===== Rotation
+            var rotation = glm.radians(this.counter);
+            var axis = glm.vec3(1.0, 0.0, 0.0);
+            model = glm.rotate(model, rotation, axis);
+            // ===== Final Transformation
+            this.myCylinder_directional.setModelTransformation(model); 
+            
+            // ===== Draw Sphere Directional
+            this.myCylinder_directional.drawit(this.viewM,this.projectionM);   
+            
+    }
+    }
+
+    var app = new Directional_App_Cylinders('Directional_Canvas_Cylinders');
+
+    app.run();
+    </script>
+
+    <!-- ========== Cylinder Directional Canvas ========== -->
+    <canvas id="Directional_Canvas_Cones" width="400" height="400" style="border:2px solid #000000;">
+        Error: Your browser does not support the HTML canvas tag.
+    </canvas>
+    <script id="Directional_App_Cones">
+    class Directional_App_Cones extends DEECapp
+    {
+        counter = 0;
+        initialize()
+        {
+            // ===== Perform initializations
+            this.gl.enable(this.gl.DEPTH_TEST);
+            this.gl.clearColor(0.9, 0.9, 0.9, 1.0);
+            
+            // ===== Initialize shaders
+            // - Default Shader
+            var fragsrc = document.getElementById("my-fragment-shader").text;
+            var vertsrc = document.getElementById("my-vertex-shader").text;
+            this.shaderprog = new DEECshader(this.gl);
+            this.shaderprog.srcShaders(vertsrc,fragsrc);
+            
+            // - Directional Shader
+            var fragsrc_dir = document.getElementById("my-fragment-shader-directional").text;
+            var vertsrc_dir = document.getElementById("my-vertex-shader-directional").text;
+            this.shaderprog_directional = new DEECshader(this.gl);
+            this.shaderprog_directional.srcShaders(vertsrc_dir,fragsrc_dir);
+                            
+            // ===== Instantiate spheres
+            // - Default Shader
+            this.myCone = new cone(this.gl, [0.2, 0.75, 0.2], 15);
+            this.myCone.setShader(this.shaderprog);
+            
+            // - Directional Shader
+            this.myCone_directional = new cone_directional(this.gl, [0.2, 0.75, 0.2], 15);
+            this.myCone_directional.setShader(this.shaderprog_directional);
+            this.myCone_directional.setMaterials(5, 0.5); // Shininess and Strength
+
+            // ===== Set parameters of light
+            this.shaderprog_directional.startUsing();
+            // -- Ambient Light
+            this.Ambientloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"Ambient");
+            var ambient_light = glm.vec3(0.5,0.5,0.5);
+            this.gl.uniform3fv(this.Ambientloc, ambient_light.array);
+            // -- Directional Light Color
+            this.LightColorloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightColor");
+            var color_light = glm.vec3(0.5,0.5,0.5);
+            this.gl.uniform3fv(this.LightColorloc, color_light.array);
+            // -- Directional Light Direction
+            this.LightDirloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightDirection");
+            var light_dir = glm.vec3(0.0, 2.0, 1.0);
+            this.gl.uniform3fv(this.LightDirloc, light_dir.array);
+            // -- View Position
+            this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"ViewPos");
+            var viewpos = glm.vec3(0,2,4);
+            this.gl.uniform3fv(this.ViewPosloc, viewpos.array);
+            // -- Setup done
+            this.shaderprog_directional.stopUsing();
+            
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
+            //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
+            //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
+            //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            this.projectionM = glm.perspective(glm.radians(45),1.0,0.1,100);      
+            
+            //////////////////////////////////////////////////////////////////////////
+            //glm.vec3(3, 3, 5): A posição da câmera no espaço 3D.                  //
+            //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
+            //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
+            //////////////////////////////////////////////////////////////////////////
+            this.viewM = glm.lookAt(viewpos,glm.vec3(0,0,0),glm.vec3(0,1,0));           
+        }
+        
+        render()
+        {
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+            this.counter++;
+        
+            // ============= No Light
+            // ===== Model
+            var model = glm.mat4(glm.mat3(1.0));
+            // ===== Translations
+            var translation = glm.vec3(0.75, 0.0, 0.0);
+            model = glm.translate(model, translation);
+            // ===== Rotation
+            var rotation = glm.radians(this.counter);
+            var axis = glm.vec3(1.0, 0.0, 0.0);
+            model = glm.rotate(model, rotation, axis);
+            // ===== Final Transformation
+            this.myCone.setModelTransformation(model); 
+            
+            // ===== Draw Sphere 
+            this.myCone.drawit(this.viewM,this.projectionM);
+            
+            
+            // ============= Directional Light
+            // ===== Model
+            var model = glm.mat4(glm.mat3(1.0));
+            // ===== Translations
+            var translation = glm.vec3(-0.75, 0.0, 0.0);
+            model = glm.translate(model, translation);
+            // ===== Rotation
+            var rotation = glm.radians(this.counter);
+            var axis = glm.vec3(1.0, 0.0, 0.0);
+            model = glm.rotate(model, rotation, axis);
+            // ===== Final Transformation
+            this.myCone_directional.setModelTransformation(model); 
+            
+            // ===== Draw Sphere Directional
+            this.myCone_directional.drawit(this.viewM,this.projectionM);   
+            
+    }
+    }
+
+    var app = new Directional_App_Cones('Directional_Canvas_Cones');
 
     app.run();
     </script>
