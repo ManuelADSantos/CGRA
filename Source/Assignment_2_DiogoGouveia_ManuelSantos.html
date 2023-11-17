@@ -653,7 +653,6 @@
 
         // class cubeTCL extends
     
-        
     </script>
     <canvas id="CubeCanvas" width="400" height="400" style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
@@ -795,45 +794,48 @@
                 slices.push([[0,this.radius,0],[0,-1*this.radius,0]]);
                 
                 
-                var vertices = [];
-                var colors = [];
+                var vertices = [], colors = [], normals = [];
                 
                 // ===== Create vertex and color data to populate buffers
                 for (let i = 0; i < this.sides; i++)
                 {            
                     // Top side
                     vertices.push(slices[this.sides][0]);
+                    normals.push(slices[this.sides][0]);
                     vertices.push(slices[i][0]);
+                    normals.push(slices[i][0]);
                     vertices.push(slices[(i+1)%this.sides][0]);
-            
-                    
+                    normals.push(slices[(i+1)%this.sides][0]);
                     colors.push([col,col,col].flat());
                     
                     // Middle sections
                     for (let j = 0; j < this.sides - 2; j++)
                     {
                         vertices.push(slices[i][j]);
+                        normals.push(slices[i][j]);
                         vertices.push(slices[(i+1)%this.sides][j]);
+                        normals.push(slices[(i+1)%this.sides][j]);
                         vertices.push(slices[i][j+1]);
-                        
-                    
+                        normals.push(slices[i][j+1]);
                         colors.push([col,col,col].flat());
 
                         vertices.push(slices[i][j+1]);
+                        normals.push(slices[i][j+1]);
                         vertices.push(slices[(i+1)%this.sides][j]);
+                        normals.push(slices[(i+1)%this.sides][j]);
                         vertices.push(slices[(i+1)%this.sides][j+1]);
-
-                        
+                        normals.push(slices[(i+1)%this.sides][j+1]);
                         colors.push([col,col,col].flat());
                     }
                     
                     // Down side
                     vertices.push(slices[i][this.sides - 2]);
+                    normals.push(slices[i][this.sides - 2]);
                     vertices.push(slices[(i+1)%this.sides][this.sides - 2]);
+                    normals.push(slices[(i+1)%this.sides][this.sides - 2]);
                     vertices.push(slices[this.sides][1]);
+                    normals.push(slices[this.sides][1]);
                     colors.push([col,col,col].flat());
-                    
-                    
                 }
                 
                 // ===== Populate Buffers
@@ -845,46 +847,28 @@
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
                 this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
                 
+                this.normalsbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals.flat()), this.gl.STATIC_DRAW);
             }
+
+            setMaterials(shiny = 0.1, strength = 0.1)
+            {    
+                this.Shininess = shiny;
+                this.Strength = strength;
+            }
+
+
         }
 
-        class sphereT extends CGRAobject
+        class sphereT extends sphere
         {
-            center = glm.vec4(0, 0, 0, 1); 
-            north_pole = glm.vec4(0, 0.5, 0, 1); 
-            
             // ===== Constructor
             constructor(glcontext, col = [1.0, 1.0, 1.0], faces = 10)
             {
                 // Initialize the parent class
                 super(glcontext); 
                 
-                // ===== Constants
-                // Number of faces (3 to inf)
-                this.sides = faces;
-                // ===== Number of vertices
-                this.numvertices = (6*this.sides + (6*this.sides)*(this.sides-2));
-                this.length = 1; this.radius = 0.5;
-                
-                // ===== Create circunferences (360/N sides)
-                let slices = [];  
-                
-                for (let i = 0; i < this.sides; i++)
-                { 
-                    let theta = i*2*Math.PI/this.sides, aux = [];
-                    for (let j = 0; j < this.sides-1; j++)
-                    {     
-                        aux.push(
-                            [(Math.sin((j+1)*Math.PI/this.sides)*this.radius)*Math.cos(theta),
-                            Math.cos((j+1)*Math.PI/this.sides)*this.radius,
-                            (Math.sin((j+1)*Math.PI/this.sides)*this.radius)*Math.sin(theta)]);
-                    }
-                    slices.push(aux);
-                }
-                slices.push([[0,this.radius,0],[0,-1*this.radius,0]]);
-                
-
-                var vertices = [];
                 var texCoords = [];
                 var colors = [];
                 
@@ -892,284 +876,77 @@
                 for (let i = 0; i < this.sides; i++)
                 {            
                     // Top side
-                    vertices.push(slices[this.sides][0]); // topo
-                    vertices.push(slices[i][0]); // esquerda
-                    vertices.push(slices[(i+1)%this.sides][0]); // direita
-                    
                     texCoords.push([(2*i+1)/(this.sides*2),1]); // topo
                     texCoords.push([(2*i)/(this.sides*2), 1-1/this.sides]); // esquerda
                     texCoords.push([(2*i+2)/(this.sides*2),1-1/this.sides]);  // direita
                     
-
-                    colors.push([col,col,col].flat());
-                    
                     // Middle sections
                     for (let j = 0; j < this.sides - 2; j++)
                     {
-                        vertices.push(slices[i][j]);
-                        vertices.push(slices[(i+1)%this.sides][j]);
-                        vertices.push(slices[i][j+1]);
-                        
                         texCoords.push([(2*i)/(this.sides*2), 1-(j+1)/this.sides]); //a
                         texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+1)/this.sides]); //b
                         texCoords.push([(2*i)/(this.sides*2), 1-(j+2)/this.sides]); //c
                         
-
-                        colors.push([col,col,col].flat());
-
-                        vertices.push(slices[i][j+1]);
-                        vertices.push(slices[(i+1)%this.sides][j]);
-                        vertices.push(slices[(i+1)%this.sides][j+1]);
-                        
                         texCoords.push([(2*i)/(this.sides*2), 1-(j+2)/this.sides]); //c
                         texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+1)/this.sides]); //b
                         texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+2)/this.sides]); //d
-                        
-
-                        
-                        colors.push([col,col,col].flat());
                     }
                     
-                    // Down side
-                    vertices.push(slices[i][this.sides - 2]); //left
-                    vertices.push(slices[(i+1)%this.sides][this.sides - 2]); //right
-                    vertices.push(slices[this.sides][1]);  //bottom
-                    
-                    
+                    // Bottom side
                     texCoords.push([(2*i)/(this.sides*2), 1/this.sides]); // esquerda
                     texCoords.push([(2*i+2)/(this.sides*2),1/this.sides]);  // direita
                     texCoords.push([(2*i+1)/(this.sides*2),0]); // bottom
-
-            
-                    colors.push([col,col,col].flat());
-                    
-                    
                 }
-                
-                
-                
-                        
-                    // ===== Populate vertex and color buffers
-                this.vertexbuffer=this.gl.createBuffer();
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
-                
-                this.colorbuffer = this.gl.createBuffer();
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
                 
                 this.texcoordbuffer = this.gl.createBuffer();
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
                 this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
-            
-                
             }
             
-                settexture(cgratex){
-                    this.textureid = cgratex.textureid;
+            settexture(cgratex)
+            {
+                this.textureid = cgratex.textureid;
             }
             
-            drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0)){
+            drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0))
+            {
                 this.shaderprog.startUsing();
-                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
-                                                                        "in_texcoords");
-                    
-                    this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
-                    this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
-                                        2, // number of elements per attribute
-                                        this.gl.FLOAT,  // Type of elements
-                                        false,  // 
-                                        0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
-                                        0); // Offset from the begining of a single vertex to this attribute
-                    this.gl.enableVertexAttribArray(this.texcoordsLocation);
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-                    this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
-                    this.gl.uniform1i(this.textureLocation, 0);
-                    
+                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_texcoords");
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                                    2, // number of elements per attribute
+                                    this.gl.FLOAT,  // Type of elements
+                                    false,  // 
+                                    0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                    0); // Offset from the begining of a single vertex to this attribute
+                this.gl.enableVertexAttribArray(this.texcoordsLocation);
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                
+                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+                this.gl.uniform1i(this.textureLocation, 0);
+                
                 // the parent method does the rest
                 super.drawit(viewMat,projectionMat,parentMat4);
             }  
-            
-            // ===== Funcion to register center and north of sphere (WIP)
-            update_pos(parentMat4 = glm.mat4(1.0))
-            {
-                var globalMat = parentMat4['*'](this.modelMat);
-                
-                //console.log(globalMat);
-                
-                this.center = globalMat['*'](this.center);
-                //console.log("Center: " + this.center);
-                this.north_pole = globalMat['*'](this.north_pole);
-                //console.log("North: " + this.center);
-            }
         }
 
-        class sphereTC extends CGRAobject
-
+        class sphereTC extends sphereT
         {
-            center = glm.vec4(0, 0, 0, 1); 
-            north_pole = glm.vec4(0, 0.5, 0, 1); 
-            
-            // ===== Constructor
-            constructor(glcontext, col = [1.0, 1.0, 1.0], faces = 10)
+            setcolor(color)
             {
-                // Initialize the parent class
-                super(glcontext); 
-                this.color=glm.vec3(0,1,0);
-                // ===== Constants
-                // Number of faces (3 to inf)
-                this.sides = faces;
-                // ===== Number of vertices
-                this.numvertices = (6*this.sides + (6*this.sides)*(this.sides-2));
-                this.length = 1; this.radius = 0.5;
-                
-                // ===== Create circunferences (360/N sides)
-                let slices = [];  
-                
-                for (let i = 0; i < this.sides; i++)
-                { 
-                    let theta = i*2*Math.PI/this.sides, aux = [];
-                    for (let j = 0; j < this.sides-1; j++)
-                    {     
-                        aux.push(
-                            [(Math.sin((j+1)*Math.PI/this.sides)*this.radius)*Math.cos(theta),
-                            Math.cos((j+1)*Math.PI/this.sides)*this.radius,
-                            (Math.sin((j+1)*Math.PI/this.sides)*this.radius)*Math.sin(theta)]);
-                    }
-                    slices.push(aux);
-                }
-                slices.push([[0,this.radius,0],[0,-1*this.radius,0]]);
-                
-
-                var vertices = [];
-                var texCoords = [];
-                var colors = [];
-                
-                // ===== Create vertex and color data to populate buffers
-                for (let i = 0; i < this.sides; i++)
-                {            
-                    // Top side
-                    vertices.push(slices[this.sides][0]); // topo
-                    vertices.push(slices[i][0]); // esquerda
-                    vertices.push(slices[(i+1)%this.sides][0]); // direita
-                    
-                    texCoords.push([(2*i+1)/(this.sides*2),1]); // topo
-                    texCoords.push([(2*i)/(this.sides*2), 1-1/this.sides]); // esquerda
-                    texCoords.push([(2*i+2)/(this.sides*2),1-1/this.sides]);  // direita
-                    
-
-                    colors.push([col,col,col].flat());
-                    
-                    // Middle sections
-                    for (let j = 0; j < this.sides - 2; j++)
-                    {
-                        vertices.push(slices[i][j]);
-                        vertices.push(slices[(i+1)%this.sides][j]);
-                        vertices.push(slices[i][j+1]);
-                        
-                        texCoords.push([(2*i)/(this.sides*2), 1-(j+1)/this.sides]); //a
-                        texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+1)/this.sides]); //b
-                        texCoords.push([(2*i)/(this.sides*2), 1-(j+2)/this.sides]); //c
-                        
-
-                        colors.push([col,col,col].flat());
-
-                        vertices.push(slices[i][j+1]);
-                        vertices.push(slices[(i+1)%this.sides][j]);
-                        vertices.push(slices[(i+1)%this.sides][j+1]);
-                        
-                        texCoords.push([(2*i)/(this.sides*2), 1-(j+2)/this.sides]); //c
-                        texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+1)/this.sides]); //b
-                        texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+2)/this.sides]); //d
-                        
-
-                        
-                        colors.push([col,col,col].flat());
-                    }
-                    
-                    // Down side
-                    vertices.push(slices[i][this.sides - 2]); //left
-                    vertices.push(slices[(i+1)%this.sides][this.sides - 2]); //right
-                    vertices.push(slices[this.sides][1]);  //bottom
-                    
-                    
-                    texCoords.push([(2*i)/(this.sides*2), 1/this.sides]); // esquerda
-                    texCoords.push([(2*i+2)/(this.sides*2),1/this.sides]);  // direita
-                    texCoords.push([(2*i+1)/(this.sides*2),0]); // bottom
-
-            
-                    colors.push([col,col,col].flat());
-                    
-                    
-                }
-                
-                
-                
-                        
-                    // ===== Populate vertex and color buffers
-                this.vertexbuffer=this.gl.createBuffer();
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
-                
-                this.colorbuffer = this.gl.createBuffer();
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
-                
-                this.texcoordbuffer = this.gl.createBuffer();
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
-            
-                
+                this.color = glm.vec3(color);
             }
             
-                settexture(cgratex){
-                    this.textureid = cgratex.textureid;
-            }
-
-            setcolor(color){
-                    this.color = glm.vec3(color);
-            }
-            
-            drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0)){
+            drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0))
+            {
                 this.shaderprog.startUsing();
                 var colorLocation = this.gl.getUniformLocation(this.shaderprog.shaderProgram,
                                                                 "un_Color");    
                 this.gl.uniform3fv(colorLocation, this.color.array);
             
-                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
-                                                                "in_texcoords");
-            
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
-                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
-                                2, // number of elements per attribute
-                                this.gl.FLOAT,  // Type of elements
-                                false,  // 
-                                0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
-                                0); // Offset from the begining of a single vertex to this attribute
-                this.gl.enableVertexAttribArray(this.texcoordsLocation);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
-                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
-                this.gl.uniform1i(this.textureLocation, 0);
-                    
                 // the parent method does the rest
                 super.drawit(viewMat,projectionMat,parentMat4);
-            }  
-            
-            // ===== Funcion to register center and north of sphere (WIP)
-            update_pos(parentMat4 = glm.mat4(1.0))
-            {
-                var globalMat = parentMat4['*'](this.modelMat);
-                
-                //console.log(globalMat);
-                
-                this.center = globalMat['*'](this.center);
-                //console.log("Center: " + this.center);
-                this.north_pole = globalMat['*'](this.north_pole);
-                //console.log("North: " + this.center);
-            }
-
-            
-
+            } cc
         }
     </script>
     <canvas id="SphereCanvas" width="400" height="400" style="border:2px solid #000000;">
@@ -3937,7 +3714,7 @@
                 // ===== Draw
                 this.Earth.drawit(viewM,projectM, globalMat);
                 if(this.form == 1)
-                    this.Earth.update_pos(globalMat);
+                //this.Earth.update_pos(globalMat);
                 
                 
                 ///////////////////////MARS/////////////////////////////////
