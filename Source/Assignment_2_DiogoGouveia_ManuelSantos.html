@@ -1,9 +1,3 @@
-# CGRA 2st Assignment
-
-Diogo Seabra Mota Henriques de Gouveia - 2018279473
-
-Manuel Alberto Dionísio dos Santos - 2019231352
-
 %%html
 <!-- ============================================ Base Scripts ============================================ -->
 <div id="Base Scripts">            
@@ -159,6 +153,8 @@ Manuel Alberto Dionísio dos Santos - 2019231352
 
 
 <!-- ============================================ Solids Definitions ============================================ -->
+<h1>Solids Definitions</h1>
+
 <canvas id="CubeCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
 </canvas>
@@ -590,13 +586,6 @@ var app = new CubeApp('CubeCanvas');
 
 app.run();
 </script>
-# Sphere
-
-To create a sphere of diameter 1, we created N slices of it, composed of N quadrilateral's each (2 triangles for each quadrilateral, except on top and bottom ends, that have only 1 each).
-
-We pushd each slice into the vertex buffer and at the same time the corresponding colors to the color buffer
-
-Finally, we instantiated a sphere object and moved the camera around it.
 
 
 <canvas id="SphereCanvas" width="800" height="800" style="border:2px solid #000000;">
@@ -1130,14 +1119,6 @@ var app = new SphereApp('SphereCanvas');
 
 app.run();
 </script>
-# Cylinder / Prism
-
-To create a cylinder of base 1, we created 2 bases (up and down) and conected each "face" of them with 2 triangles. In terms of division of the bases, the procedure is similar to the sphere. In this way, is possible to create solids from 3 to infinite faces. That means we can create a prism (3 faces), a "paralelepípedo"/cube (4 faces) or a clinder (5 to inf faces).
-
-We also created a method to dinamically change the cylinder colors.
-
-Finally, we instantiated a cylinder object and rotated it around the Z axis.
-
 
 <canvas id="CylinderCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -1640,10 +1621,6 @@ var app = new CylinderApp('CylinderCanvas');
 
 app.run();
 </script>
-# Cone
-
-The procedure to create the cone is in everything similar to the one to create a cylinder, but without the top base.
-
 
 <canvas id="ConeCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -2077,9 +2054,6 @@ var app = new ConeApp('ConeCanvas');
 
 app.run();
 </script>
-# Disc
-
-The procedure to create the cone is in everything similar to the one to create a cylinder or a cone, but just needs to create a base.
 
 
 <canvas id="DiscCanvas" width="400" height="400" style="border:2px solid #000000;">
@@ -2349,8 +2323,6 @@ var app = new DiscApp('DiscCanvas');
 
 app.run();
 </script>
-# Compound Shape
-## Moon with Flag
 
 
 <canvas id="MoonCanvas" width="400" height="400" style="border:2px solid #000000;">
@@ -2567,10 +2539,6 @@ var app = new MoonApp('MoonCanvas');
 app.run();
 </script>
 
-
-## Couple
-
-
 <canvas id="CoupleCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
 </canvas>
@@ -2785,9 +2753,6 @@ app.run();
 </script>
 
 
-# Table
-
-
 <canvas id="TableCanvas" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
 </canvas>
@@ -2976,7 +2941,6 @@ var app = new TableApp('TableCanvas');
 
 app.run();
 </script>
-## Paintings
 
 
 <canvas id="PaintingCanvas" width="400" height="400" style="border:2px solid #000000;">
@@ -3164,9 +3128,8 @@ var app = new PaintingApp('PaintingCanvas');
 
 app.run();
 </script>
-## Museum = Floor +  Walls +  Door + Windows
 
-W - Front | A - Left | S - Back | D - Right | . - Reset
+<h2> W - Front | A - Left | S - Back | D - Right | . - Reset </h2>
 
 
 <canvas id="MuseumCanvas" width="600" height="600" style="border:2px solid #000000;">
@@ -3607,12 +3570,8 @@ app.run();
 </script>
 
 
-## Solar System
 
-1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast
-
-R - Spheres | T - Cubes | Y - Cylinders | U - Cones
-
+<h2> 1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast || R - Spheres | T - Cubes | Y - Cylinders | U - Cones </h2>
 
 <canvas id="myCCanvas_solarSystem" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -4068,14 +4027,10 @@ var app2 = new myCapp_solarSystem('myCCanvas_solarSystem');
 
 app2.run();
 </script>
-# Solar System Scene
 
-W - Front | A - Left | S - Back | D - Right | . - Reset
-
-1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast
-
-R - Spheres | T - Cubes | Y - Cylinders | U - Cones
-
+<h2> W - Front | A - Left | S - Back | D - Right | . - Reset </h2>
+<h2> Stop | 2 - Slow | 3 - Normal | 4 - Fast </h2>
+<h2> R - Spheres | T - Cubes | Y - Cylinders | U - Cones </h2>
 
 <canvas id="SolarSystemScene" width="400" height="400" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
@@ -4240,16 +4195,12 @@ var app = new SolarSystemScene('SolarSystemScene');
 
 app.run();
 </script>
-# Final Scene
 
-W - Front | A - Left | S - Back | D - Right | . - Reset
+<h2> W - Front | A - Left | S - Back | D - Right | . - Reset </h2>
+<h2> 1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast (Only applies to Solar System) </h2>
+<h2> R - Spheres | T - Cubes | Y - Cylinders | U - Cones || M - Day | N - Night </h2>
 
-1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast (Only applies to Solar System)
-
-R - Spheres | T - Cubes | Y - Cylinders | U - Cones
-
-M - Day | N - Night
-
+<h3>
 Contains:
 - 1 solar system
 - 1 table 
@@ -4258,7 +4209,7 @@ Contains:
 - 1 couple
 - 1 museum room
 - 2 paintings
-
+</h3>
 
 <canvas id="myScene" width="900" height="900" style="border:2px solid #000000;">
       Error: Your browser does not support the HTML canvas tag.
