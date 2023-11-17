@@ -466,9 +466,9 @@ app.run();
     {
         Color = in_Color;
         Normal = normalize(NormalMatrix * Vertex_Normals);
-        Position = M * vec4(in_Position.xyz, 1.0);
+        Position = M * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
         
-        gl_Position = MVP * vec4(in_Position, 1.0);
+        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
     }
 </script>
 <script id="my-fragment-shader-directional" type="x-shader/x-fragment">
@@ -492,10 +492,10 @@ app.run();
         vec3 ViewerDir = normalize(ViewPos - vec3(Position));
         vec3 HalfVector = normalize(LightDirection + ViewerDir);
         
-        float diffused_part = max(0.0, dot(Normal,LightDirection));
-        float specular_part = max(0.0, dot(Normal,HalfVector));
+        float diffused_part = max(0.0, dot(Normal, LightDirection));
+        float specular_part = max(0.0, dot(Normal, HalfVector));
         
-        if (diffused_part == 0.0)
+        if (diffused_part <= 0.0)
             specular_part = 0.0;
         else
             specular_part = pow(specular_part, Shininess);
@@ -505,7 +505,8 @@ app.run();
 
         vec3 rgb = min(Color * scatteredLight + reflectedLight, vec3(1.0));
         
-        gl_FragColor = vec4(rgb, 1.0);
+        gl_FragColor = min(vec4(Color, 1.0) * vec4(Ambient,1.0), vec4(1.0));
+        //gl_FragColor = vec4(rgb, 1.0);
     }
 </script>
 
@@ -607,7 +608,7 @@ class cube_directional extends CGRAobject
     {    
         this.shaderprog.startUsing();
         
-        this.normloc = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_Normals");
+        this.normloc = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"Vertex_Normals");
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.normalsbuffer);
         this.gl.vertexAttribPointer(this.normloc, // Attribute location
                        3, // number of elements per attribute
@@ -758,6 +759,9 @@ class sphere_directional extends CGRAobject
     
     drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0))
     {   
+        // ===== Default drawit takes care of the rest (MVP, in_Position, in_Color and drawArrays)
+        super.drawit(viewMat,projectionMat,parentMat4);
+        
         this.shaderprog.startUsing();
         
         // ===== Normals into vertex shader
@@ -773,27 +777,24 @@ class sphere_directional extends CGRAobject
         
         // ===== Normals transformation matrix
         var localT = parentMat4['*'](this.modelMat);
-        var NormMatloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"NormalMatrix");
+        this. NormMatloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"NormalMatrix");
         var NormMat = glm.mat3(glm.transpose(glm.inverse(localT)));
-        this.gl.uniformMatrix3fv(NormMatloc, false, NormMat.array);
+        this.gl.uniformMatrix3fv(this.NormMatloc, false, NormMat.array);
 
         // ===== Model transformation matrix
-        var Matloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"M");
+        this.Matloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"M");
         var localT = parentMat4['*'](this.modelMat);
-        this.gl.uniformMatrix4fv(Matloc, false, localT.array);
+        this.gl.uniformMatrix4fv(this.Matloc, false, localT.array);
         
         // ===== Shininess value
-        var Shininessloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Shininess");
-        this.gl.uniform1f(Shininessloc, this.Shininess);
+        this.Shininessloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Shininess");
+        this.gl.uniform1f(this.Shininessloc, this.Shininess);
 
         // ===== Strength value
-        var Strengthloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Strength");
-        this.gl.uniform1f(Strengthloc, this.Strength);
+        this.Strengthloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Strength");
+        this.gl.uniform1f(this.Strengthloc, this.Strength);
         
         this.shaderprog.stopUsing();
-
-        // ===== Default drawit takes care of the rest (MVP, in_Position, in_Color and drawArrays)
-        super.drawit(viewMat,projectionMat,parentMat4);
     }
 }
 </script>
@@ -936,32 +937,32 @@ class Directional_App_Spheres extends DEECapp
                         
         // ===== Instantiate cubes
         // - Default Shader
-        this.mySphere = new sphere(this.gl, [0.0, 0.15, 0.85], 10);
+        this.mySphere = new sphere(this.gl, [0.0, 0.15, 0.85], 30);
         this.mySphere.setShader(this.shaderprog);
         
         // - Directional Shader
-        this.mySphere_directional = new sphere_directional(this.gl, [0.0, 0.15, 0.85], 10);
+        this.mySphere_directional = new sphere_directional(this.gl, [0.0, 0.15, 0.85], 30);
         this.mySphere_directional.setShader(this.shaderprog_directional);
         this.mySphere_directional.setMaterials(3, 1); // Shininess and Strength
 
         // ===== Set parameters of light
         this.shaderprog_directional.startUsing();
         // -- Ambient Light
-        var Ambientloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Ambient");
-        var ambient_light = glm.vec3(0.7,0.7,0.7);
-        this.gl.uniform3fv(Ambientloc, ambient_light.array);
+        this.Ambientloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"Ambient");
+        var ambient_light = glm.vec3(0.5,0.5,0.5);
+        this.gl.uniform3fv(this.Ambientloc, ambient_light.array);
         // -- Directional Light Color
-        var LightColorloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightColor");
+        this.LightColorloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightColor");
         var color_light = glm.vec3(0.8,0.8,0.8);
-        this.gl.uniform3fv(LightColorloc, color_light.array);
+        this.gl.uniform3fv(this.LightColorloc, color_light.array);
         // -- Directional Light Direction
-        var LightDirloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightDirection");
+        this.LightDirloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightDirection");
         var light_dir = glm.vec3(0.0, 2.0, 1.0);
-        this.gl.uniform3fv(LightDirloc, light_dir.array);
+        this.gl.uniform3fv(this.LightDirloc, light_dir.array);
         // -- View Position
-        var ViewPosloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"ViewPos");
+        this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"ViewPos");
         var viewpos = glm.vec3(0,2,4);
-        this.gl.uniform3fv(ViewPosloc, viewpos.array);
+        this.gl.uniform3fv(this.ViewPosloc, viewpos.array);
         // -- Setup done
         this.shaderprog_directional.stopUsing();
         
