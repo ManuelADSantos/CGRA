@@ -67,6 +67,24 @@ void main() {
      gl_FragColor = texture2D(uSampler, vTextureCoord);
 }
 </script>
+
+%%html
+% What if you want to try this shader ???
+<script id="my-fragment-shaderTC" type="x-shader/x-fragment">
+precision mediump float;
+varying  vec2 vTextureCoord;
+varying  vec3 ex_Color;
+uniform vec3 un_Color;
+
+uniform sampler2D uSampler;
+
+void main() {
+     gl_FragColor = vec4(un_Color * texture2D(uSampler, vTextureCoord).rgb,1.0);
+}
+</script>
+
+
+
 %%js
 <script>
 class CGRAtexture{
@@ -352,6 +370,134 @@ class cubeT extends CGRAobject{
     }  
     
 }
+
+class cubeTC extends CGRAobject{
+    constructor(glcontext){
+        super(glcontext); // initialize the parent class
+        this.color=glm.vec3(0,1,0);
+        this.vColors = [];
+        this.vPositions = [];
+        this.texCoords = [];
+        
+        this.Index=0;
+        this.positions = [
+            glm.vec3( -0.5, -0.5,  0.5 ),
+            glm.vec3( -0.5,  0.5,  0.5 ),
+            glm.vec3(  0.5,  0.5,  0.5 ),
+            glm.vec3(  0.5, -0.5,  0.5 ),
+            glm.vec3( -0.5, -0.5, -0.5 ),
+            glm.vec3( -0.5,  0.5, -0.5 ),
+            glm.vec3(  0.5,  0.5, -0.5 ),
+            glm.vec3(  0.5, -0.5, -0.5 )
+        ];
+        
+        this.colors = [
+            glm.vec3( 0.0, 0.0, 0.0 ),  // black
+            glm.vec3( 1.0, 0.0, 0.0 ),  // red
+            glm.vec3( 1.0, 1.0, 0.0 ),  // yellow
+            glm.vec3( 0.0, 1.0, 0.0 ),  // green
+            glm.vec3( 0.0, 0.0, 1.0 ),  // blue
+            glm.vec3( 1.0, 0.0, 1.0 ),  // magenta
+            glm.vec3( 1.0, 1.0, 1.0 ),  // white
+            glm.vec3( 0.0, 1.0, 1.0 )   // cyan
+        ];
+        
+        this.tcoords = [
+            glm.vec2(0.0,0.0),
+            glm.vec2(0.0,1.0),
+            glm.vec2(1.0,1.0),
+            glm.vec2(1.0,0.0)
+        ];
+        
+      
+        this.quad( 1, 0, 3, 2 );
+        this.quad( 2, 3, 7, 6 );
+        this.quad( 3, 0, 4, 7 );
+        this.quad( 6, 5, 1, 2 );
+        this.quad( 4, 5, 6, 7 );
+        this.quad( 5, 4, 0, 1 );
+        
+        this.vertexbuffer=this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+        var a = new Float32Array(this.vPositions);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+
+        this.colorbuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+        a = new Float32Array(this.vColors);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+        
+        this.texcoordsbuffer=this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);  
+        a=new Float32Array(this.texCoords);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+        //console.log("texc=" + this.texCoords+ "  a= "+ a + " len= "+a.length)
+        
+        this.numvertices = 36;
+    }
+    
+     quad(a, b, c, d )
+    {
+  
+        this.vColors = [].concat(this.vColors,this.colors[a].array); 
+        this.vPositions = [].concat(this.vPositions,this.positions[a].array); 
+        this.texCoords = [].concat(this.texCoords,this.tcoords[0].array);
+        
+        this.vColors = [].concat(this.vColors, this.colors[b].array); 
+        this.vPositions = [].concat(this.vPositions,this.positions[b].array); 
+        this.texCoords = [].concat(this.texCoords, this.tcoords[1].array);
+                        
+        this.vColors = [].concat(this.vColors, this.colors[c].array); 
+        this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
+        this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
+      
+        this.vColors = [].concat(this.vColors, this.colors[a].array); 
+        this.vPositions = [].concat(this.vPositions, this.positions[a].array); 
+        this.texCoords = [].concat(this.texCoords, this.tcoords[0].array);
+       
+        this.vColors = [].concat(this.vColors, this.colors[c].array); 
+        this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
+        this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
+       
+        this.vColors = [].concat(this.vColors,this.colors[d].array); 
+        this.vPositions = [].concat(this.vPositions, this.positions[d].array); 
+        this.texCoords = [].concat(this.texCoords, this.tcoords[3].array);
+
+    }
+    
+     settexture(cgratex){
+            this.textureid = cgratex.textureid;
+    }
+    setcolor(color){
+            this.color = glm.vec3(color);
+    }
+
+    drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0)){
+        this.shaderprog.startUsing();
+        var colorLocation = this.gl.getUniformLocation(this.shaderprog.shaderProgram,
+                                                          "un_Color");    
+        this.gl.uniform3fv(colorLocation, this.color.array);
+       
+        this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                          "in_texcoords");
+       
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+        this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                           2, // number of elements per attribute
+                           this.gl.FLOAT,  // Type of elements
+                           false,  // 
+                           0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                           0); // Offset from the begining of a single vertex to this attribute
+        this.gl.enableVertexAttribArray(this.texcoordsLocation);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+        this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+        this.gl.uniform1i(this.textureLocation, 0);
+        // the parent method does the rest
+        super.drawit(viewMat,projectionMat,parentMat4);
+    }  
+    
+}
+
 class CubeApp extends DEECapp
 {
     counter = 0;
@@ -730,6 +876,175 @@ class sphereT extends CGRAobject
 }
 
 
+
+class sphereTC extends CGRAobject
+{
+    center = glm.vec4(0, 0, 0, 1); 
+    north_pole = glm.vec4(0, 0.5, 0, 1); 
+    
+    // ===== Constructor
+    constructor(glcontext, col = [1.0, 1.0, 1.0], faces = 10)
+    {
+        // Initialize the parent class
+        super(glcontext); 
+        this.color=glm.vec3(0,1,0);
+        // ===== Constants
+        // Number of faces (3 to inf)
+        this.sides = faces;
+        // ===== Number of vertices
+        this.numvertices = (6*this.sides + (6*this.sides)*(this.sides-2));
+        this.length = 1; this.radius = 0.5;
+        
+        // ===== Create circunferences (360/N sides)
+        let slices = [];  
+        
+        for (let i = 0; i < this.sides; i++)
+        { 
+            let theta = i*2*Math.PI/this.sides, aux = [];
+            for (let j = 0; j < this.sides-1; j++)
+            {     
+                aux.push(
+                    [(Math.sin((j+1)*Math.PI/this.sides)*this.radius)*Math.cos(theta),
+                     Math.cos((j+1)*Math.PI/this.sides)*this.radius,
+                    (Math.sin((j+1)*Math.PI/this.sides)*this.radius)*Math.sin(theta)]);
+            }
+            slices.push(aux);
+        }
+        slices.push([[0,this.radius,0],[0,-1*this.radius,0]]);
+        
+
+        var vertices = [];
+        var texCoords = [];
+        var colors = [];
+        
+        // ===== Create vertex and color data to populate buffers
+        for (let i = 0; i < this.sides; i++)
+        {            
+            // Top side
+            vertices.push(slices[this.sides][0]); // topo
+            vertices.push(slices[i][0]); // esquerda
+            vertices.push(slices[(i+1)%this.sides][0]); // direita
+            
+            texCoords.push([(2*i+1)/(this.sides*2),1]); // topo
+            texCoords.push([(2*i)/(this.sides*2), 1-1/this.sides]); // esquerda
+            texCoords.push([(2*i+2)/(this.sides*2),1-1/this.sides]);  // direita
+            
+
+            colors.push([col,col,col].flat());
+            
+            // Middle sections
+            for (let j = 0; j < this.sides - 2; j++)
+            {
+                vertices.push(slices[i][j]);
+                vertices.push(slices[(i+1)%this.sides][j]);
+                vertices.push(slices[i][j+1]);
+                
+                texCoords.push([(2*i)/(this.sides*2), 1-(j+1)/this.sides]); //a
+                texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+1)/this.sides]); //b
+                texCoords.push([(2*i)/(this.sides*2), 1-(j+2)/this.sides]); //c
+                
+
+                colors.push([col,col,col].flat());
+
+                vertices.push(slices[i][j+1]);
+                vertices.push(slices[(i+1)%this.sides][j]);
+                vertices.push(slices[(i+1)%this.sides][j+1]);
+                
+                texCoords.push([(2*i)/(this.sides*2), 1-(j+2)/this.sides]); //c
+                texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+1)/this.sides]); //b
+                texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+2)/this.sides]); //d
+                
+
+                
+                colors.push([col,col,col].flat());
+            }
+            
+            // Down side
+            vertices.push(slices[i][this.sides - 2]); //left
+            vertices.push(slices[(i+1)%this.sides][this.sides - 2]); //right
+            vertices.push(slices[this.sides][1]);  //bottom
+            
+            
+            texCoords.push([(2*i)/(this.sides*2), 1/this.sides]); // esquerda
+            texCoords.push([(2*i+2)/(this.sides*2),1/this.sides]);  // direita
+            texCoords.push([(2*i+1)/(this.sides*2),0]); // bottom
+
+       
+            colors.push([col,col,col].flat());
+            
+            
+        }
+        
+        
+        
+                
+              // ===== Populate vertex and color buffers
+        this.vertexbuffer=this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+        
+        this.colorbuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+        
+        this.texcoordbuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
+    
+        
+    }
+    
+        settexture(cgratex){
+            this.textureid = cgratex.textureid;
+    }
+
+    setcolor(color){
+            this.color = glm.vec3(color);
+    }
+    
+    drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0)){
+        this.shaderprog.startUsing();
+        var colorLocation = this.gl.getUniformLocation(this.shaderprog.shaderProgram,
+                                                          "un_Color");    
+        this.gl.uniform3fv(colorLocation, this.color.array);
+       
+        this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                          "in_texcoords");
+       
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+        this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                           2, // number of elements per attribute
+                           this.gl.FLOAT,  // Type of elements
+                           false,  // 
+                           0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                           0); // Offset from the begining of a single vertex to this attribute
+        this.gl.enableVertexAttribArray(this.texcoordsLocation);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+        this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+        this.gl.uniform1i(this.textureLocation, 0);
+              
+        // the parent method does the rest
+        super.drawit(viewMat,projectionMat,parentMat4);
+    }  
+    
+    // ===== Funcion to register center and north of sphere (WIP)
+    update_pos(parentMat4 = glm.mat4(1.0))
+    {
+        var globalMat = parentMat4['*'](this.modelMat);
+        
+        //console.log(globalMat);
+        
+        this.center = globalMat['*'](this.center);
+        //console.log("Center: " + this.center);
+        this.north_pole = globalMat['*'](this.north_pole);
+        //console.log("North: " + this.center);
+    }
+
+    
+
+}
+
+
 class SphereApp extends DEECapp
 {
     counter=0;
@@ -1083,6 +1398,164 @@ class cylinderT extends CGRAobject
 }
 
 
+class cylinderTC extends CGRAobject
+{
+    // ===== Constructor
+    constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 1.0], faces = 10)
+    {
+        // Initialize the parent class
+        super(glcontext); 
+
+        this.color=glm.vec3(0,1,0);
+        
+        // ===== Constants
+        // Number of faces (3 to inf)
+        this.sides = faces;
+        this.numvertices = this.sides*6 + this.sides*3*2;
+        this.length = 1; this.radius = 0.5;
+        
+        // ===== Calculate top and bottom bases coordinates
+        let up_side = [], down_side = [], circleT =[];
+        for (let i = 0; i < this.sides; i++)
+        { 
+            let theta = i*2*Math.PI/this.sides;
+            up_side.push([this.radius*Math.cos(theta),
+                          (this.length)/2,
+                          this.radius*Math.sin(theta)]);
+            
+            down_side.push([this.radius*Math.cos(theta),
+                            -1*(this.length)/2,
+                            this.radius*Math.sin(theta)]);
+            
+            circleT.push([0.25*Math.cos(theta)+0.25,
+                            0.25*Math.sin(theta)+0.25]);
+            
+            
+        }
+        
+        // ===== Calculate vertices
+        var vertices = [];
+        var texCoords = [];
+        for (let i = 0; i < this.sides; i++)
+        {   
+            
+            //LAT
+            vertices.push(up_side[i]);
+            vertices.push(up_side[(i+1)%this.sides]);
+            vertices.push(down_side[i]);
+ 
+            texCoords.push([0.5+(i)*0.5/this.sides, 0.5]);
+            texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
+            texCoords.push([0.5+(i)*0.5/this.sides, 0]);           
+            
+            vertices.push(down_side[i]);
+            vertices.push(down_side[(i+1)%this.sides]);
+            vertices.push(up_side[(i+1)%this.sides]);
+            
+            texCoords.push([0.5+(i)*0.5/this.sides, 0]);
+            texCoords.push([0.5+(i+1)*0.5/this.sides, 0]);
+            texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
+            
+            //TOP BASE
+            
+            vertices.push(up_side[i]);
+            vertices.push(up_side[(i+1)%this.sides]);
+            vertices.push([0,(this.length)/2,0]);
+            
+            texCoords.push(circleT[i]);
+            texCoords.push(circleT[(i+1)%this.sides]);
+            texCoords.push([0.25,0.25]);
+            
+            // DOWN BASE
+            
+            vertices.push(down_side[i]);
+            vertices.push(down_side[(i+1)%this.sides]);
+            vertices.push([0,-1*(this.length)/2,0]);
+            
+            texCoords.push(circleT[i]);
+            texCoords.push(circleT[(i+1)%this.sides]);
+            texCoords.push([0.25,0.25]);
+            
+
+        }
+
+        // ===== Assign colors
+        var colors = [];
+        this.color1 = [col1, col1, col2].flat();
+        this.color2 = [col2, col2, col1].flat();
+        for (let i=0; i < (this.sides*6)/3; i++)
+        {
+            colors.push(this.color1);
+            colors.push(this.color2);
+        }
+
+        
+        // ===== Populate vertex and color buffers
+        this.vertexbuffer=this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+        
+        this.colorbuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+        
+        this.texcoordbuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
+    }
+    
+    // ===== Function to dynamically change the cylinder colors
+    setColors(newColor1, newColor2)
+    {
+        this.color1 = [newColor1, newColor1, newColor2].flat();
+        this.color2 = [newColor2, newColor2, newColor1].flat();
+        let colors = [];
+        for (var i=0; i < (this.numvertices/3)/2; i++)
+        {
+            colors.push(this.color1);
+            colors.push(this.color2);
+        }
+        this.colorbuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+    }
+    
+    settexture(cgratex){
+            this.textureid = cgratex.textureid;
+    }
+
+    setcolor(color){
+            this.color = glm.vec3(color);
+    }
+            
+    drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0)){
+              this.shaderprog.startUsing();
+              var colorLocation = this.gl.getUniformLocation(this.shaderprog.shaderProgram,
+                                                          "un_Color");    
+        this.gl.uniform3fv(colorLocation, this.color.array);
+       
+        this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                          "in_texcoords");
+       
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+        this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                           2, // number of elements per attribute
+                           this.gl.FLOAT,  // Type of elements
+                           false,  // 
+                           0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                           0); // Offset from the begining of a single vertex to this attribute
+        this.gl.enableVertexAttribArray(this.texcoordsLocation);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+        this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+        this.gl.uniform1i(this.textureLocation, 0);
+        
+              
+        // the parent method does the rest
+        super.drawit(viewMat,projectionMat, parentMat4);
+            } 
+}
+
+
 class CylinderApp extends DEECapp
 {
     counter=0;
@@ -1328,8 +1801,7 @@ class coneT extends CGRAobject
         
         
         // ===== Populate buffers
-        console.log(vertices);
-        console.log(texCoords);
+
         this.vertexbuffer=this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
@@ -1388,6 +1860,137 @@ class coneT extends CGRAobject
               super.drawit(viewMat,projectionMat, parentMat4);
             } 
 }
+
+class coneTC extends CGRAobject
+{
+    // ===== Contructor
+    constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 0.0], faces = 10)
+    {
+        // ===== Initialize the parent class
+        super(glcontext); 
+        this.color=glm.vec3(0,1,0);
+        
+        // ===== Constants
+        // Number of faces (3 to inf)
+        this.sides = faces;
+        this.numvertices = this.sides*3*2;
+        this.length = 1; this.radius = 0.5;
+        
+        // ===== Calculate base
+        let base = [];
+        var texCoords = [];
+        let baseT = [];
+        for (let i = 0; i < this.sides; i++)
+        { 
+            let theta = i*2*Math.PI/this.sides;
+            base.push(
+                [this.radius*Math.cos(theta),
+                 -1*(this.length)/2,
+                this.radius*Math.sin(theta)]);
+            baseT.push(
+                [this.radius*Math.cos(theta)+0.5,
+                this.radius*Math.sin(theta)+0.5]);
+        }
+        
+        // ===== Calculate vertices
+        var vertices = [];
+        
+        
+        for (let i = 0; i < this.sides; i++)
+        {   
+            vertices.push(base[i]);
+            vertices.push(base[(i+1)%this.sides]);
+            vertices.push([0,-1*(this.length)/2,0]);
+            
+            texCoords.push(baseT[i]);
+            texCoords.push(baseT[(i+1)%this.sides]);
+            texCoords.push([0.5,0.5]);
+            
+            vertices.push(base[i]);
+            vertices.push(base[(i+1)%this.sides]);
+            vertices.push([0,(this.length)/2,0]);
+            
+            texCoords.push(baseT[i]);
+            texCoords.push(baseT[(i+1)%this.sides]);
+            texCoords.push([0.5,0.5]);
+        }
+        
+        // ===== Assign colors
+        this.Cone_colors = [col1, col1, col2].flat();
+        let colors = [];
+        for (let i=0; i < (this.sides*6)/3; i++)
+        {
+            colors.push(this.Cone_colors);
+        }
+        
+        
+        // ===== Populate buffers
+
+        this.vertexbuffer=this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+        
+        this.colorbuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+        
+                
+        this.texcoordbuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords.flat()), this.gl.STATIC_DRAW);
+            
+        
+
+    }
+    
+    // Function to dynamically change colors
+    setColors(newColor1, newColor2)
+    {
+        this.Cone_colors = [newColor1, newColor1, newColor2].flat();
+        let colors = [];
+        for (let i=0; i < (this.sides*6)/3; i++)
+        {
+            colors.push(this.Cone_colors);
+        }
+        this.colorbuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+    }
+    
+    setcolor(color){
+            this.color = glm.vec3(color);
+    }
+            
+            settexture(cgratex){
+                    this.textureid = cgratex.textureid;
+            }
+            
+            drawit(viewMat, projectionMat, parentMat4 = glm.mat4(1.0)){
+              this.shaderprog.startUsing();
+              var colorLocation = this.gl.getUniformLocation(this.shaderprog.shaderProgram,
+                                                          "un_Color");    
+        this.gl.uniform3fv(colorLocation, this.color.array);
+       
+        this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                          "in_texcoords");
+       
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+        this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                           2, // number of elements per attribute
+                           this.gl.FLOAT,  // Type of elements
+                           false,  // 
+                           0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                           0); // Offset from the begining of a single vertex to this attribute
+        this.gl.enableVertexAttribArray(this.texcoordsLocation);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+        this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+        this.gl.uniform1i(this.textureLocation, 0);
+              
+              // the parent method does the rest
+              super.drawit(viewMat,projectionMat, parentMat4);
+            } 
+}
+
 
 
 
@@ -3030,10 +3633,11 @@ R - Spheres | T - Cubes | Y - Cylinders | U - Cones
 class solarSystem extends CGRAobject
 {
     form = 1;
-    constructor(glcontext, form = 1)
+    constructor(glcontext, form = 1, sunFlg = 1)
     {    
         super(glcontext)
-        
+    
+
         this.form = form;
         
         
@@ -3048,6 +3652,8 @@ class solarSystem extends CGRAobject
         var UraTex = new CGRAtexture(glcontext);
         var NepTex = new CGRAtexture(glcontext);
         
+
+
         
         SunTex.load("SunTex.jpg");
         MerTex.load("MerTex.jpg");
@@ -3066,7 +3672,7 @@ class solarSystem extends CGRAobject
         switch(form)
         {
             case 1: 
-                this.Sun = new sphereT(this.gl,[1, 0.7, 0] , 20);
+                this.Sun = new sphereTC(this.gl,[1, 0.7, 0] , 20);
                 this.Mercury = new sphereT(this.gl,[0.58, 0.58, 0.58] , 20);
                 this.Venus = new sphereT(this.gl,[0.58, 0.29, 0.1] , 20);
                 this.Earth = new sphereT(this.gl,[0, 0.8, 0.3], 20);
@@ -3077,7 +3683,7 @@ class solarSystem extends CGRAobject
                 this.Neptune = new sphereT(this.gl,[0, 0, 1], 20);
                 break;
             case 2:
-                this.Sun = new cubeT(this.gl);
+                this.Sun = new cubeTC(this.gl);
                 this.Mercury = new cubeT(this.gl);
                 this.Venus = new cubeT(this.gl);
                 this.Earth = new cubeT(this.gl);
@@ -3088,7 +3694,7 @@ class solarSystem extends CGRAobject
                 this.Neptune = new cubeT(this.gl);
                 break;
             case 3:
-                this.Sun = new cylinderT(this.gl,[1, 0.7, 0] ,[1, 1, 0], 10);
+                this.Sun = new cylinderTC(this.gl,[1, 0.7, 0] ,[1, 1, 0], 10);
                 this.Mercury = new cylinderT(this.gl,[0.58, 0.58, 0.58] ,[0.8, 0.8, 0.8], 10);
                 this.Venus = new cylinderT(this.gl,[0.58, 0.29, 0.1] ,[1, 0.8, 0.67], 10);
                 this.Earth = new cylinderT(this.gl,[0, 0.8, 0.3], [0, 0, 1], 10);
@@ -3099,7 +3705,7 @@ class solarSystem extends CGRAobject
                 this.Neptune = new cylinderT(this.gl,[0, 0, 1] ,[0, 0.5, 1], 10);
                 break;
             case 4:
-                this.Sun = new coneT(this.gl,[1, 0.7, 0] ,[1, 1, 0], 10);
+                this.Sun = new coneTC(this.gl,[1, 0.7, 0] ,[1, 1, 0], 10);
                 this.Mercury = new coneT(this.gl,[0.58, 0.58, 0.58] ,[0.8, 0.8, 0.8], 10);
                 this.Venus = new coneT(this.gl,[0.58, 0.29, 0.1] ,[1, 0.8, 0.67], 10);
                 this.Earth = new coneT(this.gl,[0, 0.8, 0.3], [0, 0, 1], 10);
@@ -3108,6 +3714,22 @@ class solarSystem extends CGRAobject
                 this.Saturn = new coneT(this.gl,[0.8, 0.4, 0] ,[0.8, 0.8, 0.8], 10);
                 this.Uranus = new coneT(this.gl,[0.4, 0.6, 0.9] ,[0, 0.7, 1], 10);
                 this.Neptune = new coneT(this.gl,[0, 0, 1] ,[0, 0.5, 1], 10);
+                break;
+            }
+
+            var Color = [0.3, 0.3, 0.3];
+            switch(sunFlg){
+                case 1:
+                    Color = [0.3, 0.3, 0.3];
+                break;
+                case 2:
+                    Color = [0.9, 0.9, 0.9];
+                break;
+                case 3:
+                    Color = [1, 0.7, 0.0];
+                break;
+                case 4:
+                    Color = [1, 0.0, 0.0];
                 break;
             }
         
@@ -3124,23 +3746,28 @@ class solarSystem extends CGRAobject
         this.Neptune.settexture(NepTex);
         this.SaturnDisc.settexture(SatDTex);
 
+       this.Sun.setcolor(Color)
             
         }
         
+    setShader(shaderT,shaderTC){
+        this.Sun.setShader(shaderTC);
+        this.Mercury.setShader(shaderT);
+        this.Venus.setShader(shaderT);
+        this.Earth.setShader(shaderT);
+        this.Mars.setShader(shaderT);
+        this.Jupiter.setShader(shaderT);
+        this.Saturn.setShader(shaderT);
+        this.Uranus.setShader(shaderT);
+        this.Neptune.setShader(shaderT);
+        this.SaturnDisc.setShader(shaderT);
+    }
     
     drawit(viewM, projectM, counter, parentMat4 = glm.mat4(1.0))
     {
         var globalMat = parentMat4['*'](this.modelMat);
         
-        this.Sun.setShader(this.shaderprog);
-        this.Mercury.setShader(this.shaderprog);
-        this.Venus.setShader(this.shaderprog);
-        this.Earth.setShader(this.shaderprog);
-        this.Mars.setShader(this.shaderprog);
-        this.Jupiter.setShader(this.shaderprog);
-        this.Saturn.setShader(this.shaderprog);
-        this.Uranus.setShader(this.shaderprog);
-        this.Neptune.setShader(this.shaderprog);
+       
         
         
         ////////////////////////SUN//////////////////////////////
@@ -3273,7 +3900,7 @@ class solarSystem extends CGRAobject
         
         
         //////////////////////SATURN///////////////////////////////
-        this.SaturnDisc.setShader(this.shaderprog);
+     
         var Saturn = glm.mat4(glm.mat3(1));
         // ===== Scale
         var scale = glm.vec3(1.2/2, 1.2/2, 1.2/2);
@@ -3347,6 +3974,7 @@ class solarSystem extends CGRAobject
 class myCapp_solarSystem extends DEECapp{
     counter=0;
     speedup = 1;
+    SunFlag = 1;
     initialize(){
         var fragsrc = document.getElementById("my-fragment-shader").text;
         var vertsrc = document.getElementById("my-vertex-shader").text;
@@ -3357,15 +3985,21 @@ class myCapp_solarSystem extends DEECapp{
          var fragsrcT = document.getElementById("my-fragment-shaderT").text;
         var vertsrcT = document.getElementById("my-vertex-shaderT").text;
         
+        
+
         this.shaderprogT = new DEECshader(this.gl);
         this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
+
+        var fragsrcTC = document.getElementById("my-fragment-shaderTC").text;
+        this.shaderprogTC = new DEECshader(this.gl);
+        this.shaderprogTC.srcShaders(vertsrcT,fragsrcTC);
         
         // perform other initializations
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.clearColor(0.1,0.1,0.1,1.0);
         
         this.solarSystem = new solarSystem(this.gl, 1);
-        this.solarSystem.setShader(this.shaderprogT);
+        this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
@@ -3405,20 +4039,24 @@ class myCapp_solarSystem extends DEECapp{
                  this.speedup = 10;
                  break;
              case 114: // r
-                 this.solarSystem = new solarSystem(this.gl, 1);
-                 this.solarSystem.setShader(this.shaderprog);
+             this.SunFlag = 1;
+                 this.solarSystem = new solarSystem(this.gl, 1, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 116: // t
-                 this.solarSystem = new solarSystem(this.gl, 2);
-                 this.solarSystem.setShader(this.shaderprog);
+                this.SunFlag = 2;
+                 this.solarSystem = new solarSystem(this.gl, 2, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 121: // y
-                 this.solarSystem = new solarSystem(this.gl, 3);
-                 this.solarSystem.setShader(this.shaderprog);
+                this.SunFlag = 3;
+                 this.solarSystem = new solarSystem(this.gl, 3, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 117: // u
-                 this.solarSystem = new solarSystem(this.gl, 4);
-                 this.solarSystem.setShader(this.shaderprog);
+                this.SunFlag = 4;
+                 this.solarSystem = new solarSystem(this.gl, 4, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
         }
     }
@@ -3462,6 +4100,7 @@ class SolarSystemScene extends DEECapp{
     positionX = -5.0;
     positionZ = 0.0;
     camera_angle = 0;
+    SunFlag = 1;
     initialize()
     {
         var fragsrc = document.getElementById("my-fragment-shader").text;
@@ -3476,6 +4115,11 @@ class SolarSystemScene extends DEECapp{
         
         this.shaderprogT = new DEECshader(this.gl);
         this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
+
+
+        var fragsrcTC = document.getElementById("my-fragment-shaderTC").text;
+        this.shaderprogTC = new DEECshader(this.gl);
+        this.shaderprogTC.srcShaders(vertsrcT,fragsrcTC);
         
         // perform other initializations
         this.gl.enable(this.gl.DEPTH_TEST);
@@ -3483,7 +4127,7 @@ class SolarSystemScene extends DEECapp{
         
         // Lets create solar system
         this.solarSystem = new solarSystem(this.gl, 1);
-        this.solarSystem.setShader(this.shaderprogT);
+        this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
         
         
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3524,20 +4168,20 @@ class SolarSystemScene extends DEECapp{
                  this.speedup = 10;
                  break;
              case 114: // r
-                 this.solarSystem = new solarSystem(this.gl, 1);
-                 this.solarSystem.setShader(this.shaderprog);
+                 this.solarSystem = new solarSystem(this.gl, 1, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 116: // t
-                 this.solarSystem = new solarSystem(this.gl, 2);
-                 this.solarSystem.setShader(this.shaderprog);
+                 this.solarSystem = new solarSystem(this.gl, 2, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 121: // y
-                 this.solarSystem = new solarSystem(this.gl, 3);
-                 this.solarSystem.setShader(this.shaderprog);
+                 this.solarSystem = new solarSystem(this.gl, 3, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 117: // u
-                 this.solarSystem = new solarSystem(this.gl, 4);
-                 this.solarSystem.setShader(this.shaderprog);
+                 this.solarSystem = new solarSystem(this.gl, 4, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 100: //d
                  this.camera_angle = this.camera_angle + 0.1;
@@ -3642,7 +4286,7 @@ class myScene extends DEECapp{
     camera_angle = glm.radians(-45);
     positionY = 0.033;
     view_flag = 1;
-    
+    SunFlag = 1;
     dayflg = 1;
     dayTex = new CGRAtexture(this.gl); 
 
@@ -3659,6 +4303,11 @@ class myScene extends DEECapp{
         
         this.shaderprogT = new DEECshader(this.gl);
         this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
+
+
+        var fragsrcTC = document.getElementById("my-fragment-shaderTC").text;
+        this.shaderprogTC = new DEECshader(this.gl);
+        this.shaderprogTC.srcShaders(vertsrcT,fragsrcTC);
    
         
         // Initializations
@@ -3667,7 +4316,7 @@ class myScene extends DEECapp{
         
         // Create Objects
         this.solarSystem = new solarSystem(this.gl);
-        this.solarSystem.setShader(this.shaderprogT);
+        this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
         
         this.museum = new museumRoom(this.gl);
         this.museum.setShader(this.shaderprogT);
@@ -3744,20 +4393,20 @@ class myScene extends DEECapp{
                  this.speedup = 10;
                  break;
             case 114: // r
-                 this.solarSystem = new solarSystem(this.gl, 1);
-                 this.solarSystem.setShader(this.shaderprog);
+                 this.solarSystem = new solarSystem(this.gl, 1, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 116: // t
-                 this.solarSystem = new solarSystem(this.gl, 2);
-                 this.solarSystem.setShader(this.shaderprog);
+                 this.solarSystem = new solarSystem(this.gl, 2, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 121: // y
-                 this.solarSystem = new solarSystem(this.gl, 3);
-                 this.solarSystem.setShader(this.shaderprog);
+                 this.solarSystem = new solarSystem(this.gl, 3, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 117: // u
-                 this.solarSystem = new solarSystem(this.gl, 4);
-                 this.solarSystem.setShader(this.shaderprog);
+                 this.solarSystem = new solarSystem(this.gl, 4, this.SunFlag);
+                 this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
                  break;
              case 100: //d
                  this.camera_angle = this.camera_angle + 0.1;
