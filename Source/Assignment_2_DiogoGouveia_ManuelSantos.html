@@ -4012,6 +4012,7 @@
         positionY = 0.033;
         view_flag = 1;
         SunFlag = 1;
+        ShapeFlag = 1;
         dayflg = 1;
         dayTex = new CGRAtexture(this.gl); 
 
@@ -4118,20 +4119,16 @@
                     this.speedup = 10;
                     break;
                 case 114: // r
-                    this.solarSystem = new solarSystem(this.gl, 1, this.SunFlag);
-                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+                    this.ShapeFlag = 1;
                     break;
                 case 116: // t
-                    this.solarSystem = new solarSystem(this.gl, 2, this.SunFlag);
-                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+                    this.ShapeFlag = 2;
                     break;
                 case 121: // y
-                    this.solarSystem = new solarSystem(this.gl, 3, this.SunFlag);
-                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+                    this.ShapeFlag = 3;
                     break;
                 case 117: // u
-                    this.solarSystem = new solarSystem(this.gl, 4, this.SunFlag);
-                    this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
+                    this.ShapeFlag = 4;
                     break;
                 case 100: //d
                     this.camera_angle = this.camera_angle + 0.1;
@@ -4169,12 +4166,21 @@
                     break;
                 case 110: // n
                     this.dayflg = 0;
+                    break;
+                case 99: // c
+                    this.SunFlag++;
+                    if (this.SunFlag > 4)
+                        this.SunFlag = 1;
+                    break;
             }
         }
         
         
         render(){
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+            this.solarSystem = new solarSystem(this.gl, this.ShapeFlag, this.SunFlag);
+            this.solarSystem.setShader(this.shaderprogT, this.shaderprogTC);
             
             if(this.dayflg == 1){
                 this.dayTex.load("DayTex.jpg");
