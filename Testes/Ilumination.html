@@ -192,7 +192,105 @@ class sphere extends CGRAobject
     }
 }
 </script>
+
+<script id="Cylinder Original">
+    class cylinder extends CGRAobject
+    {
+        // ===== Constructor
+        constructor(glcontext, col1 = [0.0, 1.0, 0.0], col2 = [0.0, 0.0, 1.0], faces = 10)
+        {
+            // Initialize the parent class
+            super(glcontext); 
+            
+            // ===== Constants
+            // Number of faces (3 to inf)
+            this.sides = faces;
+            this.numvertices = this.sides*6 + this.sides*3*2;
+            this.length = 1; this.radius = 0.5;
+            
+            // ===== Calculate top and bottom bases coordinates
+            let up_side = [], down_side = [];   
+            for (let i = 0; i < this.sides; i++)
+            { 
+                let theta = i*2*Math.PI/this.sides;
+                up_side.push([this.radius*Math.cos(theta),
+                            (this.length)/2,
+                            this.radius*Math.sin(theta)]);
+                
+                down_side.push([this.radius*Math.cos(theta),
+                                -1*(this.length)/2,
+                                this.radius*Math.sin(theta)]);
+            }
+            
+            // ===== Calculate vertices
+            var vertices = [];
+            for (let i = 0; i < this.sides; i++)
+            {   
+                vertices.push(up_side[i]);
+                vertices.push(up_side[(i+1)%this.sides]);
+                vertices.push(down_side[i]);
+                
+                vertices.push(down_side[i]);
+                vertices.push(down_side[(i+1)%this.sides]);
+                vertices.push(up_side[(i+1)%this.sides]);
+                
+                vertices.push(up_side[i]);
+                vertices.push(up_side[(i+1)%this.sides]);
+                vertices.push([0,(this.length)/2,0]);
+                
+                vertices.push(down_side[i]);
+                vertices.push(down_side[(i+1)%this.sides]);
+                vertices.push([0,-1*(this.length)/2,0]);
+            }
+
+            // ===== Assign colors
+            var colors = [];
+            this.color1 = [col1, col1, col2].flat();
+            this.color2 = [col2, col2, col1].flat();
+            for (let i=0; i < (this.sides*6)/3; i++)
+            {
+                colors.push(this.color1);
+                colors.push(this.color2);
+            }
+            /*var alpha = 0;
+            for (let i=0; i < this.numvertices; i++)
+            {
+                colors.push(col1[0]*alpha + (1*alpha)*col2[0]);
+                colors.push(col1[1]*alpha + (1*alpha)*col2[1]);
+                colors.push(col1[2]*alpha + (1*alpha)*col2[2]);
+                alpha += 1.0/this.numvertices;
+            }*/
+            
+            // ===== Populate vertex and color buffers
+            this.vertexbuffer=this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), this.gl.STATIC_DRAW);
+            
+            this.colorbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+        }
+        
+        // ===== Function to dynamically change the cylinder colors
+        setColors(newColor1, newColor2)
+        {
+            this.color1 = [newColor1, newColor1, newColor2].flat();
+            this.color2 = [newColor2, newColor2, newColor1].flat();
+            let colors = [];
+            for (var i=0; i < (this.numvertices/3)/2; i++)
+            {
+                colors.push(this.color1);
+                colors.push(this.color2);
+            }
+            this.colorbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors.flat()), this.gl.STATIC_DRAW);
+        }
+    }
+</script>
+
 </div>
+
 
 <!-- ======================================================================================================================= -->
 <div id="Ambient">
