@@ -1330,10 +1330,21 @@ class cone extends CGRAobject
                 vertices.push(base[i]);
                 vertices.push(base[(i+1)%this.sides]);
                 vertices.push([0,(this.length)/2,0]);
+                console.log(base[i]); 
                 
-                
+                var a = glm.vec3(base[(i+1)%this.sides][0] - base[i][0],
+                                base[(i+1)%this.sides][1] - base[i][1],
+                                base[(i+1)%this.sides][2] - base[i][2]);
 
-                console.log(teste);
+                var b = glm.vec3(0 - base[i][0],
+                                (this.length)/2 - base[i][1],
+                                0 - base[i][2]);
+
+                var c = glm.cross(b,a);
+
+                normals.push(c.array);
+                normals.push(c.array);
+                normals.push(c.array);
             }
             
             // ===== Assign colors
