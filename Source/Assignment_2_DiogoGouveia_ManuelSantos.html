@@ -469,6 +469,84 @@
 <!-- ============================================ Solids Definitions ============================================ -->
 <div id="Solids Definitions">  
     <h1 id="Solids Definitions">===== Solids Definitions =====</h1>
+    
+    <script id="SquareDefinitions">
+        class square extends CGRAobject{
+  constructor(glcontext, cgratex){
+      super(glcontext); // initialize the parent class
+      
+      this.numvertices = 6;
+      var vertices =
+          [ -1.0, -1.0,  0.0,
+            -1.0,  1.0,   0.0,
+             1.0,  1.0,   0.0,
+             1.0,   1.0,  0.0,
+             1.0,   -1.0,   0.0,
+             -1.0,   -1.0,  0.0,]; 
+      
+      var colors = [
+          1.0, 0.0, 0.0, 
+          0.0, 1.0, 0.0,
+          0.0, 0.0, 1.0,
+          0.0, 0.0, 0.0,
+          0.0, 0.0, 1.0,
+          0.0, 0.0, 0.0];
+
+      
+      this.vertexbuffer=this.gl.createBuffer();
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+      // as JS stores everything in 64 bit format and GL expects 32bits...
+      this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
+
+      this.colorbuffer = this.gl.createBuffer();
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+      // as JS stores everything in 64 bit format and GL expects 32bits...
+      this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors), this.gl.STATIC_DRAW);    
+  }
+}
+class squareT extends square{
+    constructor(glcontext){
+        super(glcontext);
+            var texcoords = [
+                0.0, 0.0,
+                0.0, 1.0,
+                1.0, 1.0,
+                1.0, 1.0,
+                1.0, 0.0,
+                0.0, 0.0 ];
+        
+            this.texcoordbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texcoords), this.gl.STATIC_DRAW);
+    }
+        
+    settexture(cgratex){
+            this.textureid = cgratex.textureid;
+    }
+    
+    drawit(viewMat, projectionMat){
+        this.shaderprog.startUsing();
+        this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                          "in_texcoords");
+       
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+        this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                           2, // number of elements per attribute
+                           this.gl.FLOAT,  // Type of elements
+                           false,  // 
+                           0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                           0); // Offset from the begining of a single vertex to this attribute
+        this.gl.enableVertexAttribArray(this.texcoordsLocation);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+        this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+        this.gl.uniform1i(this.textureLocation, 0);
+        
+        // the parent method does the rest
+        super.drawit(viewMat,projectionMat);
+    }    
+}
+
+    </script>
     <!-- Cubes -->
     <script id="CubeDefinitions">
         class cube extends CGRAobject
@@ -3703,6 +3781,7 @@
             ShapeFlag = 1;
             dayflg = 1;
             dayTex = new CGRAtexture(this.gl); 
+            nightTex = new CGRAtexture(this.gl);
 
             initialize()
             {
@@ -3765,8 +3844,55 @@
                 
                 this.day = new sphereT(this.gl);
                 this.day.setShader(this.shaderprogT);
+
+                this.dayTex.load("DayTex.jpg");
+                this.day.settexture(this.dayTex);
+
+                this.nightTex.load("NightTex.jpg");
+
+
+                this.targetTextureWidth = 1280;
+                this.targetTextureHeight = 720;
+                this.targetTexture = this.gl.createTexture();
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.targetTexture);
+
+                this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA,
+                            this.targetTextureWidth, this.targetTextureHeight, 0,
+                            this.gl.RGBA, this.gl.UNSIGNED_BYTE, null);
+
+                // set the filtering so we don't need mips
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
                 
-            
+
+                // Create and bind the framebuffer
+                this.fb = this.gl.createFramebuffer();
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.fb);
+
+                this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, 
+                                            this.gl.TEXTURE_2D, this.targetTexture, 0);
+
+                // create a depth renderbuffer
+                this.depthBuffer = this.gl.createRenderbuffer();
+                this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, this.depthBuffer);
+
+                // make a depth buffer and the same size as the targetTexture
+                this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, 
+                                            this.targetTextureWidth, this.targetTextureHeight);
+                this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, 
+                                                this.gl.RENDERBUFFER, this.depthBuffer);
+
+
+
+                this.screen = new squareT(this.gl);
+                this.screen.textureid = this.targetTexture;
+                this.screen.setShader(this.shaderprogT);
+                this.screen_mat=glm.translate(glm.mat4(1.0),(glm.vec3(0.0,10.0,-10.0)));
+                this.screen_mat[0][0]=4;this.screen_mat[1][1]=2.5;
+                this.screen.setModelTransformation(this.screen_mat);//Move up
+                            
+                        
                 
                 
                 
@@ -3872,19 +3998,35 @@
                         break;
                 }
             }
+
+            draw_scene(viewM){
+                if(this.dayflg == 1){
+                    this.day.settexture(this.dayTex);
+                }
+                else{
+                    this.day.settexture(this.nightTex);
+                }
+
+                // ===== Draw
+                this.solarSystem.drawit(viewM,this.projectionM, this.orbits);
+                this.museum.drawit(viewM,this.projectionM);
+                this.expositor.drawit(viewM,this.projectionM);
+                this.moon.drawit(viewM,this.projectionM);
+                this.guard.drawit(viewM,this.projectionM);
+                this.couple.drawit(viewM,this.projectionM);   
+                this.painting.drawit(viewM,this.projectionM);
+                this.painting1.drawit(viewM,this.projectionM);
+                this.grass.drawit(viewM,this.projectionM);
+                this.day.drawit(viewM,this.projectionM);
+                this.screen.drawit(viewM,this.projectionM); 
+
+            }
             
             render()
             {
                 this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
             
-                if(this.dayflg == 1){
-                    this.dayTex.load("DayTex.jpg");
-                    this.day.settexture(this.dayTex);
-                }
-                else{
-                    this.dayTex.load("NightTex.jpg");
-                    this.day.settexture(this.dayTex);
-                }
+               
                 // ===== Update Speed
                 this.orbits = this.orbits + this.speedup;
                 this.counter++;
@@ -4071,19 +4213,68 @@
                                             glm.vec3(0,this.positionY,0),
                                             glm.vec3(0,1,0));
                 }
+                var Earth = glm.mat4(glm.mat3(1));
+                    // ===== Scale
+                    var scale = glm.vec3(0.127/2, 0.127/2, 0.127/2);
+                    Earth = glm.scale(Earth, scale);
+                    // ===== Rotation
+                    var outer_rotation = this.orbits;
+                    var rotation = glm.radians(outer_rotation);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Earth = glm.rotate(Earth, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,-50);
+                    Earth = glm.translate(Earth, translation);
+                    // ===== Rotation
+                    var inner_rotation = this.orbits;
+                    var rotation = glm.radians(-inner_rotation);
+                    Earth = glm.rotate(Earth, rotation, axis);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Earth = glm.rotate(Earth, rotation, axis);   
+                    
+                    //var center = this.solarSystem.Earth.center;
+                    //console.log("Center: " + center);
+                    //var north = this.solarSystem.Earth.north_pole;
+                    //console.log("North: " + north);
+                    
+                    //this.viewM = glm.lookAt(glm.vec3(center[0], center[1], center[2]),
+                    //                        glm.vec3(0,this.positionY,0),
+                    //                        glm.vec3(0,1,0));
+                    
+                    this.viewScreen = glm.lookAt(glm.vec3(Earth[3][0], this.positionY,Earth[3][2]),
+                                            glm.vec3(0,this.positionY,0),
+                                            glm.vec3(0,1,0));
+
+
+                this.gl.enable(this.gl.DEPTH_TEST);
+
+                // render to our targetTexture by binding the framebuffer
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.fb);
+                this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, 
+                                        this.gl.TEXTURE_2D, this.targetTexture, 0);
+
+                // Tell WebGL how to convert from clip space to pixels
+                this.gl.viewport(0, 0, this.targetTextureWidth, this.targetTextureHeight);
+
+
+                this.gl.clearColor(0, 0, 0, 1);   // clear to white
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+                this.draw_scene(this.viewScreen);
+
+                //------------------------Draw Scene for the Viewer--------------------//
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+                this.gl.enable(this.gl.DEPTH_TEST);
+
+                this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
+
+                this.gl.clearColor(0, 0, 0, 1);   // clear to white
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+                this.draw_scene(this.viewM);
                 
                 
-                // ===== Draw
-                this.solarSystem.drawit(this.viewM,this.projectionM, this.orbits);
-                this.museum.drawit(this.viewM,this.projectionM);
-                this.expositor.drawit(this.viewM,this.projectionM);
-                this.moon.drawit(this.viewM,this.projectionM);
-                this.guard.drawit(this.viewM,this.projectionM);
-                this.couple.drawit(this.viewM,this.projectionM);
-                this.painting.drawit(this.viewM,this.projectionM);
-                this.painting1.drawit(this.viewM,this.projectionM);
-                this.grass.drawit(this.viewM,this.projectionM);
-                this.day.drawit(this.viewM,this.projectionM);
+
                 
                 
             }
