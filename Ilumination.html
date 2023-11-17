@@ -1228,9 +1228,9 @@ class sphere extends CGRAobject
             this.gl.uniformMatrix3fv(this.NormMatloc, false, NormMat.array);
 
             // ===== Model transformation matrix
-            this.Matloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"M");
-            var localT = parentMat4['*'](this.modelMat);
-            this.gl.uniformMatrix4fv(this.Matloc, false, localT.array);
+            this.Matloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"MV");
+            var MV = viewMat['*'](parentMat4['*'](this.modelMat));
+            this.gl.uniformMatrix4fv(this.Matloc, false, MV.array);
             
             // ===== Shininess value
             this.Shininessloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Shininess");
@@ -1414,10 +1414,10 @@ class sphere extends CGRAobject
             this.shaderprog.srcShaders(vertsrc,fragsrc);
             
             // - Directional Shader
-            var fragsrc_dir = document.getElementById("my-fragment-shader-directional").text;
-            var vertsrc_dir = document.getElementById("my-vertex-shader-directional").text;
-            this.shaderprog_directional = new DEECshader(this.gl);
-            this.shaderprog_directional.srcShaders(vertsrc_dir,fragsrc_dir);
+            var fragsrc_dir = document.getElementById("my-fragment-shader-pontual").text;
+            var vertsrc_dir = document.getElementById("my-vertex-shader-pontual").text;
+            this.shaderprog_pontual = new DEECshader(this.gl);
+            this.shaderprog_pontual.srcShaders(vertsrc_dir,fragsrc_dir);
             
             // ===== Instantiate cubes
             // - Default Shader
@@ -1425,30 +1425,41 @@ class sphere extends CGRAobject
             this.myCube.setShader(this.shaderprog);
             
             // - Ambient Shader
-            this.myCube_dir = new cube_directional(this.gl, [1, 0, 0]);
-            this.myCube_dir.setShader(this.shaderprog_directional);
-            this.myCube_dir.setMaterials(30, 1); // Shininess and Strength
+            this.myCube_pontual = new cube_pontual(this.gl, [1, 0, 0]);
+            this.myCube_pontual.setShader(this.shaderprog_pontual);
+            this.myCube_pontual.setMaterials(30, 1); // Shininess and Strength
             
             // ===== Set parameters of light
-            this.shaderprog_directional.startUsing();
+            this.shaderprog_pontual.startUsing();
             // -- Ambient Light
-            this.Ambientloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"Ambient");
+            this.Ambientloc = this.gl.getUniformLocation(this.shaderprog_pontual.shaderProgram,"Ambient");
             var ambient_light = glm.vec3(0.5,0.5,0.5);
             this.gl.uniform3fv(this.Ambientloc, ambient_light.array);
             // -- Directional Light Color
-            this.LightColorloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightColor");
+            this.LightColorloc = this.gl.getUniformLocation(this.shaderprog_pontual.shaderProgram,"LightColor");
             var color_light = glm.vec3(0.5,0.5,0.5);
             this.gl.uniform3fv(this.LightColorloc, color_light.array);
-            // -- Directional Light Direction
-            this.LightDirloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"LightDirection");
-            var light_dir = glm.vec3(0.0, 2.0, 1.0);
-            this.gl.uniform3fv(this.LightDirloc, light_dir.array);
+            // -- Directional Light Position
+            this.LightPosloc = this.gl.getUniformLocation(this.shaderprog_pontual.shaderProgram,"LightPosition");
+            var light_pos = glm.vec3(2.0, 2.0, 1.0);
+            this.gl.uniform3fv(this.LightPosloc, light_pos.array);
             // -- View Position
-            this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog_directional.shaderProgram,"ViewPos");
+            this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog_pontual.shaderProgram,"ViewPos");
             var viewpos = glm.vec3(0,3,6);
             this.gl.uniform3fv(this.ViewPosloc, viewpos.array);
+            // ----- Attenuations
+            // -- Constant Attenuation
+            this.ConstantAttenuationloc = this.gl.getUniformLocation(this.shaderprog_pontual.shaderProgram,"ConstantAttenuation");
+            this.gl.uniform1f(this.ConstantAttenuationloc, 0.5);
+            // -- Linear Attenuation
+            this.LinearAttenuationloc = this.gl.getUniformLocation(this.shaderprog_pontual.shaderProgram,"LinearAttenuation");
+            this.gl.uniform1f(this.LinearAttenuationloc, 0.09);
+            // -- Quadratic Attenuation
+            this.QuadraticAttenuationloc = this.gl.getUniformLocation(this.shaderprog_pontual.shaderProgram,"QuadraticAttenuation");
+            this.gl.uniform1f(this.QuadraticAttenuationloc, 0.032);
+
             // -- Setup done
-            this.shaderprog_directional.stopUsing();
+            this.shaderprog_pontual.stopUsing();
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
@@ -1490,7 +1501,7 @@ class sphere extends CGRAobject
             this.myCube.drawit(this.viewM,this.projectionM);
             
             
-            // ============= Directional Light
+            // ============= Pontual Light
             // ===== Model
             var model = glm.mat4(glm.mat3(1.0));
             // ===== Translations
@@ -1501,10 +1512,10 @@ class sphere extends CGRAobject
             var axis = glm.vec3(0.0, 1.0, 0.0);
             model = glm.rotate(model, rotation, axis);
             // ===== Final Transformation
-            this.myCube_dir.setModelTransformation(model); 
+            this.myCube_pontual.setModelTransformation(model); 
             
             // ===== Draw Cube Dir
-            this.myCube_dir.drawit(this.viewM,this.projectionM);       
+            this.myCube_pontual.drawit(this.viewM,this.projectionM);       
         }
     }
 
