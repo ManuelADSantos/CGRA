@@ -1,0 +1,728 @@
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecshader.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecapp.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgraobject.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgratexture.js"></script>
+<script src='https://git.io/glm-js.min.js'></script>
+
+
+<script id="my-vertex-shader" type="x-shader/x-vertex">
+    precision mediump float;
+
+    attribute  vec3 in_Position;
+    attribute  vec3 in_Color;
+    uniform mat4 MVP;
+
+    varying  vec3 ex_Color;
+
+    void main() 
+    {
+        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+
+        ex_Color = in_Color;
+    }
+</script>
+
+<script id="my-fragment-shader" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying  vec3 ex_Color;
+
+    void main() 
+    {
+        gl_FragColor = vec4(ex_Color,1.0);
+    }
+</script>
+
+<script id="my-vertex-shaderT" type="x-shader/x-vertex">
+    precision mediump float;
+
+    attribute  vec3 in_Position;
+    attribute  vec3 in_Color;
+    attribute vec2 in_texcoords;
+    uniform mat4 MVP;
+
+    varying  vec3 ex_Color;
+    varying  vec2 vTextureCoord;
+
+    void main()
+    {
+        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+        vTextureCoord = in_texcoords;
+        ex_Color = in_Color;
+    }
+</script>
+
+<script id="my-fragment-shaderT" type="x-shader/x-fragment">
+    precision mediump float;
+    varying  vec2 vTextureCoord;
+    varying  vec3 ex_Color;
+
+    uniform sampler2D uSampler;
+
+    void main()
+    {
+        gl_FragColor = texture2D(uSampler, vTextureCoord);
+    }
+</script>
+
+
+<h1> Cubes </h1>
+<script>
+    class cube extends CGRAobject{
+        constructor(glcontext){
+            super(glcontext); // initialize the parent class
+            this.vColors = [];
+            this.vPositions = [];
+            this.texCoords = [];
+            
+            this.Index=0;
+            this.positions = [
+                glm.vec3( -0.5, -0.5,  0.5 ),
+                glm.vec3( -0.5,  0.5,  0.5 ),
+                glm.vec3(  0.5,  0.5,  0.5 ),
+                glm.vec3(  0.5, -0.5,  0.5 ),
+                glm.vec3( -0.5, -0.5, -0.5 ),
+                glm.vec3( -0.5,  0.5, -0.5 ),
+                glm.vec3(  0.5,  0.5, -0.5 ),
+                glm.vec3(  0.5, -0.5, -0.5 )
+            ];
+            
+            this.colors = [
+                glm.vec3( 0.0, 0.0, 0.0 ),  // black
+                glm.vec3( 1.0, 0.0, 0.0 ),  // red
+                glm.vec3( 1.0, 1.0, 0.0 ),  // yellow
+                glm.vec3( 0.0, 1.0, 0.0 ),  // green
+                glm.vec3( 0.0, 0.0, 1.0 ),  // blue
+                glm.vec3( 1.0, 0.0, 1.0 ),  // magenta
+                glm.vec3( 1.0, 1.0, 1.0 ),  // white
+                glm.vec3( 0.0, 1.0, 1.0 )   // cyan
+            ];
+            
+            this.tcoords = [
+                glm.vec2(0.0,0.0),
+                glm.vec2(0.0,1.0),
+                glm.vec2(1.0,1.0),
+                glm.vec2(1.0,0.0)
+            ];
+            
+        
+            this.quad( 1, 0, 3, 2 );
+            this.quad( 2, 3, 7, 6 );
+            this.quad( 3, 0, 4, 7 );
+            this.quad( 6, 5, 1, 2 );
+            this.quad( 4, 5, 6, 7 );
+            this.quad( 5, 4, 0, 1 );
+            
+            this.vertexbuffer=this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+            var a = new Float32Array(this.vPositions);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+
+            this.colorbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+            a = new Float32Array(this.vColors);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+            
+            this.texcoordsbuffer=this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);  
+            a=new Float32Array(this.texCoords);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, a, this.gl.STATIC_DRAW);
+            //console.log("texc=" + this.texCoords+ "  a= "+ a + " len= "+a.length)
+            
+            this.numvertices = 36;
+        }
+        
+        quad(a, b, c, d )
+        {
+    
+            this.vColors = [].concat(this.vColors,this.colors[a].array); 
+            this.vPositions = [].concat(this.vPositions,this.positions[a].array); 
+            this.texCoords = [].concat(this.texCoords,this.tcoords[0].array);
+            
+            this.vColors = [].concat(this.vColors, this.colors[b].array); 
+            this.vPositions = [].concat(this.vPositions,this.positions[b].array); 
+            this.texCoords = [].concat(this.texCoords, this.tcoords[1].array);
+                            
+            this.vColors = [].concat(this.vColors, this.colors[c].array); 
+            this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
+            this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
+        
+            this.vColors = [].concat(this.vColors, this.colors[a].array); 
+            this.vPositions = [].concat(this.vPositions, this.positions[a].array); 
+            this.texCoords = [].concat(this.texCoords, this.tcoords[0].array);
+        
+            this.vColors = [].concat(this.vColors, this.colors[c].array); 
+            this.vPositions = [].concat(this.vPositions, this.positions[c].array); 
+            this.texCoords = [].concat(this.texCoords,this.tcoords[2].array);
+        
+            this.vColors = [].concat(this.vColors,this.colors[d].array); 
+            this.vPositions = [].concat(this.vPositions, this.positions[d].array); 
+            this.texCoords = [].concat(this.texCoords, this.tcoords[3].array);
+
+        }
+        
+    }
+
+    class cubeT extends cube{
+        
+        settexture(cgratex){
+                this.textureid = cgratex.textureid;
+        }
+        
+        drawit(viewMat, projectionMat){
+            this.shaderprog.startUsing();
+            this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                            "in_texcoords");
+            
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordsbuffer);
+            this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                            2, // number of elements per attribute
+                            this.gl.FLOAT,  // Type of elements
+                            false,  // 
+                            0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                            0); // Offset from the begining of a single vertex to this attribute
+            this.gl.enableVertexAttribArray(this.texcoordsLocation);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+            this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+            this.gl.uniform1i(this.textureLocation, 0);
+            // the parent method does the rest
+            super.drawit(viewMat,projectionMat);
+            
+        }  
+    }
+</script>
+Below is the already seen cube example... much more verbose and complicated to build.
+%%js
+
+<script>
+    class cube2 extends CGRAobject{
+        constructor(glcontext){
+            super(glcontext);
+            this.numvertices = 36;
+            var x = 0.5;
+            var y = 0.5;
+            var z = 0.5;
+            // the following variables can be local as they are only needed for  
+            // creating the values before passing them to the VBOs
+            // on the other side the number of vertices is needed on another function of this class (render)
+            var  vertices = [
+                // front
+                -x,-y,z,
+                x,-y, z,
+                x, y, z, // triangle 1 : end
+        
+                x, y,z, // triangle 2 : begin
+                -x,y,z,
+                -x, -y,z, // triangle 2 : end
+
+                // top
+                -x,y, z,
+                x,y,z,
+                x,y,-z,
+        
+                x, y,-z,
+                -x,y,-z,
+                -x,y,z,
+        
+                // back
+                -x,y,-z,
+                x, y, -z,
+                x, -y,-z,
+        
+                x,-y, -z,
+                -x,-y, -z,
+                -x,y,-z,
+
+                // bottom
+                -x, -y, -z,
+                x,-y, -z,
+                x,-y, z,
+        
+                x, -y, z,
+                -x,-y,z,
+                -x, -y,-z,
+
+                // left 
+                -x,-y,-z,
+                -x, -y, z,
+                -x,y, z,
+        
+                -x, y, z,
+                -x, y,-z,
+                -x, -y,-z,
+
+                // right
+                x, -y, z,
+                x, -y,-z,
+                x, y, -z,
+        
+                x, y, -z,
+                x, y, z,
+                x,-y, z];
+        
+            var   colors = [
+                0.583,  0.771,  0.014,
+                0.609,  0.115,  0.436,
+                0.327,  0.483,  0.844,
+                0.822,  0.569,  0.201,
+                0.435,  0.602,  0.223,
+                0.310,  0.747,  0.185,
+                0.597,  0.770,  0.761,
+                0.559,  0.436,  0.730,
+                0.359,  0.583,  0.152,
+                0.483,  0.596,  0.789,
+                0.559,  0.861,  0.639,
+                0.195,  0.548,  0.859,
+                0.014,  0.184,  0.576,
+                0.771,  0.328,  0.970,
+                0.406,  0.615,  0.116,
+                0.676,  0.977,  0.133,
+                0.971,  0.572,  0.833,
+                0.140,  0.616,  0.489,
+                0.997,  0.513,  0.064,
+                0.945,  0.719,  0.592,
+                0.543,  0.021,  0.978,
+                0.279,  0.317,  0.505,
+                0.167,  0.620,  0.077,
+                0.347,  0.857,  0.137,
+                0.055,  0.953,  0.042,
+                0.714,  0.505,  0.345,
+                0.783,  0.290,  0.734,
+                0.722,  0.645,  0.174,
+                0.302,  0.455,  0.848,
+                0.225,  0.587,  0.040,
+                0.517,  0.713,  0.338,
+                0.053,  0.959,  0.120,
+                0.393,  0.621,  0.362,
+                0.673,  0.211,  0.457,
+                0.820,  0.883,  0.371,
+                0.982,  0.099,  0.879];
+            
+            this.vertexbuffer=this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+            
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
+
+            this.colorbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+        
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors), this.gl.STATIC_DRAW);
+        }
+    }
+</script>
+
+<h1> Scene class </h1>
+<h2> A class supporting the scene drawing to be reused multiple times. </h2>
+Note that you must complete it to include a background image.
+
+<script>
+    class scene{
+        constructor(glcontext){
+            this.gl=glcontext;
+            var fragsrc = document.getElementById("my-fragment-shader").text;
+            var vertsrc = document.getElementById("my-vertex-shader").text;
+            
+            this.shaderprog = new DEECshader(this.gl);
+            this.shaderprog.srcShaders(vertsrc,fragsrc);
+            
+            var fragsrcT = document.getElementById("my-fragment-shaderT").text;
+            var vertsrcT = document.getElementById("my-vertex-shaderT").text;
+            
+            this.shaderprogT = new DEECshader(this.gl);
+            this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
+            
+            
+            // Lets create two triangle objects
+        
+            
+            this.texture = new CGRAtexture(this.gl);
+            this.texture.load("gallery_1.jpg");
+            this.texture2 = new CGRAtexture(this.gl);
+            this.texture2.load("ISR_RUG_lc.png");
+            this.texture3 = new CGRAtexture(this.gl);
+            
+        
+            this.mycube1 = new cube(this.gl);
+            this.mycube1.setShader(this.shaderprog);
+            
+            this.mycube2 = new cube2(this.gl);
+            this.mycube2.setShader(this.shaderprog);
+        
+            
+            this.mycube3 = new cubeT(this.gl);
+            this.mycube3.settexture(this.texture);
+            this.mycube3.setShader(this.shaderprogT);
+            
+            this.mycube4 = new cubeT(this.gl);
+            this.mycube4.settexture(this.texture3);
+            this.mycube4.setShader(this.shaderprogT);   
+            
+            this.mycube1_1 = new cube(this.gl);
+            this.mycube1_1.setShader(this.shaderprog);
+            
+            this.mycube2_1 = new cube2(this.gl);
+            this.mycube2_1.setShader(this.shaderprog);
+            
+            this.mycube3_1 = new cubeT(this.gl);
+            this.mycube3_1.settexture(this.texture);
+            this.mycube3_1.setShader(this.shaderprogT);
+            
+            this.mycube4_1 = new cubeT(this.gl);
+            this.mycube4_1.settexture(this.texture3);
+            this.mycube4_1.setShader(this.shaderprogT);   
+            
+            
+            this.mycube1_2 = new cube(this.gl);
+            this.mycube1_2.setShader(this.shaderprog);
+            
+            this.mycube2_2 = new cube2(this.gl);
+            this.mycube2_2.setShader(this.shaderprog);
+            
+            this.mycube3_2 = new cubeT(this.gl);
+            this.mycube3_2.settexture(this.texture);
+            this.mycube3_2.setShader(this.shaderprogT);
+            
+            this.mycube4_2 = new cubeT(this.gl);
+            this.mycube4_2.settexture(this.texture3);
+            this.mycube4_2.setShader(this.shaderprogT);   
+            
+            this.mycube1_3 = new cube(this.gl);
+            this.mycube1_3.setShader(this.shaderprog);
+            
+            this.mycube2_3 = new cube2(this.gl);
+            this.mycube2_3.setShader(this.shaderprog);
+            
+            this.mycube3_3 = new cubeT(this.gl);
+            this.mycube3_3.settexture(this.texture);
+            this.mycube3_3.setShader(this.shaderprogT);
+            
+            this.mycube4_3 = new cubeT(this.gl);
+            this.mycube4_3.settexture(this.texture3);
+            this.mycube4_3.setShader(this.shaderprogT);   
+            
+            this.counter = 0;
+        }
+        
+        render(viewM, projM){
+            if(typeof viewM === "undefined"){throw "No cam matrix defined"; ;}
+
+            // place the background image
+            
+            this.viewM = viewM;
+            this.projM = projM;
+            // console.log(viewM.toString());
+
+            
+            var transl = glm.translate(glm.mat4(1.0),glm.vec3(1.5,1.5,-5.5));
+            var rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(1.0,0.0,0.0));
+            var transformation = transl['*'](rotation);
+            this.mycube1.setModelTransformation(transformation);
+            this.mycube1.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(-1.5,1.5,-6.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(0.0,1.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube2.setModelTransformation(transformation);
+            this.mycube2.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(-1.5,-1.5,-6.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(1.0,0.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube3.setModelTransformation(transformation);
+            this.mycube3.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(1.5,-1.5,-6.5));
+        
+            transformation = transl['*'](rotation);
+            this.mycube4.setModelTransformation(transformation);
+            this.mycube4.drawit(this.viewM,this.projM);
+            
+            ////
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(1.5,1.5,-15.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(1.0,0.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube1_1.setModelTransformation(transformation);
+            this.mycube1_1.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(-1.5,1.5,-16.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(0.0,1.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube2_1.setModelTransformation(transformation);
+            this.mycube2_1.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(-1.5,-1.5,-16.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(1.0,0.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube3_1.setModelTransformation(transformation);
+            this.mycube3_1.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(1.5,-1.5,-16.5));
+        
+            transformation = transl['*'](rotation);
+            this.mycube4_1.setModelTransformation(transformation);
+            this.mycube4_1.drawit(this.viewM,this.projM);
+            
+            ////
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(1.5,1.5,-25.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(1.0,0.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube1_2.setModelTransformation(transformation);
+            this.mycube1_2.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(-1.5,1.5,-26.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(0.0,1.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube2_2.setModelTransformation(transformation);
+            this.mycube2_2.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(-1.5,-1.5,-26.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(1.0,0.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube3_2.setModelTransformation(transformation);
+            this.mycube3_2.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(1.5,-1.5,-26.5));
+        
+            transformation = transl['*'](rotation);
+            this.mycube4_2.setModelTransformation(transformation);
+            this.mycube4_2.drawit(this.viewM,this.projM);
+            
+            ////
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(1.5,1.5,-35.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(1.0,0.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube1_3.setModelTransformation(transformation);
+            this.mycube1_3.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(-1.5,1.5,-36.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(0.0,1.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube2_3.setModelTransformation(transformation);
+            this.mycube2_3.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(-1.5,-1.5,-36.5));
+            rotation = glm.rotate(glm.mat4(1.0),glm.radians(-this.counter),glm.vec3(1.0,0.0,0.0));
+            transformation = transl['*'](rotation);
+            this.mycube3_3.setModelTransformation(transformation);
+            this.mycube3_3.drawit(this.viewM,this.projM);
+            
+            transl = glm.translate(glm.mat4(1.0),glm.vec3(1.5,-1.5,-36.5));
+        
+            transformation = transl['*'](rotation);
+            this.mycube4_3.setModelTransformation(transformation);
+            this.mycube4_3.drawit(this.viewM,this.projM);
+            //console.log("Render done counter="+this.counter);
+        }
+    }
+</script>
+
+
+<h1>A Camera class</h1>
+You must complete the code below to support the left and right camera for generating stereo views.
+
+<script>
+    class cam{
+        constructor(){
+            this.projM = glm.perspective(glm.radians(45),1,1,100);
+            this.setEyeSep();
+            this.lookAt(glm.vec3(0,0,0),glm.vec3(0,0,-1),glm.vec3(0,1,0));
+        }
+        
+        lookAt(from,to,up){
+            this.from=from;
+            this.to=to;
+            this.up=up;
+            this.viewMbase = glm.lookAt(from,to,up);
+            this.viewM = this.viewMbase;
+            this.viewMinv = glm.inverse(this.viewM);
+            // lets define the two points of view in camera coordinates
+            var right=glm.vec4(this.sep/2,0,0,1);
+            var left=glm.vec4(-this.sep/2,0,0,1);
+            
+            // now complete the rest for stereo view generation
+            
+        }
+        // the next method is to support a rotation of the camera 
+        // without the need to specify a new target point to look too
+        rotate(deg){
+            var rot = glm.rotate(glm.mat4(1.0),glm.radians(deg),glm.vec3(0.0,1.0,0.0));
+            this.viewM = this.viewMbase ['*'](rot);
+            this.viewMinv = glm.inverse(this.viewM);
+
+            var right=glm.vec4(this.sep/2,0,0,1);
+            var left=glm.vec4(-this.sep/2,0,0,1);
+            
+            // now complete the rest for stereo view generation
+        // this.rightviewM = ....
+        // this.leftviewM = ...
+        }
+        
+        setEyeSep(sep=0.15){
+            this.sep=sep;
+        }
+        
+    }
+</script>
+
+<canvas id="myCanvas" width="800" height="800" style="border:2px solid #000000;">
+      Error: Your browser does not support the HTML canvas tag.
+</canvas>
+
+<script>
+    class myapp extends DEECapp{
+        counter=0;
+        initialize(){
+            
+            // perform other initializations
+            this.gl.enable(this.gl.DEPTH_TEST);
+            this.gl.clearColor(0.30,0.30,0.30,1.0);
+            
+            this.cam = new cam;
+            // Projection and view matrices
+            this.cam.projM = glm.perspective(glm.radians(45),1,1,100);
+            this.cam.lookAt(glm.vec3(0,0,1),glm.vec3(0,0,-20),glm.vec3(0,1,0))
+            
+            this.sc = new scene(this.gl);
+            this.counter = 0;
+            
+        }
+        
+        
+        render(){
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+            this.sc.counter++;
+            this.counter++;
+            if (this.counter<30){
+                this.cam.rotate(this.counter);
+            } else if (this.counter < 90){
+                this.cam.rotate(60-this.counter);
+            } else{
+                this.counter = -30;
+            }
+            
+            this.sc.render(this.cam.viewM, this.cam.projM);
+        }
+    }
+
+    var app = new myapp('myCanvas');
+
+    app.run();
+</script>
+
+
+<h1>Anaglyph</h1>
+
+<canvas id="myCanvas3" width="800" height="800" style="border:2px solid #000000;">
+      Error: Your browser does not support the HTML canvas tag.
+</canvas>
+
+<script>
+    class myapp3 extends DEECapp{
+        counter=0;
+        initialize(){
+            
+            // perform other initializations
+            this.gl.enable(this.gl.DEPTH_TEST);
+            this.gl.clearColor(1,1,1,1.0);
+            this.gl.clearColor(0.30,0.30,0.30,1.0);
+
+            // Projection and view matrices
+            this.cam = new cam;
+            this.cam.lookAt(glm.vec3(0,0,1),glm.vec3(0,0,-20),glm.vec3(0,1,0))
+            
+            this.sc = new scene(this.gl);
+            this.counter = 0;
+        }
+        
+        
+        render(){
+            this.gl.colorMask(true, true, true, true);
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+            this.counter++;
+            
+            this.sc.counter++;
+            if (this.counter<30){
+                this.cam.rotate(this.counter);
+            } else if (this.counter < 90){
+                this.cam.rotate(60-this.counter);
+            } else{
+                this.counter = -30;
+            }
+            this.gl.colorMask(true, false, false, false);
+            this.sc.render(this.cam.leftviewM, this.cam.projM);
+            
+            
+            this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
+            this.gl.colorMask(false, true, true, true);
+
+            this.sc.render(this.cam.rightviewM, this.cam.projM);
+
+        }
+    }
+
+    var app2 = new myapp3('myCanvas3');
+
+    app2.run();
+</script>
+
+
+<h1>Cardboard</h1>
+Rendering twice for use with cardboards.
+
+<canvas id="myCanvas4" width="800" height="400" style="border:2px solid #000000;">
+      Error: Your browser does not support the HTML canvas tag.
+</canvas>
+
+<script>
+    class myapp4 extends DEECapp{
+        counter=0;
+        initialize(){
+            
+            // perform other initializations
+            this.gl.enable(this.gl.DEPTH_TEST);
+            this.gl.clearColor(1,1,1,1.0);
+            this.gl.clearColor(0.30,0.30,0.30,1.0);
+
+            // Projection and view matrices
+            this.cam = new cam;
+            this.cam.lookAt(glm.vec3(0,0,1),glm.vec3(0,0,-20),glm.vec3(0,1,0))
+            
+            this.sc = new scene(this.gl);
+            this.counter = 0;
+        }
+        
+        
+        render(){
+            this.gl.viewport( 0, 0,myCanvas4.width/2, myCanvas4.height);
+
+        //    this.gl.colorMask(true, true, true, true);
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+            this.counter++;
+            
+            this.sc.counter++;
+            if (this.counter<30){
+                this.cam.rotate(this.counter);
+            } else if (this.counter < 90){
+                this.cam.rotate(60-this.counter);
+            } else{
+                this.counter = -30;
+            }
+        //  this.gl.colorMask(true, false, false, false);
+            this.sc.render(this.cam.leftviewM, this.cam.projM);
+            this.gl.viewport( myCanvas4.width/2, 0,myCanvas4.width/2, myCanvas4.height);
+            this.gl.clear( this.gl.DEPTH_BUFFER_BIT);
+
+        // this.gl.colorMask(false, true, true, true);
+
+            this.sc.render(this.cam.rightviewM, this.cam.projM);
+
+        }
+    }
+
+    var app2 = new myapp4('myCanvas4');
+
+    app2.run();
+</script>
