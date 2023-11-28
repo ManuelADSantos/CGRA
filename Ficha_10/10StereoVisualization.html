@@ -575,6 +575,13 @@ You must complete the code below to support the left and right camera for genera
             // this.leftviewM = ...
             // this.rightviewM = this.viewMbase ['*'](right);
             // this.leftviewM = this.viewMbase ['*'](left);
+            
+            // ======= BRUNO
+            var right_pos = glm.vec3(this.viewMinv['*'](right));
+            var left_pos = glm.vec3(this.viewMinv['*'](left));
+
+            this.rightviewM = glm.lookAt(right_pos,this.to,this.up);
+            this.leftviewM = glm.lookAt(left_pos,this.to,this.up);
         
         }
         
