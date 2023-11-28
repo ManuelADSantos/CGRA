@@ -311,6 +311,85 @@ Below is the already seen cube example... much more verbose and complicated to b
     }
 </script>
 
+
+<script>
+    class square extends CGRAobject
+    {
+        constructor(glcontext)
+        {
+            super(glcontext);
+            this.numvertices = 6;
+            this.vertices = [
+                -1.0, -1.0, 0.0,
+                 1.0, -1.0, 0.0,
+                 1.0,  1.0, 0.0,
+                 1.0,  1.0, 0.0,
+                -1.0,  1.0, 0.0,
+                -1.0, -1.0, 0.0
+            ];
+
+            this.texCoords = [
+                0.0, 0.0,
+                1.0, 0.0,
+                1.0, 1.0,
+                1.0, 1.0,
+                0.0, 1.0,
+                0.0, 0.0
+            ];
+
+            this.vertexbuffer=this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);4
+
+            this.texcoordsbuffer=this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.texCoords), this.gl.STATIC_DRAW);
+        }
+
+        settexture(cgratex){
+            this.textureid = cgratex.textureid;
+        }
+
+        setShader(shader){
+            this.shaderprog = shader;
+        }
+
+        drawit(viewMat, projectionMat){
+            this.shaderprog.startUsing();
+            
+            this.vertexLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_Position");
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.vertexbuffer);
+            this.gl.vertexAttribPointer(this.vertexLocation, // Attribute location
+                            3, // number of elements per attribute
+                            this.gl.FLOAT,  // Type of elements
+                            false,  // 
+                            0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                            0); // Offset from the begining of a single vertex to this attribute
+            this.gl.enableVertexAttribArray(this.vertexLocation);
+
+
+            this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_texcoords");
+            
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordsbuffer);
+            this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                            2, // number of elements per attribute
+                            this.gl.FLOAT,  // Type of elements
+                            false,  // 
+                            0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                            0); // Offset from the begining of a single vertex to this attribute
+            this.gl.enableVertexAttribArray(this.texcoordsLocation);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+            this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+            this.gl.uniform1i(this.textureLocation, 0);
+            // the parent method does the rest
+            super.drawit(viewMat,projectionMat);
+            
+        }
+    }
+
+</script>
+
+
 <h1> Scene class </h1>
 <h2> A class supporting the scene drawing to be reused multiple times. </h2>
 Note that you must complete it to include a background image.
@@ -333,13 +412,17 @@ Note that you must complete it to include a background image.
             
             
             // Lets create two triangle objects
-        
-            
             this.texture = new CGRAtexture(this.gl);
             this.texture.load("gallery_1.jpg");
             this.texture2 = new CGRAtexture(this.gl);
             this.texture2.load("ISR_RUG_lc.png");
             this.texture3 = new CGRAtexture(this.gl);
+            this.fundo = new CGRAtexture(this.gl);
+            this.fundo.load("fundo.jpg");
+
+            this.myFundo = new square(this.gl);
+            this.myFundo.setShader(this.shaderprogT);
+            this.myFundo.settexture(this.fundo);
             
         
             this.mycube1 = new cube(this.gl);
@@ -405,12 +488,32 @@ Note that you must complete it to include a background image.
         
         render(viewM, projM){
             if(typeof viewM === "undefined"){throw "No cam matrix defined"; ;}
+            
 
             // place the background image
+            this.gl.disable(this.gl.DEPTH_TEST);
+            this.myFundo.drawit();
+            this.gl.enable(this.gl.DEPTH_TEST);
             
+
+
             this.viewM = viewM;
             this.projM = projM;
             // console.log(viewM.toString());
+
+            
+            // // ===== Model
+            // var model = glm.mat4(glm.mat3(1.0));
+            // // ===== Scale
+            // var scale = glm.vec3(1,1,0.1);
+            // model = glm.scale(model, scale);
+            // // ===== Translations
+            // var translation = glm.vec3(0.0, 0.0, -50);
+            // model = glm.translate(model, translation);
+            // // ===== Final Transformation
+            // this.myFundo.setModelTransformation(model);
+            // var proj = glm.ortho(-1,1,-1,1,1,100);
+            
 
             
             var transl = glm.translate(glm.mat4(1.0),glm.vec3(1.5,1.5,-5.5));
@@ -664,6 +767,7 @@ You must complete the code below to support the left and right camera for genera
         
         
         render(){
+            // Filtrar as componentes de cor
             this.gl.colorMask(true, true, true, true);
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
             this.counter++;
@@ -679,10 +783,9 @@ You must complete the code below to support the left and right camera for genera
             this.gl.colorMask(true, false, false, false);
             this.sc.render(this.cam.leftviewM, this.cam.projM);
             
-            
             this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
+            
             this.gl.colorMask(false, true, true, true);
-
             this.sc.render(this.cam.rightviewM, this.cam.projM);
 
         }
