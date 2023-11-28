@@ -544,6 +544,21 @@ You must complete the code below to support the left and right camera for genera
             
             // now complete the rest for stereo view generation
             
+            // ======= MEU
+            // this.rightviewM = this.viewMbase ['*'](right);
+            // // console.log(this.rightviewM.array);
+            // console.log(glm.mat4(this.rightviewM.array));
+
+            // this.leftviewM = this.viewMbase ['*'](left);
+
+            // ======= BRUNO
+            var right_pos = glm.vec3(this.viewMinv['*'](right));
+            var left_pos = glm.vec3(this.viewMinv['*'](left));
+
+            this.rightviewM = glm.lookAt(right_pos,this.to,this.up);
+            this.leftviewM = glm.lookAt(left_pos,this.to,this.up);
+
+
         }
         // the next method is to support a rotation of the camera 
         // without the need to specify a new target point to look too
@@ -556,8 +571,11 @@ You must complete the code below to support the left and right camera for genera
             var left=glm.vec4(-this.sep/2,0,0,1);
             
             // now complete the rest for stereo view generation
-        // this.rightviewM = ....
-        // this.leftviewM = ...
+            // this.rightviewM = ....
+            // this.leftviewM = ...
+            // this.rightviewM = this.viewMbase ['*'](right);
+            // this.leftviewM = this.viewMbase ['*'](left);
+        
         }
         
         setEyeSep(sep=0.15){
