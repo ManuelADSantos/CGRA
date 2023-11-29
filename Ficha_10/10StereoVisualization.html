@@ -328,18 +328,31 @@ Below is the already seen cube example... much more verbose and complicated to b
                 -1.0, -1.0, 0.0
             ];
 
+            this.colors = [
+                1.0, 1.0, 1.0, 1.0,  // white
+                1.0, 1.0, 1.0, 1.0,  // white
+                1.0, 1.0, 1.0, 1.0,  // white
+                1.0, 1.0, 1.0, 1.0,  // white
+                1.0, 1.0, 1.0, 1.0,  // white
+                1.0, 1.0, 1.0, 1.0   // white
+            ];
+
             this.texCoords = [
-                0.0, 0.0,
-                1.0, 0.0,
-                1.0, 1.0,
-                1.0, 1.0,
                 0.0, 1.0,
-                0.0, 0.0
+                1.0, 1.0,
+                1.0, 0.0,
+                1.0, 0.0,
+                0.0, 0.0,
+                0.0, 1.0
             ];
 
             this.vertexbuffer=this.gl.createBuffer();
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);
             this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);4
+
+            this.colorbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.colors), this.gl.STATIC_DRAW);
 
             this.texcoordsbuffer=this.gl.createBuffer();
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);
@@ -357,17 +370,6 @@ Below is the already seen cube example... much more verbose and complicated to b
         drawit(viewMat, projectionMat){
             this.shaderprog.startUsing();
             
-            this.vertexLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_Position");
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.vertexbuffer);
-            this.gl.vertexAttribPointer(this.vertexLocation, // Attribute location
-                            3, // number of elements per attribute
-                            this.gl.FLOAT,  // Type of elements
-                            false,  // 
-                            0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
-                            0); // Offset from the begining of a single vertex to this attribute
-            this.gl.enableVertexAttribArray(this.vertexLocation);
-
-
             this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_texcoords");
             
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordsbuffer);
@@ -386,7 +388,6 @@ Below is the already seen cube example... much more verbose and complicated to b
             
         }
     }
-
 </script>
 
 
@@ -418,7 +419,8 @@ Note that you must complete it to include a background image.
             this.texture2.load("ISR_RUG_lc.png");
             this.texture3 = new CGRAtexture(this.gl);
             this.fundo = new CGRAtexture(this.gl);
-            this.fundo.load("fundo.jpg");
+            // this.fundo.load("fundo.jpg");
+            this.fundo.load("tio.jpg");
 
             this.myFundo = new square(this.gl);
             this.myFundo.setShader(this.shaderprogT);
