@@ -1,15 +1,3 @@
-# Computação Gráfica e Realidade Aumentada
-# Visualização Computacional
-## 2021/2022
-<author>Author: Paulo Menezes</author>
-<h1>Video on a triangle.</h1>
-
-For using this example you must log into http://seeds2.deec.uc.pt/CGRA or you
-will not be able to use the webcam.
-%%html
-
-<b> If you don't see a request for opening the webcam, read the above!</b>
-
 <!--- all the access to the auxiliary files must use https instead of http --->
 <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecshader.js"></script>
 <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecapp.js"></script>
@@ -18,67 +6,67 @@ will not be able to use the webcam.
 <script src='https://git.io/glm-js.min.js'></script>
 
 <script id="my-vertex-shader" type="x-shader/x-vertex">
-precision mediump float;
+    precision mediump float;
 
-attribute  vec3 in_Position;
-attribute  vec3 in_Color;
-uniform mat4 MVP;
+    attribute  vec3 in_Position;
+    attribute  vec3 in_Color;
+    uniform mat4 MVP;
 
-varying  vec3 ex_Color;
+    varying  vec3 ex_Color;
 
-void main() {
-  
-    gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+    void main() {
+    
+        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
 
-    ex_Color = in_Color;
-}
+        ex_Color = in_Color;
+    }
 </script>
 
 <script id="my-fragment-shader" type="x-shader/x-fragment">
-precision mediump float;
+    precision mediump float;
 
-varying  vec3 ex_Color;
+    varying  vec3 ex_Color;
 
-void main() {
-  
-    gl_FragColor = vec4(ex_Color,1.0);
-}
+    void main() {
+    
+        gl_FragColor = vec4(ex_Color,1.0);
+    }
 </script>
 
 <script id="my-vertex-shaderC" type="x-shader/x-vertex">
-precision mediump float;
+    precision mediump float;
 
-attribute  vec3 in_Position;
-attribute  vec3 in_Color;
-uniform mat4 MVP;
-uniform vec3 un_Color;
-varying  vec3 ex_Color;
+    attribute  vec3 in_Position;
+    attribute  vec3 in_Color;
+    uniform mat4 MVP;
+    uniform vec3 un_Color;
+    varying  vec3 ex_Color;
 
-void main(void) {
-  
-    gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+    void main(void) {
+    
+        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
 
-    ex_Color = un_Color;
-}
+        ex_Color = un_Color;
+    }
 </script>
 
 <script id="my-vertex-shaderT" type="x-shader/x-vertex">
-precision mediump float;
+    precision mediump float;
 
-attribute  vec3 in_Position;
-attribute  vec3 in_Color;
-attribute vec2 in_texcoords;
-uniform mat4 MVP;
+    attribute  vec3 in_Position;
+    attribute  vec3 in_Color;
+    attribute vec2 in_texcoords;
+    uniform mat4 MVP;
 
-varying  vec3 ex_Color;
-varying  vec2 vTextureCoord;
+    varying  vec3 ex_Color;
+    varying  vec2 vTextureCoord;
 
-void main() {
-  
-    gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
-    vTextureCoord = in_texcoords;
-    ex_Color = in_Color;
-}
+    void main() {
+    
+        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+        vTextureCoord = in_texcoords;
+        ex_Color = in_Color;
+    }
 </script>
 
 <script id="my-fragment-shaderT" type="x-shader/x-fragment">
@@ -91,7 +79,7 @@ void main() {
     void main() {
         gl_FragColor = texture2D(uSampler, vTextureCoord);
     }
-    </script>
+</script>
 
 <script>
     class triangle extends CGRAobject{

@@ -1,0 +1,355 @@
+<h2>Aruco detector and pose estimation.</h2>
+
+Test with other aruco markers from https://chev.me/arucogen/
+
+<video id="video" autoplay style="width:320px; height:240px;"></video> 
+<!-- -
+<video id="videofile" controls autoplay loop style="width:320px; height:240px;" crossOrigin="Anonymous"; src="https://is3l.isr.uc.pt/~pm/CGRA/marcador65.mp4"></video>
+ - -->
+
+<canvas id="myCanvas" width="400" height="400" style="border:2px solid #000000;">
+      Error: Your browser does not support the HTML canvas tag.
+</canvas>
+
+<!--- all the access to the auxiliary files must use https instead of http --->
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecshader.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecapp.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgraobject.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgratexture.js"></script>
+<script src='https://git.io/glm-js.min.js'></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/js-aruco/cv.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/js-aruco/aruco.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/js-aruco/svd.js"></script>
+<script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/js-aruco/posit1.js"></script>
+
+<script id="my-vertex-shader" type="x-shader/x-vertex">
+    precision mediump float;
+
+    attribute  vec3 in_Position;
+    attribute  vec3 in_Color;
+    uniform mat4 MVP;
+
+    varying  vec3 ex_Color;
+
+    void main() {
+    
+        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+
+        ex_Color = in_Color;
+    }
+</script>
+
+<script id="my-fragment-shader" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying  vec3 ex_Color;
+
+    void main() {
+    
+        gl_FragColor = vec4(ex_Color,1.0);
+    }
+</script>
+
+<script id="my-vertex-shaderC" type="x-shader/x-vertex">
+    precision mediump float;
+
+    attribute  vec3 in_Position;
+    attribute  vec3 in_Color;
+    uniform mat4 MVP;
+    uniform vec3 un_Color;
+    varying  vec3 ex_Color;
+
+    void main(void) {
+    
+        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+
+        ex_Color = un_Color;
+    }
+</script>
+
+<script id="my-vertex-shaderT" type="x-shader/x-vertex">
+    precision mediump float;
+
+    attribute  vec3 in_Position;
+    attribute  vec3 in_Color;
+    attribute vec2 in_texcoords;
+    uniform mat4 MVP;
+
+    varying  vec3 ex_Color;
+    varying  vec2 vTextureCoord;
+
+    void main() {
+    
+        gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+        vTextureCoord = in_texcoords;
+        ex_Color = in_Color;
+    }
+</script>
+
+<script id="my-fragment-shaderT" type="x-shader/x-fragment">
+    precision mediump float;
+    varying  vec2 vTextureCoord;
+    varying  vec3 ex_Color;
+
+    uniform sampler2D uSampler;
+
+    void main() {
+        gl_FragColor = texture2D(uSampler, vTextureCoord);
+    }
+</script>
+
+<script>
+    class triangle extends CGRAobject{
+        constructor(glcontext){
+            super(glcontext); // initialize the parent class
+            
+            this.numvertices = 3;
+            var vertices =
+                [ -0.90, -0.90, 0.9 ,
+                0.90, -0.90, 0.9 ,
+                -0.90,  0.90, 0.9]; 
+            
+            var colors = [
+                1.0, 0.0, 0.0, 
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 1.0];
+            
+            this.vertexbuffer=this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+            // as JS stores everything in 64 bit format and GL expects 32bits...
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
+
+            this.colorbuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+            // as JS stores everything in 64 bit format and GL expects 32bits...
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors), this.gl.STATIC_DRAW);
+        }
+    }
+
+    class triangleT extends triangle{
+        
+        constructor(glcontext){
+            super(glcontext);
+                var texcoords = [
+                    0.0, 0.0,
+                    1.0, 0.0,
+                    0.0, 1.0 ];
+            
+                this.texcoordbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texcoords), this.gl.STATIC_DRAW);
+        }
+            
+        settexture(cgratex){
+                this.textureid = cgratex.textureid;
+        }
+        
+        drawit(viewMat, projectionMat){
+            this.shaderprog.startUsing();
+            this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,
+                                                            "in_texcoords");
+        
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordbuffer);
+            this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                            2, // number of elements per attribute
+                            this.gl.FLOAT,  // Type of elements
+                            false,  // 
+                            0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                            0); // Offset from the begining of a single vertex to this attribute
+            this.gl.enableVertexAttribArray(this.texcoordsLocation);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+            this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+            this.gl.uniform1i(this.textureLocation, 0);
+            
+            // the parent method does the rest
+            super.drawit(viewMat,projectionMat);
+        }    
+    }
+</script>
+
+<pre id=testfield> </pre>
+<pre id=markerfield></pre>
+
+<script>
+    class myapp extends DEECapp{
+        counter=0;
+        
+        initvideofile(){
+            this.video = document.getElementById("videofile");
+            this.back = document.createElement('canvas');
+            this.backctx = this.back.getContext('2d');
+        }
+        initcamera(){
+            this.video = document.getElementById("video");
+            this.back = document.createElement('canvas');
+            this.backctx = this.back.getContext('2d');
+        if (navigator.mediaDevices === undefined) {
+            navigator.mediaDevices = {};
+        }
+        
+        if (navigator.mediaDevices.getUserMedia === undefined) {
+            navigator.mediaDevices.getUserMedia = function(constraints) {
+            var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+            
+            if (!getUserMedia) {
+                return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+            }
+
+            return new Promise(function(resolve, reject) {
+                getUserMedia.call(navigator, constraints, resolve, reject);
+            });
+            }
+        }
+        
+        navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then(function(stream) {
+            if ("srcObject" in video) {
+                video.srcObject = stream;
+            } else {
+                video.src = window.URL.createObjectURL(stream);
+            }
+            })
+            .catch(function(err) {
+            console.log(err.name + ": " + err.message);
+            }
+        );
+        }
+        initialize(){
+
+            if ( document.getElementById("videofile")){
+                this.initvideofile();
+            } 
+            else {
+                this.initcamera();
+            }
+
+            var fragsrcT = document.getElementById("my-fragment-shaderT").text;
+            var vertsrcT = document.getElementById("my-vertex-shaderT").text;
+            
+            this.shaderprogT = new DEECshader(this.gl);
+            this.shaderprogT.srcShaders(vertsrcT,fragsrcT);
+            
+        
+            
+            // perform other initializations
+            this.gl.enable(this.gl.DEPTH_TEST);
+            this.gl.clearColor(0.30,0.30,0.30,1.0);
+            
+            // Projection and view matrices
+            this.projM = glm.perspective(glm.radians(45),1,1,100);
+            
+            this.viewM = glm.lookAt(glm.vec3(0,0,0),glm.vec3(0,0,-1),glm.vec3(0,1,0));
+            
+            // Lets create two triangle objects
+            
+            this.mytriangle = new triangleT(this.gl);
+            this.mytriangle.setShader(this.shaderprogT);
+            
+            
+            this.texture3 = new CGRAtexture(this.gl);
+            
+            this.mytriangle.settexture(this.texture3);
+        
+            // HERE IS the initalization of the Aruco detector
+            this.detector = new AR.Detector();
+            var modelsize = 35.0;
+            var focallength = 640.0;
+            // and of the pose estimator
+            this.posit = new POS.Posit(modelsize,focallength);
+        }
+        
+        calculateSize(srcSize, dstSize) {
+        var srcRatio = srcSize.width / srcSize.height;
+        var dstRatio = dstSize.width / dstSize.height;
+        if (dstRatio > srcRatio) {
+        return {
+            width:  dstSize.height * srcRatio,
+            height: dstSize.height
+        };
+        } else {
+        return {
+            width:  dstSize.width,
+            height: dstSize.width / srcRatio
+        };
+        }
+    }
+        
+        processvideo(){
+            
+            if (this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
+                var videoSize = { width: this.video.videoWidth, height: this.video.videoHeight };
+                var canvasSize = { width: this.canvas.width, height: this.canvas.height };
+                var renderSize = this.calculateSize(videoSize, canvasSize);
+                var xOffset = (canvasSize.width - renderSize.width) / 2;
+            
+                this.back.width=this.video.videoWidth;
+                this.back.height=this.video.videoHeight;
+                this.backctx.drawImage(this.video,0,0,this.video.videoWidth,this.video.videoHeight);
+                var imagedata = this.backctx.getImageData(0,0,this.video.videoWidth,this.video.videoHeight);
+                
+                this.texture3.update(imagedata,this.video.videoWidth,this.video.videoHeight);    
+                //
+                // Detect the markers 
+                var markers = this.detector.detect(imagedata);
+                
+            var mText ="Markers detected = " + markers.length + "\n";
+                if (markers.length > 0){
+                    for (var j = 0; j !== markers.length; ++ j){
+                        mText += "Marker "+j + " ID= " + markers[j].id +"\n";
+                        var corners = markers[j].corners;
+                    
+                        for (var i=0; i !== corners.length; ++ i){
+                            var corner = corners[(i + 1) % corners.length];
+                            mText += "Corner " + i + " " + corner.x + " " + corner.y + "\n";
+                        }
+        
+                    }
+                    var pose = this.posit.pose(corners);
+                    var translation = pose.bestTranslation;
+                    var rotation = pose.bestRotation;
+
+                var txtText = "Rotation = \n";
+                    for (var l=0;l<3;l++){
+                        testfield.innerText += "|";
+                        for (var c=0;c<3;c++){
+
+                            txtText += Math.round(rotation[l][c]*100)/100;
+                            txtText += ", ";
+                        }
+                        txtText += "|\n";
+                    }
+            
+                    // pose.bestRotation, pose.bestTranslation);
+                    txtText += "Translation = \n [" + Math.round(translation[0]*100)/100 + ", "+ Math.round(translation[1]*100)/100 +", "+ Math.round(translation[2]*100)/100 + " ]";
+                    testfield.innerText = txtText;
+                    markerfield.innerText=mText;
+                
+                }
+            }      
+        }
+
+        
+        render(){
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+            this.processvideo();
+            this.counter++;
+            
+            // define the model tranformation for the first
+            var rotation = glm.toMat4(glm.angleAxis(glm.radians(this.counter),glm.vec3(0.0,0.0,1.0)));
+            rotation = glm.mat4(0.1)['*'](rotation);
+            this.mytriangle.setModelTransformation(rotation);
+        
+            // define the model tranformation for the second
+        
+            
+            // draw both triangles
+            this.mytriangle.drawit();
+            
+        }
+    }
+
+    var app = new myapp('myCanvas');
+
+    app.run();
+</script>
