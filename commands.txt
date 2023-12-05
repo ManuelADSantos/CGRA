@@ -1,0 +1,2 @@
+Ctrl + k , Ctrl + 0 ==> Collapse all
+Ctrl + k , Ctrl + j ==> Expand all
