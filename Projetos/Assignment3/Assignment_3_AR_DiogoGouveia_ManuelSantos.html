@@ -1,12 +1,16 @@
 %%html
 <!-- ============================================ Base Scripts ============================================ -->
-<div id="Base Scripts">            
-    <script id="deec_shader" src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecshader.js"></script>
-    <script id="deec_app" src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecapp.js"></script>
-    <script id="cgra_object" src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgraobject.js"></script>
-    <script id="git" src='https://git.io/glm-js.min.js'></script>
+<div id="Base Scripts">
+    <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecshader.js"></script>
+    <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/deecapp.js"></script>
+    <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgraobject.js"></script>
+    <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgratexture.js"></script>
+    <script src='https://git.io/glm-js.min.js'></script>
+    <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/js-aruco/cv.js"></script>
+    <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/js-aruco/aruco.js"></script>
+    <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/js-aruco/svd.js"></script>
+    <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/js-aruco/posit1.js"></script>
 </div>
-
 
 <!-- ============================================ Light Experimentations ============================================ -->
 <div id="Original">
@@ -36,7 +40,7 @@
             gl_FragColor = vec4(ex_Color,1.0);
         }
     </script>
-    
+
     <!-- ========== Original Cube ========== -->
     <script id="Cube_Original">
     class cube_light extends CGRAobject
@@ -99,7 +103,7 @@
         }
     }
     </script>
-    
+
     <!-- ========== Original Sphere ========== -->
     <script id="Sphere_Original">
     class sphere_light extends CGRAobject
@@ -194,7 +198,7 @@
         }
     }
     </script>
-    
+
     <!-- ========== Original Cylinder ========== -->
     <script id="Cylinder Original">
         class cylinder_light extends CGRAobject
@@ -280,7 +284,7 @@
             }
         }
     </script>
-    
+
     <!-- ========== Original Cone ========== -->
     <script id="Cone Original">
     class cone_light extends CGRAobject
@@ -353,8 +357,8 @@
         }
     }
     </script>
-    </div>
-    
+</div>
+
 <div id="Ambient">
     <!-- ========== Ambient Vertex and Fragment Shaders ========== -->
     <script id="my-vertex-shader-orig-ambient" type="x-shader/x-vertex">
@@ -397,9 +401,10 @@
 
     <!-- ========== Cube Ambient Canvas ========== -->
     <h1>Ambient Light</h1>
-    <canvas id="Ambient_Canvas_Cubes" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Ambient_Canvas_Cubes" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>   
+    </canvas>
     <script id="Ambient_App_Cubes">
     class Ambient_App_Cubes extends DEECapp
     {
@@ -502,9 +507,10 @@
     </script>
 
     <!-- ========== Sphere Ambient Canvas ========== -->
-    <canvas id="Ambient_Canvas_Spheres" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Ambient_Canvas_Spheres" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>   
+    </canvas>
     <script id="Ambient_App_Spheres">
     class Ambient_App_Spheres extends DEECapp
     {
@@ -607,9 +613,10 @@
     </script>
 
     <!-- ========== Cylinder Ambient Canvas ========== -->
-    <canvas id="Ambient_Canvas_Cylinders" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Ambient_Canvas_Cylinders" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>   
+    </canvas>
     <script id="Ambient_App_Cylinder">
     class Ambient_App_Cylinders extends DEECapp
     {
@@ -709,9 +716,10 @@
     </script>
 
     <!-- ========== Cone Ambient Canvas ========== -->
-    <canvas id="Ambient_Canvas_Cones" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Ambient_Canvas_Cones" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>   
+    </canvas>
     <script id="Ambient_App_Cones">
     class Ambient_App_Cones extends DEECapp
     {
@@ -1288,7 +1296,7 @@
         }
     }
     </script>
-    
+
     <!-- ========== Cone Directional ========== -->
     <script id="Cone_Directional">
     class cone_directional extends CGRAobject
@@ -1431,9 +1439,10 @@
 
     <!-- ========== Cube Directional Canvas ========== -->
     <h1>Directional Light</h1>
-    <canvas id="Directional_Canvas_Cubes" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Directional_Canvas_Cubes" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>   
+    </canvas>
     <script id="Directional_App_Cubes">
     class Directional_App_Cubes extends DEECapp
     {
@@ -1552,7 +1561,8 @@
     </script>
 
     <!-- ========== Sphere Directional Canvas ========== -->
-    <canvas id="Directional_Canvas_Spheres" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Directional_Canvas_Spheres" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="Directional_App_Spheres">
@@ -1672,7 +1682,8 @@
     </script>
 
     <!-- ========== Cylinder Directional Canvas ========== -->
-    <canvas id="Directional_Canvas_Cylinders" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Directional_Canvas_Cylinders" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="Directional_App_Cylinders">
@@ -1792,7 +1803,8 @@
     </script>
 
     <!-- ========== Cone Directional Canvas ========== -->
-    <canvas id="Directional_Canvas_Cones" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Directional_Canvas_Cones" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="Directional_App_Cones">
@@ -2400,7 +2412,7 @@
             }
         }
         </script>
-    
+
     <!-- ========== Cone Pontual ========== -->
     <script id="Cone_Pontual">
     class cone_pontual extends CGRAobject
@@ -2527,12 +2539,12 @@
     }
     </script>
 
-
     <!-- ========== Cube Pontual Canvas ========== -->
     <h1>Pontual Light</h1>
-    <canvas id="Pontual_Canvas_Cubes" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Pontual_Canvas_Cubes" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>   
+    </canvas>
     <script id="Pontual_App_Cubes">
     class Pontual_App_Cubes extends DEECapp
     {
@@ -2662,7 +2674,8 @@
     </script>
 
     <!-- ========== Sphere Pontual Canvas ========== -->
-    <canvas id="Pontual_Canvas_Spheres" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Pontual_Canvas_Spheres" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="Pontual_App_Spheres">
@@ -2793,9 +2806,10 @@
     </script>
 
     <!-- ========== Cylinder Pontual Canvas ========== -->
-    <canvas id="Pontual_Canvas_Cylinders" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Pontual_Canvas_Cylinders" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>   
+    </canvas>
     <script id="Pontual_App_Cylinders">
     class Pontual_App_Cylinders extends DEECapp
     {
@@ -2925,7 +2939,8 @@
     </script>
 
     <!-- ========== Cone Pontual Canvas ========== -->
-    <canvas id="Pontual_Canvas_Cones" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="Pontual_Canvas_Cones" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="Pontual_App_Cones">
@@ -3056,7 +3071,6 @@
     </script>
 </div>
 
-
 <!-- ============================================ Shaders ============================================ -->
 <div id="Shaders">
     <!-- Default Shaders-->
@@ -3088,7 +3102,7 @@
             }
         </script>
     </div>
-    
+
     <!-- Textures and Colors-->
     <div id="Just_Texture_Shaders">
         <script id="my-vertex-shaderT" type="x-shader/x-vertex">
@@ -3452,7 +3466,6 @@
 
 </div>
 
-
 <!-- ============================================ CGRA Texture ============================================ -->
 <div id="CGRA_Texture">
     <script>
@@ -3514,9 +3527,8 @@
     </script>
 </div>
 
-
 <!-- ============================================ Solids Definitions ============================================ -->
-<div id="Solids Definitions">  
+<div id="Solids Definitions">
     <h1 id="Solids Definitions">===== Solids Definitions =====</h1>
     <script id="Squares">
         class square extends CGRAobject{
@@ -3594,8 +3606,7 @@ class squareT extends square{
     }    
 }
     </script>
-    
-    
+
     <!-- Cubes -->
     <script id="CubeDefinitions">
         class cube extends CGRAobject
@@ -3782,7 +3793,8 @@ class squareT extends square{
     
         
     </script>
-    <canvas id="CubeCanvas" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="CubeCanvas" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="CubeShow">
@@ -3887,7 +3899,7 @@ class squareT extends square{
         var app = new CubeApp('CubeCanvas');
         app.run();
     </script>
-    
+
     <!-- Spheres -->
     <script id="SphereDefinitions">
         class sphere extends CGRAobject
@@ -4299,7 +4311,8 @@ class squareT extends square{
 
         }
     </script>
-    <canvas id="SphereCanvas" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="SphereCanvas" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="SphereApp">
@@ -4397,9 +4410,10 @@ class squareT extends square{
         var app = new SphereApp('SphereCanvas');
         app.run();
     </script>
-    
+
     <!-- Cylinders -->
-    <canvas id="CylinderCanvas" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="CylinderCanvas" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="CylinderApp">
@@ -4901,7 +4915,8 @@ class squareT extends square{
     </script>
 
     <!-- Cones -->
-    <canvas id="ConeCanvas" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="ConeCanvas" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="ConeApp">
@@ -5334,7 +5349,8 @@ class squareT extends square{
     </script>
 
     <!-- Discs -->
-    <canvas id="DiscCanvas" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="DiscCanvas" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
     <script id="DiscApp">
@@ -5602,14 +5618,14 @@ class squareT extends square{
     </script>
 </div>
 
-
 <!-- ============================================ Compound Solids Definitions ============================================ -->
-<div id="Compound Solids Definitions">     
+<div id="Compound Solids Definitions">
     <h1 id="Compound Solids Definitions">===== Composit Solids Definitions =====</h1>
     <!-- Moon -->
-    <canvas id="MoonCanvas" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="MoonCanvas" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>    
+    </canvas>
     <script id="MoonApp">
 
     //////////////////////////////// FLAG //////////////////////////////// 
@@ -5821,9 +5837,10 @@ class squareT extends square{
     </script>
 
     <!-- Couple -->
-    <canvas id="CoupleCanvas" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="CoupleCanvas" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>  
+    </canvas>
     <script id="CoupleApp">
 
     //////////////////////////////// COUPLE ////////////////////////////////
@@ -6034,9 +6051,10 @@ class squareT extends square{
     </script>
 
     <!-- Table -->
-    <canvas id="TableCanvas" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="TableCanvas" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>  
+    </canvas>
     <script id="TableApp">
 
     //////////////////////////////// TABLE //////////////////////////////// 
@@ -6221,11 +6239,12 @@ class squareT extends square{
 
     app.run();
     </script>
-    
+
     <!-- Paintings -->
-    <canvas id="PaintingCanvas" width="400" height="400" style="border:2px solid #000000;">
+    <canvas id="PaintingCanvas" width="400" height="400"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
-    </canvas>  
+    </canvas>
     <script id="PaintingApp">
         class Painting1 extends CGRAobject {
             
@@ -6404,14 +6423,15 @@ class squareT extends square{
 
         app.run();
     </script>
-    
+
     <!-- Museum -->
     <div id="Museum">
 
         <h1>===== Museum Room =====</h1>
         <h2> W - Front | A - Left | S - Back | D - Right | . - Reset </h2>
-        
-        <canvas id="MuseumCanvas" width="600" height="600" style="border:2px solid #000000;">
+
+        <canvas id="MuseumCanvas" width="600" height="600"
+            style="border:2px solid #000000;">
             Error: Your browser does not support the HTML canvas tag.
         </canvas>
         <script id="MuseumApp">
@@ -6838,15 +6858,17 @@ class squareT extends square{
             app.run();
         </script>
     </div>
-    
+
     <!-- Solar System -->
     <div id="SolarSystem">
 
         <h1>===== Solar System =====</h1>
-        <h2>1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast || R - Spheres | T - Cubes | Y - Cylinders | U - Cones</h2>
+        <h2>1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast || R - Spheres | T -
+            Cubes | Y - Cylinders | U - Cones</h2>
 
-        <canvas id="SolarSystem_Canvas" width="600" height="600" style="border:2px solid #000000;">
-        Error: Your browser does not support the HTML canvas tag.
+        <canvas id="SolarSystem_Canvas" width="600" height="600"
+            style="border:2px solid #000000;">
+            Error: Your browser does not support the HTML canvas tag.
         </canvas>
 
         <script id="SolarSystem_Base_App">
@@ -7285,35 +7307,36 @@ class squareT extends square{
 
             var app = new SolarSystem_Base_App('SolarSystem_Canvas');
             app.run();
-        </script> 
+        </script>
     </div>
 
 </div>
-
 
 <!-- ============================================ Compound Solids Definitions ============================================ -->
 <div id="FinalScene">
     <h1> ===== Final Scene =====</h1>
     <h2> W - Front | A - Left | S - Back | D - Right | . - Reset</h2>
-    <h2> 1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast (Only applies to Solar System)</h2>
+    <h2> 1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast (Only applies to Solar
+        System)</h2>
     <h2> R - Spheres | T - Cubes | Y - Cylinders | U - Cones</h2>
     <h2> C - Change Sun color || M - Day | N - Night || Z - Toggle Lamp</h2>
     <h3>
-    Contains:
-    - 1 solar system
-    - 1 table 
-    - 1 moon with flag
-    - 1 guard (man)
-    - 1 couple
-    - 1 museum room
-    - 2 paintings
-    - 2 lamps
+        Contains:
+        - 1 solar system
+        - 1 table
+        - 1 moon with flag
+        - 1 guard (man)
+        - 1 couple
+        - 1 museum room
+        - 2 paintings
+        - 2 lamps
     </h3>
 
-    <canvas id="myScene" width="900" height="900" style="border:2px solid #000000;">
+    <canvas id="myScene" width="900" height="900"
+        style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
     </canvas>
-        
+
     <script id="myScene">
         class myScene extends DEECapp
         {
