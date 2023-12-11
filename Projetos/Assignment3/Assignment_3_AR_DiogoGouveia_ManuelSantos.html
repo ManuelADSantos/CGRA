@@ -22,28 +22,10 @@
 </div>
 
 <!-- ============================================ Get Video Input ============================================ -->
-<video id="video" autoplay style="width:320px; height:240px;"></video>
+<video id="video" autoplay style="display: none; width:320px; height:240px;"></video>
 
 <!-- ============================================ Shaders ============================================ -->
 <div id="Shaders">
-    <!-- <script id="vertex-shader" type="x-shader/x-vertex">
-        precision mediump float;
-
-        attribute  vec3 in_Position;
-        attribute  vec3 in_Color;
-        attribute vec2 in_texcoords;
-        uniform mat4 MVP;
-
-        varying  vec3 ex_Color;
-        varying  vec2 vTextureCoord;
-
-        void main()
-        {
-            gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
-            vTextureCoord = in_texcoords;
-            ex_Color = in_Color;
-        }
-    </script> -->
 
     <script id="vertex-shader" type="x-shader/x-vertex">
         precision mediump float;
@@ -75,19 +57,6 @@
             gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
         }
     </script>
-
-    <!-- <script id="fragment-shader" type="x-shader/x-fragment">
-        precision mediump float;
-        varying  vec2 vTextureCoord;
-        varying  vec3 ex_Color;
-    
-        uniform sampler2D uSampler;
-    
-        void main()
-        {
-            gl_FragColor = texture2D(uSampler, vTextureCoord);
-        }
-    </script> -->
 
     <script id="fragment-shader" type="x-shader/x-fragment">
         precision mediump float;
@@ -148,6 +117,39 @@
             gl_FragColor = vec4(rgb, 1.0)*texture2D(uSampler, Textures);
         }
     </script>
+
+    <script id="vertex-shader-video" type="x-shader/x-vertex">
+        precision mediump float;
+
+        attribute  vec3 in_Position;
+        attribute  vec3 in_Color;
+        attribute vec2 in_texcoords;
+        uniform mat4 MVP;
+
+        varying  vec3 ex_Color;
+        varying  vec2 vTextureCoord;
+
+        void main()
+        {
+            gl_Position = MVP * vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+            vTextureCoord = in_texcoords;
+            ex_Color = in_Color;
+        }
+    </script>
+
+    <script id="fragment-shader-video" type="x-shader/x-fragment">
+        precision mediump float;
+        varying  vec2 vTextureCoord;
+        varying  vec3 ex_Color;
+
+        uniform sampler2D uSampler;
+
+        void main()
+        {
+            gl_FragColor = texture2D(uSampler, vTextureCoord);
+        }
+    </script>
+
 </div>
 
 <!-- ============================================ Solids Definitions ============================================ -->
@@ -538,20 +540,88 @@
 
     <!-- Discs -->
 
+    <!-- Square -->
+    <script>
+        class square extends CGRAobject
+        {
+            constructor(glcontext)
+            {
+                super(glcontext);
+                this.numvertices = 6;
+                this.vertices = [
+                    -1.0, -1.0, 0.0,
+                     1.0, -1.0, 0.0,
+                     1.0,  1.0, 0.0,
+                     1.0,  1.0, 0.0,
+                    -1.0,  1.0, 0.0,
+                    -1.0, -1.0, 0.0
+                ];
+    
+                this.colors = [
+                    1.0, 1.0, 1.0, 1.0,  // white
+                    1.0, 1.0, 1.0, 1.0,  // white
+                    1.0, 1.0, 1.0, 1.0,  // white
+                    1.0, 1.0, 1.0, 1.0,  // white
+                    1.0, 1.0, 1.0, 1.0,  // white
+                    1.0, 1.0, 1.0, 1.0   // white
+                ];
+    
+                this.texCoords = [
+                    0.0, 1.0,
+                    1.0, 1.0,
+                    1.0, 0.0,
+                    1.0, 0.0,
+                    0.0, 0.0,
+                    0.0, 1.0
+                ];
+    
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);4
+    
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.colors), this.gl.STATIC_DRAW);
+    
+                this.texcoordsbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.texCoords), this.gl.STATIC_DRAW);
+            }
+    
+            settexture(cgratex){
+                this.textureid = cgratex.textureid;
+            }
+    
+            setShader(shader){
+                this.shaderprog = shader;
+            }
+    
+            drawit(viewMat, projectionMat){
+                this.shaderprog.startUsing();
+                
+                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_texcoords");
+                
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordsbuffer);
+                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                                2, // number of elements per attribute
+                                this.gl.FLOAT,  // Type of elements
+                                false,  // 
+                                0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                0); // Offset from the begining of a single vertex to this attribute
+                this.gl.enableVertexAttribArray(this.texcoordsLocation);
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+                this.gl.uniform1i(this.textureLocation, 0);
+                // the parent method does the rest
+                super.drawit(viewMat,projectionMat);
+                
+            }
+        }
+    </script>
+
 </div>
 
-<!-- ============================================ Solar System Definition ============================================ -->
-<div id="SolarSystem">
-
-</div>
-
-<!-- ============================================ Bouncing Cylinder Definition ============================================ -->
-<div id="BouncingCylinder">
-
-</div>
-
-<!-- ============================================ AR Application ============================================ -->
-<div id="AR_Scene">
+<div id="See_Solids">
     <canvas id="Testes" width="600" height="600"
         style="border:2px solid #000000;">
         Error: Your browser does not support the HTML canvas tag.
@@ -560,6 +630,7 @@
         class Testes_App extends DEECapp
         {
             counter = 0;
+
             initialize()
             {
                 // ===== Perform initializations
@@ -582,6 +653,7 @@
                 this.mySphere.setShader(this.shaderprog);
                 this.mySphere.setMaterials(10,10);
                 this.mySphere.setTexture("EarTex.jpg");
+
 
                 // ===== Set camera
                 this.viewpos = glm.vec3(0, 0, 6);
@@ -681,11 +753,264 @@
                 this.mySphere.setModelTransformation(model);
                 // ===== Draw Sphere
                 this.mySphere.drawit(this.viewM,this.projectionM);
-                
             }
         }
 
         var app = new Testes_App('Testes');
+
+        app.run();
+
+    </script>
+</div>
+
+<!-- ============================================ Solar System Definition ============================================ -->
+<div id="SolarSystem">
+
+</div>
+
+<!-- ============================================ Bouncing Cylinder Definition ============================================ -->
+<div id="BouncingCylinder">
+
+</div>
+
+<!-- ============================================ AR Application ============================================ -->
+<div id="AR_Scene">
+    <canvas id="AR_App" width="800" height="600"
+        style="border:2px solid #000000;">
+        Error: Your browser does not support the HTML canvas tag.
+    </canvas>
+
+    <pre id=testfield> </pre>
+    <pre id=markerfield></pre>
+    <script id="AR_App">
+        class AR_App extends DEECapp
+        {
+            counter = 0;
+
+            initcamera()
+            {
+                this.video = document.getElementById("video");
+                this.back = document.createElement('canvas');
+                this.backctx = this.back.getContext('2d');
+
+                if (navigator.mediaDevices === undefined) 
+                {
+                    navigator.mediaDevices = {};
+                }
+            
+                if (navigator.mediaDevices.getUserMedia === undefined) 
+                {
+                    navigator.mediaDevices.getUserMedia = function(constraints) 
+                    {
+                        var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                        
+                        if (!getUserMedia) 
+                        {
+                            return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+                        }
+
+                        return new Promise(function(resolve, reject) {getUserMedia.call(navigator, constraints, resolve, reject);});
+                    }
+                }
+                
+                navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) 
+                {
+                    if ("srcObject" in video)
+                    {
+                        video.srcObject = stream;
+                    } 
+                    else 
+                    {
+                        video.src = window.URL.createObjectURL(stream);
+                    }
+                }).catch(function(err) {console.log(err.name + ": " + err.message);});
+            }
+
+            initialize()
+            {
+                this.initcamera();
+
+                // ===== Perform initializations
+                this.gl.enable(this.gl.DEPTH_TEST);
+                this.gl.clearColor(0.1, 0.1, 0.1, 1.0);
+                
+                // ===== Initialize shader for objects
+                var fragsrc = document.getElementById("fragment-shader").text;
+                var vertsrc = document.getElementById("vertex-shader").text;
+                this.shaderprog = new DEECshader(this.gl);
+                this.shaderprog.srcShaders(vertsrc,fragsrc);
+                
+                // ===== Instantiate background video
+                var fragsrc_background = document.getElementById("fragment-shader-video").text;
+                var vertsrc_background = document.getElementById("vertex-shader-video").text;
+                this.shaderprog_video = new DEECshader(this.gl);
+                this.shaderprog_video.srcShaders(vertsrc_background,fragsrc_background);
+                    
+                this.background_texture = new CGRAtexture(this.gl);
+
+                this.background = new square(this.gl);
+                this.background.setShader(this.shaderprog_video);
+                this.background.settexture(this.background_texture);
+
+                // HERE IS the initalization of the Aruco detector
+                this.detector = new AR.Detector();
+                var modelsize = 35.0;
+                var focallength = 640.0;
+                // and of the pose estimator
+                this.posit = new POS.Posit(modelsize,focallength);
+
+                // ===== Set camera
+                this.viewpos = glm.vec3(0, 0, 5);
+
+                // ===== Set lights
+                this.setLights();
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
+                //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
+                //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
+                //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                this.projectionM= glm.perspective(glm.radians(45),1.0,0.1,100);      
+                
+                //////////////////////////////////////////////////////////////////////////
+                //glm.vec3(3, 3, 5): A posição da câmera no espaço 3D.                  //
+                //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
+                //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
+                //////////////////////////////////////////////////////////////////////////
+                this.viewM = glm.lookAt(this.viewpos,glm.vec3(0,0,0),glm.vec3(0,1,0));        
+                
+                
+            }
+
+            setLights()
+            {
+                // ===== Set parameters of light
+                this.shaderprog.startUsing();
+                // -- Ambient Light
+                this.Ambientloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Ambient");
+                var ambient_light = glm.vec3(0.2);
+                this.gl.uniform3fv(this.Ambientloc, ambient_light.array);
+                // -- Directional Light Color
+                this.LightColorloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightColor");
+                var color_light = glm.vec3(1.0);
+                this.gl.uniform3fv(this.LightColorloc, color_light.array);
+                // -- Directional Light Position
+                this.LightPosloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightPosition");
+                var light_pos = glm.vec3(2.0, 2.0, 2.0);
+                this.gl.uniform3fv(this.LightPosloc, light_pos.array);
+                // -- View Position
+                this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"ViewPos");
+                this.gl.uniform3fv(this.ViewPosloc, this.viewpos.array);
+                
+                // ----- Attenuations
+                // -- Constant Attenuation
+                this.ConstantAttenuationloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"ConstantAttenuation");
+                this.gl.uniform1f(this.ConstantAttenuationloc, 1.0);
+                // -- Linear Attenuation
+                this.LinearAttenuationloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LinearAttenuation");
+                this.gl.uniform1f(this.LinearAttenuationloc, 0.09);
+                // -- Quadratic Attenuation
+                this.QuadraticAttenuationloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"QuadraticAttenuation");
+                this.gl.uniform1f(this.QuadraticAttenuationloc, 0.032);
+                // -- Setup done
+                this.shaderprog.stopUsing();
+            }
+            
+            calculateSize(srcSize, dstSize) 
+            {
+                var srcRatio = srcSize.width / srcSize.height;
+                var dstRatio = dstSize.width / dstSize.height;
+                if (dstRatio > srcRatio)
+                {
+                    return {width:  dstSize.height * srcRatio, height: dstSize.height};
+                } 
+                else 
+                {
+                    return {width:  dstSize.width, height: dstSize.width / srcRatio};
+                }
+            }
+
+            processvideo()
+            {
+                if (this.video.readyState === this.video.HAVE_ENOUGH_DATA)
+                 {
+                    var videoSize = { width: this.video.videoWidth, height: this.video.videoHeight };
+                    var canvasSize = { width: this.canvas.width, height: this.canvas.height };
+                    var renderSize = this.calculateSize(videoSize, canvasSize);
+                    var xOffset = (canvasSize.width - renderSize.width) / 2;
+                
+                    this.back.width=640;//this.video.videoWidth;
+                    this.back.height=480; //this.video.videoHeight;
+                    // --- Orginal video
+                    // this.backctx.drawImage(this.video,0,0,this.video.videoWidth,this.video.videoHeight);
+                    // --- Mirrored video
+                    this.backctx.save();
+                    this.backctx.scale(-1, 1);
+                    this.backctx.drawImage(this.video, -this.video.videoWidth, 0, this.video.videoWidth, this.video.videoHeight);
+                    this.backctx.restore();
+                    var imagedata = this.backctx.getImageData(0,0,this.video.videoWidth,this.video.videoHeight);
+                    
+                    this.background_texture.update(imagedata,this.video.videoWidth,this.video.videoHeight);    
+
+                    // Detect the markers 
+                    var markers = this.detector.detect(imagedata); 
+
+                    var mText ="Markers detected = " + markers.length + "\n";
+                    if (markers.length > 0)
+                    {
+                        for (var j = 0; j !== markers.length; ++ j)
+                        {
+                            mText += "Marker "+j + " ID= " + markers[j].id/256 +"\n";
+                            var corners = markers[j].corners;
+                        
+                            for (var i=0; i !== corners.length; ++ i)
+                            {
+                                var corner = corners[(i + 1) % corners.length];
+                                mText += "Corner " + i + " " + corner.x/this.back.width + " " + corner.y/this.back.height + "\n";
+                            }
+            
+                        }
+                        var pose = this.posit.pose(corners);
+                        var translation = pose.bestTranslation;
+                        var rotation = pose.bestRotation;
+
+                        var txtText = "Rotation = \n";
+                        for (var l=0;l<3;l++)
+                        {
+                            testfield.innerText += "|";
+                            for (var c=0;c<3;c++)
+                            {
+                                txtText += Math.round(rotation[l][c]*100)/100;
+                                txtText += ", ";
+                            }
+                            txtText += "|\n";
+                        }
+                
+                        // pose.bestRotation, pose.bestTranslation);
+                        txtText += "Translation = \n [" + Math.round(translation[0]*100)/100 + ", "+ Math.round(translation[1]*100)/100 +", "+ Math.round(translation[2]*100)/100 + " ]";
+                        testfield.innerText = txtText;
+                        markerfield.innerText=mText;
+                    }
+                }      
+            }
+
+            render()
+            {
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+                this.processvideo();
+                this.counter++;
+            
+
+                // ==================== Background ====================
+                this.gl.disable(this.gl.DEPTH_TEST);
+                this.background.drawit();
+                this.gl.enable(this.gl.DEPTH_TEST);
+                
+            }
+        }
+
+        var app = new AR_App('AR_App');
 
         app.run();
 
