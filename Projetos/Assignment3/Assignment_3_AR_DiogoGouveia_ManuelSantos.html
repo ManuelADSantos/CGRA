@@ -21,6 +21,9 @@
     <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/js-aruco/posit1.js"></script>
 </div>
 
+<!-- ============================================ Get Video Input ============================================ -->
+<video id="video" autoplay style="width:320px; height:240px;"></video>
+
 <!-- ============================================ Shaders ============================================ -->
 <div id="Shaders">
     <!-- <script id="vertex-shader" type="x-shader/x-vertex">
@@ -329,7 +332,7 @@
         class sphere extends CGRAobject
         {
             // ===== Constructor
-            constructor(glcontext, color = [1.0, 1.0, 1.0], faces = 10)
+            constructor(glcontext, color = [1.0, 1.0, 1.0], faces = 20)
             {
                 // ===== Initialize the parent class
                 super(glcontext); 
@@ -372,9 +375,9 @@
                     
                     this.colors.push([color,color,color].flat());
 
-                    this.texCoords.push([(2*i+1)/(this.sides*2),1]); // topo
-                    this.texCoords.push([(2*i)/(this.sides*2), 1-1/this.sides]); // esquerda
-                    this.texCoords.push([(2*i+2)/(this.sides*2),1-1/this.sides]);  // direita
+                    this.texCoords.push([1-((i+(1/2))/(this.sides)), 0]);               // topo
+                    this.texCoords.push([1-((i+0)/(this.sides)), 1/this.sides]);  // esquerda
+                    this.texCoords.push([1-((i+1)/(this.sides)), 1/this.sides]);  // direita
                     
                     // Middle sections
                     for (let j = 0; j < this.sides - 2; j++)
@@ -390,9 +393,9 @@
                         
                         this.colors.push([color,color,color].flat());
 
-                        this.texCoords.push([(2*i)/(this.sides*2), 1-(j+1)/this.sides]); //a
-                        this.texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+1)/this.sides]); //b
-                        this.texCoords.push([(2*i)/(this.sides*2), 1-(j+2)/this.sides]); //c
+                        this.texCoords.push([1-((i+0)/(this.sides)), (j+1)/this.sides]); //a
+                        this.texCoords.push([1-((i+1)/(this.sides)), (j+1)/this.sides]); //b
+                        this.texCoords.push([1-((i+0)/(this.sides)), (j+2)/this.sides]); //c
                         
                         // Triangle 2
                         this.vertices.push(slices[i][j+1]);
@@ -405,9 +408,9 @@
                         
                         this.colors.push([color,color,color].flat());
 
-                        this.texCoords.push([(2*i)/(this.sides*2), 1-(j+2)/this.sides]); //c
-                        this.texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+1)/this.sides]); //b
-                        this.texCoords.push([((2*i)+2)/(this.sides*2), 1-(j+2)/this.sides]); //d
+                        this.texCoords.push([1-((i+0)/(this.sides)), (j+2)/this.sides]); //c
+                        this.texCoords.push([1-((i+1)/(this.sides)), (j+1)/this.sides]); //b
+                        this.texCoords.push([1-((i+1)/(this.sides)), (j+2)/this.sides]); //d
                     }
                     
                     // Down side
@@ -421,15 +424,15 @@
                     
                     this.colors.push([color,color,color].flat());
 
-                    this.texCoords.push([(2*i)/(this.sides*2), 1/this.sides]); // esquerda
-                    this.texCoords.push([(2*i+2)/(this.sides*2),1/this.sides]);  // direita
-                    this.texCoords.push([(2*i+1)/(this.sides*2),0]); // bottom
+                    this.texCoords.push([1-((i+0)/(this.sides)), 1-1/this.sides]);  // esquerda
+                    this.texCoords.push([1-((i+1)/(this.sides)), 1-1/this.sides]); // direita
+                    this.texCoords.push([1-((i+(1/2))/(this.sides)), 1]);            // bottom
                 }
             
                 // ===== Creating and configuring buffers
                 this.vertexbuffer=this.gl.createBuffer();
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices.flat()), this.gl.STATIC_DRAW);
                 
                 this.colorbuffer = this.gl.createBuffer();
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
@@ -437,11 +440,11 @@
 
                 this.normalsbuffer = this.gl.createBuffer();
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.normals), this.gl.STATIC_DRAW);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.normals.flat()), this.gl.STATIC_DRAW);
 
                 this.texcoordsbuffer=this.gl.createBuffer();
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);  
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.texCoords), this.gl.STATIC_DRAW);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.texCoords.flat()), this.gl.STATIC_DRAW);
             }
 
             // ===== Set texture
@@ -577,11 +580,11 @@
                 
                 this.mySphere = new sphere(this.gl);
                 this.mySphere.setShader(this.shaderprog);
-                this.mySphere.setMaterials(100,10);
-                this.mySphere.setTexture("Diamond.jpg");
+                this.mySphere.setMaterials(10,10);
+                this.mySphere.setTexture("EarTex.jpg");
 
                 // ===== Set camera
-                this.viewpos = glm.vec3(0, 0, 8);
+                this.viewpos = glm.vec3(0, 0, 6);
 
                 // ===== Set lights
                 this.setLights();
@@ -610,11 +613,11 @@
                 this.shaderprog.startUsing();
                 // -- Ambient Light
                 this.Ambientloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Ambient");
-                var ambient_light = glm.vec3(0.5,0.5,0.5);
+                var ambient_light = glm.vec3(0.2);
                 this.gl.uniform3fv(this.Ambientloc, ambient_light.array);
                 // -- Directional Light Color
                 this.LightColorloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightColor");
-                var color_light = glm.vec3(0.5,0.5,0.5);
+                var color_light = glm.vec3(1.0);
                 this.gl.uniform3fv(this.LightColorloc, color_light.array);
                 // -- Directional Light Position
                 this.LightPosloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightPosition");
@@ -647,7 +650,7 @@
                 // ===== Model
                 var model = glm.mat4(glm.mat3(1.0));
                 // ===== Translations
-                var translation = glm.vec3(-1.0, 0.0, 0.0);
+                var translation = glm.vec3(-1.0, 1.0, 0.0);
                 model = glm.translate(model, translation);
                 // ===== Rotation
                 var rotation = glm.radians(this.counter);
@@ -665,11 +668,14 @@
                 // ===== Model
                 var model = glm.mat4(glm.mat3(1.0));
                 // ===== Translations
-                var translation = glm.vec3(1.0, 0.0, 0.0);
+                var translation = glm.vec3(1.0, 1.0, 0.0);
                 model = glm.translate(model, translation);
                 // ===== Rotation
                 var rotation = glm.radians(this.counter);
                 var axis = glm.vec3(0.0, 1.0, 0.0);
+                // model = glm.rotate(model, rotation, axis);
+                // rotation = glm.radians(180);
+                // axis = glm.vec3(0.0, 0.0, 1.0);
                 model = glm.rotate(model, rotation, axis);
                 // ===== Final Transformation
                 this.mySphere.setModelTransformation(model);
