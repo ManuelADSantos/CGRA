@@ -4,7 +4,6 @@
 <script src="https://is3l.isr.uc.pt/~pm/CGRA/JS/cgratexture.js"></script>
 <script src='https://git.io/glm-js.min.js'></script>
 
-
 <script id="my-vertex-shader" type="x-shader/x-vertex">
     precision mediump float;
 
@@ -65,7 +64,6 @@
     }
 </script>
 
-
 <h1> Cubes </h1>
 <script>
     class cube extends CGRAobject{
@@ -112,6 +110,8 @@
             this.quad( 6, 5, 1, 2 );
             this.quad( 4, 5, 6, 7 );
             this.quad( 5, 4, 0, 1 );
+
+            // console.log(this.texCoords);
             
             this.vertexbuffer=this.gl.createBuffer();
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
@@ -191,7 +191,8 @@
         }  
     }
 </script>
-Below is the already seen cube example... much more verbose and complicated to build.
+Below is the already seen cube example... much more verbose and complicated to
+build.
 %%js
 
 <script>
@@ -311,7 +312,6 @@ Below is the already seen cube example... much more verbose and complicated to b
     }
 </script>
 
-
 <script>
     class square extends CGRAobject
     {
@@ -389,7 +389,6 @@ Below is the already seen cube example... much more verbose and complicated to b
         }
     }
 </script>
-
 
 <h1> Scene class </h1>
 <h2> A class supporting the scene drawing to be reused multiple times. </h2>
@@ -624,9 +623,9 @@ Note that you must complete it to include a background image.
     }
 </script>
 
-
 <h1>A Camera class</h1>
-You must complete the code below to support the left and right camera for generating stereo views.
+You must complete the code below to support the left and right camera for
+generating stereo views.
 
 <script>
     class cam{
@@ -698,7 +697,7 @@ You must complete the code below to support the left and right camera for genera
 </script>
 
 <canvas id="myCanvas" width="800" height="800" style="border:2px solid #000000;">
-      Error: Your browser does not support the HTML canvas tag.
+    Error: Your browser does not support the HTML canvas tag.
 </canvas>
 
 <script>
@@ -742,11 +741,11 @@ You must complete the code below to support the left and right camera for genera
     app.run();
 </script>
 
-
 <h1>Anaglyph</h1>
 
-<canvas id="myCanvas3" width="800" height="800" style="border:2px solid #000000;">
-      Error: Your browser does not support the HTML canvas tag.
+<canvas id="myCanvas3" width="800" height="800"
+    style="border:2px solid #000000;">
+    Error: Your browser does not support the HTML canvas tag.
 </canvas>
 
 <script>
@@ -798,12 +797,12 @@ You must complete the code below to support the left and right camera for genera
     app2.run();
 </script>
 
-
 <h1>Cardboard</h1>
 Rendering twice for use with cardboards.
 
-<canvas id="myCanvas4" width="800" height="400" style="border:2px solid #000000;">
-      Error: Your browser does not support the HTML canvas tag.
+<canvas id="myCanvas4" width="800" height="400"
+    style="border:2px solid #000000;">
+    Error: Your browser does not support the HTML canvas tag.
 </canvas>
 
 <script>
