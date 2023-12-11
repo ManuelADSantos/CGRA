@@ -1,6 +1,6 @@
 
 <!-- ============================================ Background Color ============================================ -->
-<head>
+<head id="Background_Color">
     <style>
       body {
         background-color: rgb(46, 46, 46); /* You can change 'lightblue' to any color you want */
@@ -535,13 +535,133 @@
     </script>
 
     <!-- Cylinders -->
+    <script id="Cylinder">
+        class cylinder extends CGRAobject
+        {
+            // ===== Constructor
+            constructor(glcontext, color = [1.0, 1.0, 1.0], faces = 20)
+            {}
+
+            // ===== Set texture
+            setTexture(source)
+            {
+                this.texture = new CGRAtexture(this.gl);
+                this.texture.load(source);
+                this.textureid = this.texture.textureid;
+            }
+
+            // ===== Set material properties
+            setMaterials(shiny = 50, strength = 0.4)
+            {
+                this.Shininess = shiny;
+                this.Strength = strength;
+            }
+
+            // ===== Function to dinamically change cylinder color
+            setColor(color)
+            {
+                for (var i = 0; i < this.numvertices; i++)
+                {
+                    this.colors.push(color);
+                }
+
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.colors.flat()), this.gl.STATIC_DRAW);
+            }
+
+            // ===== Function to draw the cylinder
+            drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0))
+            {}
+        }
+    </script>
 
     <!-- Cones -->
+    <script id="Cone">
+        class cone extends CGRAobject
+        {
+            // ===== Constructor
+            constructor(glcontext, color = [1.0, 1.0, 1.0], faces = 20)
+            {}
+
+            // ===== Set texture
+            setTexture(source)
+            {
+                this.texture = new CGRAtexture(this.gl);
+                this.texture.load(source);
+                this.textureid = this.texture.textureid;
+            }
+
+            // ===== Set material properties
+            setMaterials(shiny = 50, strength = 0.4)
+            {
+                this.Shininess = shiny;
+                this.Strength = strength;
+            }
+
+            // ===== Function to dinamically change cone color
+            setColor(color)
+            {
+                for (var i = 0; i < this.numvertices; i++)
+                {
+                    this.colors.push(color);
+                }
+
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.colors.flat()), this.gl.STATIC_DRAW);
+            }
+
+            // ===== Function to draw the cone
+            drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0))
+            {}
+        }
+    </script>
 
     <!-- Discs -->
+    <script id="Disc">
+        class disc extends CGRAobject
+        {
+            // ===== Constructor
+            constructor(glcontext, color = [1.0, 1.0, 1.0], faces = 20)
+            {}
+
+            // ===== Set texture
+            setTexture(source)
+            {
+                this.texture = new CGRAtexture(this.gl);
+                this.texture.load(source);
+                this.textureid = this.texture.textureid;
+            }
+
+            // ===== Set material properties
+            setMaterials(shiny = 50, strength = 0.4)
+            {
+                this.Shininess = shiny;
+                this.Strength = strength;
+            }
+
+            // ===== Function to dinamically change disc color
+            setColor(color)
+            {
+                for (var i = 0; i < this.numvertices; i++)
+                {
+                    this.colors.push(color);
+                }
+
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.colors.flat()), this.gl.STATIC_DRAW);
+            }
+
+            // ===== Function to draw the disc
+            drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0))
+            {}
+        }
+    </script>
 
     <!-- Square -->
-    <script>
+    <script id="Square">
         class square extends CGRAobject
         {
             constructor(glcontext)
@@ -765,7 +885,410 @@
 
 <!-- ============================================ Solar System Definition ============================================ -->
 <div id="SolarSystem">
+    <canvas id="SolarSystem_Canvas" width="600" height="600"
+        style="border:2px solid #000000;">
+        Error: Your browser does not support the HTML canvas tag.
+    </canvas>
 
+    <script id="SolarSystem">
+        class solarSystem extends CGRAobject
+            {
+                form = 1;
+                constructor(glcontext, form = 1, sunFlg = 1)
+                {    
+                    super(glcontext)
+
+                    switch(form)
+                    {
+                        case 1: 
+                            this.Sun = new sphere(this.gl,[1, 0.7, 0] , 20);
+                            this.Mercury = new sphere(this.gl,[0.58, 0.58, 0.58] , 20);
+                            this.Venus = new sphere(this.gl,[0.58, 0.29, 0.1] , 20);
+                            this.Earth = new sphere(this.gl,[0, 0.8, 0.3], 20);
+                            this.Mars = new sphere(this.gl,[0.9, 0, 0], 20);
+                            this.Jupiter = new sphere(this.gl,[0.9, 0.4, 0], 20);
+                            this.Saturn = new sphere(this.gl,[0.8, 0.4, 0], 20);
+                            this.Uranus = new sphere(this.gl,[0.4, 0.6, 0.9], 20);
+                            this.Neptune = new sphere(this.gl,[0, 0, 1], 20);
+                            break;
+                        case 2:
+                            this.Sun = new cube(this.gl);
+                            this.Mercury = new cube(this.gl);
+                            this.Venus = new cube(this.gl);
+                            this.Earth = new cube(this.gl);
+                            this.Mars = new cube(this.gl);
+                            this.Jupiter = new cube(this.gl);
+                            this.Saturn = new cube(this.gl);
+                            this.Uranus = new cube(this.gl);
+                            this.Neptune = new cube(this.gl);
+                            break;
+                        case 3:
+                            this.Sun = new cylinder(this.gl,[1, 0.7, 0] ,[1, 1, 0], 10);
+                            this.Mercury = new cylinder(this.gl,[0.58, 0.58, 0.58] ,[0.8, 0.8, 0.8], 10);
+                            this.Venus = new cylinder(this.gl,[0.58, 0.29, 0.1] ,[1, 0.8, 0.67], 10);
+                            this.Earth = new cylinder(this.gl,[0, 0.8, 0.3], [0, 0, 1], 10);
+                            this.Mars = new cylinder(this.gl,[0.9, 0, 0] ,[1, 0.5, 0], 10);
+                            this.Jupiter = new cylinder(this.gl,[0.9, 0.4, 0] ,[0.8, 0.8, 0.8], 10);
+                            this.Saturn = new cylinder(this.gl,[0.8, 0.4, 0] ,[0.8, 0.8, 0.8], 10);
+                            this.Uranus = new cylinder(this.gl,[0.4, 0.6, 0.9] ,[0, 0.7, 1], 10);
+                            this.Neptune = new cylinder(this.gl,[0, 0, 1] ,[0, 0.5, 1], 10);
+                            break;
+                        case 4:
+                            this.Sun = new cone(this.gl,[1, 0.7, 0] ,[1, 1, 0], 10);
+                            this.Mercury = new cone(this.gl,[0.58, 0.58, 0.58] ,[0.8, 0.8, 0.8], 10);
+                            this.Venus = new cone(this.gl,[0.58, 0.29, 0.1] ,[1, 0.8, 0.67], 10);
+                            this.Earth = new cone(this.gl,[0, 0.8, 0.3], [0, 0, 1], 10);
+                            this.Mars = new cone(this.gl,[0.9, 0, 0] ,[1, 0.5, 0], 10);
+                            this.Jupiter = new cone(this.gl,[0.9, 0.4, 0] ,[0.8, 0.8, 0.8], 10);
+                            this.Saturn = new cone(this.gl,[0.8, 0.4, 0] ,[0.8, 0.8, 0.8], 10);
+                            this.Uranus = new cone(this.gl,[0.4, 0.6, 0.9] ,[0, 0.7, 1], 10);
+                            this.Neptune = new coneT(this.gl,[0, 0, 1] ,[0, 0.5, 1], 10);
+                            break;
+                    }
+
+                    var Color = [0.3, 0.3, 0.3];
+                    switch(sunFlg)
+                    {
+                        case 1:
+                            Color = [0.3, 0.3, 0.3];
+                            break;
+                        case 2:
+                            Color = [0.9, 0.9, 0.9];
+                            break;
+                        case 3:
+                            Color = [1, 0.7, 0.0];
+                            break;
+                        case 4:
+                            Color = [1, 0.0, 0.0];
+                            break;
+                    }
+                    // this.SaturnDisc = new disc(this.gl, [0.9, 0.7, 0] ,[0.7, 0.7, 0.6], 20);
+                    
+                    this.Sun.setTexture("SunTex.jpg");
+                    this.Mercury.setTexture("MerTex.jpg");
+                    this.Venus.setTexture("VenTex.jpg");
+                    this.Earth.setTexture("EarTex.jpg");
+                    this.Mars.setTexture("MarTex.jpg");
+                    this.Jupiter.setTexture("JupTex.jpg");
+                    this.Saturn.setTexture("SatTex.jpg");
+                    this.Uranus.setTexture("UraTex.jpg");
+                    this.Neptune.setTexture("NepTex.jpg");
+                    // this.SaturnDisc.setTexture("SatTex.jpg");
+
+                    this.Sun.setColor(Color)
+                }
+                    
+                setShader(shader)
+                {
+                    this.Sun.setShader(shader);
+                    this.Mercury.setShader(shader);
+                    this.Venus.setShader(shader);
+                    this.Earth.setShader(shader);
+                    this.Mars.setShader(shader);
+                    this.Jupiter.setShader(shader);
+                    this.Saturn.setShader(shader);
+                    this.Uranus.setShader(shader);
+                    this.Neptune.setShader(shader);
+                    // this.SaturnDisc.setShader(shader);
+                }
+
+                drawit(viewM, projectM, counter, parentMat4 = glm.mat4(1.0))
+                {
+                    var globalMat = parentMat4['*'](this.modelMat);
+                    
+                    ////////////////////////SUN//////////////////////////////
+                    var Sun = glm.mat4(glm.mat3(1.0));
+                    // ===== Scale
+                    var scale = glm.vec3(2.5,2.5, 2.5);
+                    Sun = glm.scale(Sun, scale);
+                    // ===== Rotation
+                    var rotation = glm.radians(-counter);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Sun = glm.rotate(Sun, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,0);
+                    Sun = glm.translate(Sun, translation);
+                    // ===== Final Transformation
+                    this.Sun.setModelTransformation(Sun);      
+                    // ===== Draw
+                    this.Sun.drawit(viewM,projectM, globalMat);
+                    
+                    
+                    //////////////////////MERCURY///////////////////////////////////
+                    var Mercury = glm.mat4(glm.mat3(1));
+                    // ===== Scale
+                    var scale = glm.vec3(0.024, 0.024, 0.024);
+                    Mercury = glm.scale(Mercury, scale);
+                    // ===== Rotation
+                    var outer_rotation = counter*365/85;
+                    var rotation = glm.radians(outer_rotation);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Mercury = glm.rotate(Mercury, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,-70);
+                    Mercury = glm.translate(Mercury, translation);
+                    // ===== Rotation
+                    Mercury = glm.rotate(Mercury, rotation, axis);
+                    // ===== Final Transformation
+                    this.Mercury.setModelTransformation(Mercury);      
+                    // ===== Draw
+                    this.Mercury.drawit(viewM,projectM, globalMat);
+                    
+                    
+                    /////////////////////VENUS/////////////////////////////////////
+                    var Venus = glm.mat4(glm.mat3(1));
+                    // ===== Scale
+                    var scale = glm.vec3(0.121/2, 0.121/2, 0.121/2);
+                    Venus = glm.scale(Venus, scale);
+                    // ===== Rotation
+                    var outer_rotation = counter*365/224;
+                    var rotation = glm.radians(outer_rotation);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Venus = glm.rotate(Venus, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,-40);
+                    Venus = glm.translate(Venus, translation);
+                    // ===== Rotation
+                    var inner_rotation = counter/365;
+                    var rotation = glm.radians(inner_rotation);
+                    Venus = glm.rotate(Venus, rotation, axis);
+                    // ===== Final Transformation
+                    this.Venus.setModelTransformation(Venus);      
+                    // ===== Draw
+                    this.Venus.drawit(viewM,projectM, globalMat);
+                    
+                    
+                    ///////////////////////EARTH/////////////////////////////////////
+                    var Earth = glm.mat4(glm.mat3(1));
+                    // ===== Scale
+                    var scale = glm.vec3(0.127/2, 0.127/2, 0.127/2);
+                    Earth = glm.scale(Earth, scale);
+                    // ===== Rotation
+                    var outer_rotation = counter*365/365;
+                    var rotation = glm.radians(outer_rotation);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Earth = glm.rotate(Earth, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,-50);
+                    Earth = glm.translate(Earth, translation);
+                    // ===== Rotation
+                    var inner_rotation = counter/365;
+                    var rotation = glm.radians(inner_rotation);
+                    Earth = glm.rotate(Earth, rotation, axis);
+                    // ===== Final Transformation
+                    this.Earth.setModelTransformation(Earth);      
+                    // ===== Draw
+                    this.Earth.drawit(viewM,projectM, globalMat);
+                    
+                    
+                    ///////////////////////MARS/////////////////////////////////
+                    var Mars = glm.mat4(glm.mat3(1));
+                    // ===== Scale
+                    var scale = glm.vec3(0.067/2, 0.067/2, 0.067/2);
+                    Mars = glm.scale(Mars, scale);
+                    // ===== Rotation
+                    var outer_rotation = counter*365/(365*1.88);
+                    var rotation = glm.radians(outer_rotation);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Mars = glm.rotate(Mars, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,-120);
+                    Mars = glm.translate(Mars, translation);
+                    // ===== Rotation
+                    Mars = glm.rotate(Mars, rotation, axis);
+                    // ===== Final Transformation
+                    this.Mars.setModelTransformation(Mars);      
+                    // ===== Draw
+                    this.Mars.drawit(viewM,projectM, globalMat);
+                    
+                    
+                    //////////////////////JUPITER///////////////////////////////
+                    var Jupiter = glm.mat4(glm.mat3(1));
+                    // ===== Scale
+                    var scale = glm.vec3(1.42/2, 1.42/2, 1.42/2);
+                    Jupiter = glm.scale(Jupiter, scale);
+                    // ===== Rotation
+                    var outer_rotation = counter/11.86;
+                    var rotation = glm.radians(outer_rotation);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Jupiter = glm.rotate(Jupiter, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,-8);
+                    Jupiter = glm.translate(Jupiter, translation);
+                    // ===== Rotation
+                    Jupiter = glm.rotate(Jupiter, rotation, axis);
+                    // ===== Final Transformation
+                    this.Jupiter.setModelTransformation(Jupiter);      
+                    // ===== Draw
+                    this.Jupiter.drawit(viewM,projectM, globalMat);
+                    
+                    
+                    //////////////////////SATURN///////////////////////////////
+
+                    var Saturn = glm.mat4(glm.mat3(1));
+                    // ===== Scale
+                    var scale = glm.vec3(1.2/2, 1.2/2, 1.2/2);
+                    Saturn = glm.scale(Saturn, scale);
+                    // ===== Rotation
+                    var outer_rotation = counter/29.46;
+                    var rotation = glm.radians(outer_rotation);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Saturn = glm.rotate(Saturn, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,-12);
+                    Saturn = glm.translate(Saturn, translation);
+                    // ===== Rotation
+                    Saturn = glm.rotate(Saturn, rotation, axis);
+                    // ===== Final Transformation
+                    this.Saturn.setModelTransformation(Saturn);
+                    var scale = glm.vec3(1.5, 1.5, 1.5);
+                    Saturn = glm.scale(Saturn, scale);
+                    // this.SaturnDisc.setModelTransformation(Saturn);
+                    
+                    // ===== Draw
+                    this.Saturn.drawit(viewM,projectM, globalMat);
+                    // this.SaturnDisc.drawit(viewM,projectM, globalMat);
+                    
+                    
+                    
+                    //////////////////////URANUS/////////////////////////////
+                    var Uranus = glm.mat4(glm.mat3(1));
+                    // ===== Scale
+                    var scale = glm.vec3(0.51/2, 0.51/2, 0.51/2);
+                    Uranus = glm.scale(Uranus, scale);
+                    // ===== Rotation
+                    var outer_rotation = counter/84.01;
+                    var rotation = glm.radians(outer_rotation);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Uranus = glm.rotate(Uranus, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,-36);
+                    Uranus = glm.translate(Uranus, translation);
+                    // ===== Rotation
+                    Uranus = glm.rotate(Uranus, rotation, axis);
+                    // ===== Final Transformation
+                    this.Uranus.setModelTransformation(Uranus);      
+                    // ===== Draw
+                    this.Uranus.drawit(viewM,projectM, globalMat);
+                    
+                    
+                    /////////////////////NEPTUNE////////////////////////////
+                    var Neptune = glm.mat4(glm.mat3(1));
+                    // ===== Scale
+                    var scale = glm.vec3(0.495/2, 0.495/2, 0.495/2);
+                    Neptune = glm.scale(Neptune, scale);
+                    // ===== Rotation
+                    var outer_rotation = counter/164.79;
+                    var rotation = glm.radians(outer_rotation);
+                    var axis = glm.vec3(0.0,1.0,0.0);
+                    Neptune = glm.rotate(Neptune, rotation, axis);
+                    // ===== Translate
+                    var translation = glm.vec3(0,0,-44);
+                    Neptune = glm.translate(Neptune, translation);
+                    // ===== Rotation
+                    Neptune = glm.rotate(Neptune, rotation, axis);
+                    // ===== Final Transformation
+                    this.Neptune.setModelTransformation(Neptune);      
+                    // ===== Draw
+                    this.Neptune.drawit(viewM,projectM, globalMat);  
+                }
+            }
+    </script>
+
+    <script id="SolarSystem_Base_App">  
+            class SolarSystem_Base_App extends DEECapp
+            {
+                counter=0;
+                speedup = 1;
+                SunFlag = 1;
+                initialize()
+                {
+                    var fragsrc = document.getElementById("fragment-shader").text;
+                    var vertsrc = document.getElementById("vertex-shader").text;
+                    this.shaderprog = new DEECshader(this.gl);
+                    this.shaderprog.srcShaders(vertsrc,fragsrc);
+
+                    // perform other initializations
+                    this.gl.enable(this.gl.DEPTH_TEST);
+                    this.gl.clearColor(0.1,0.1,0.1,1.0);
+                    
+                    this.solarSystem = new solarSystem(this.gl, 1);
+                    this.solarSystem.setShader(this.shaderprog);
+
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
+                    //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
+                    //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
+                    //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    this.projectionMa= glm.perspective(glm.radians(60),1.0,0.1,1000);      
+                    
+                    //////////////////////////////////////////////////////////////////////////
+                    //glm.vec3(0, 0, 0): A posição da câmera no espaço 3D.                  //
+                    //glm.vec3(0, 0, -1): O ponto para o qual a câmera está direcionada.    //
+                    //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
+                    //////////////////////////////////////////////////////////////////////////
+                    this.viewMa = glm.lookAt(glm.vec3(0,0,5),glm.vec3(0,0,0),glm.vec3(0,1,0));           
+
+                    window.addEventListener("keypress",(evt)=>this.keyprocess(evt),false);
+                }
+
+                keyprocess(evt)
+                {
+                    switch (evt.keyCode)
+                    {
+                        case 27:
+                            alert("You pressed the \"Escape\" key."); 
+                            break;
+                        case 49: // 1 Stop
+                            this.speedup = 0;     
+                            break;
+                        case 50: // 2 Slow
+                            this.speedup = 0.2;
+                            break;
+                        case 51: // 3 Middle
+                            this.speedup = 1;
+                            break;
+                        case 52: // 4 Fast
+                            this.speedup = 10;
+                            break;
+                        case 114: // r
+                        this.SunFlag = 1;
+                            this.solarSystem = new solarSystem(this.gl, 1, this.SunFlag);
+                            this.solarSystem.setShader(this.shaderprog, this.shaderprogTC);
+                            break;
+                        case 116: // t
+                            this.SunFlag = 2;
+                            this.solarSystem = new solarSystem(this.gl, 2, this.SunFlag);
+                            this.solarSystem.setShader(this.shaderprog, this.shaderprogTC);
+                            break;
+                        case 121: // y
+                            this.SunFlag = 3;
+                            this.solarSystem = new solarSystem(this.gl, 3, this.SunFlag);
+                            this.solarSystem.setShader(this.shaderprog, this.shaderprogTC);
+                            break;
+                        case 117: // u
+                            this.SunFlag = 4;
+                            this.solarSystem = new solarSystem(this.gl, 4, this.SunFlag);
+                            this.solarSystem.setShader(this.shaderprog, this.shaderprogTC);
+                            break;
+                    }
+                }
+                                
+                render()
+                {
+                    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+                    this.counter = this.counter + this.speedup;
+                    
+                    this.shaderprog.startUsing();
+                    
+                    this.solarSystem.drawit(this.viewMa,this.projectionMa, this.counter);        
+                }
+            }
+
+            var app = new SolarSystem_Base_App('SolarSystem_Canvas');
+            app.run();
+    </script>
 </div>
 
 <!-- ============================================ Bouncing Cylinder Definition ============================================ -->
