@@ -540,7 +540,104 @@
         {
             // ===== Constructor
             constructor(glcontext, color = [1.0, 1.0, 1.0], faces = 20)
-            {}
+            {
+                // Initialize the parent class
+                super(glcontext); 
+                
+                // ===== Constants
+                // Number of faces (3 to inf)
+                this.sides = faces;
+                this.numvertices = this.sides*6 + this.sides*3*2;
+                this.length = 1; this.radius = 0.5;
+                
+                // ===== Calculate top and bottom bases coordinates
+                let up_side = [], down_side = [], circleT = [];
+                for (let i = 0; i < this.sides; i++)
+                { 
+                    let theta = i*2*Math.PI/this.sides;
+                    up_side.push([this.radius*Math.cos(theta),
+                                (this.length)/2,
+                                this.radius*Math.sin(theta)]);
+                    
+                    down_side.push([this.radius*Math.cos(theta),
+                                    -1*(this.length)/2,
+                                    this.radius*Math.sin(theta)]);
+
+                    circleT.push([0.25*Math.cos(theta)+0.25,
+                                0.25*Math.sin(theta)+0.25]);
+                }
+                
+                // ===== Calculate vertices and normals
+                this.vertices = [], this.normals = [], this.texCoords = [], this.colors = [];
+                for (let i = 0; i < this.sides; i++)
+                {   
+                    // Lateral
+                    this.vertices.push(up_side[i]);
+                    this.normals.push(up_side[i]);
+                    this.vertices.push(up_side[(i+1)%this.sides]);
+                    this.normals.push(up_side[(i+1)%this.sides]);
+                    this.vertices.push(down_side[i]);
+                    this.normals.push(down_side[i]);
+                    this.texCoords.push([0.5+(i)*0.5/this.sides, 0.5]);
+                    this.texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
+                    this.texCoords.push([0.5+(i)*0.5/this.sides, 0]);
+                    
+                    this.vertices.push(down_side[i]);
+                    this.normals.push(down_side[i]);
+                    this.vertices.push(down_side[(i+1)%this.sides]);
+                    this.normals.push(down_side[(i+1)%this.sides]);
+                    this.vertices.push(up_side[(i+1)%this.sides]);
+                    this.normals.push(up_side[(i+1)%this.sides]);
+                    this.texCoords.push([0.5+(i)*0.5/this.sides, 0]);
+                    this.texCoords.push([0.5+(i+1)*0.5/this.sides, 0]);
+                    this.texCoords.push([0.5+(i+1)*0.5/this.sides, 0.5]);
+                    
+                    // Top
+                    this.vertices.push(up_side[i]);
+                    this.normals.push([0,1,0]);
+                    this.vertices.push(up_side[(i+1)%this.sides]);
+                    this.normals.push([0,1,0]);
+                    this.vertices.push([0,(this.length)/2,0]);
+                    this.normals.push([0,1,0]);
+                    this.texCoords.push(circleT[i]);
+                    this.texCoords.push(circleT[(i+1)%this.sides]);
+                    this.texCoords.push([0.25,0.25]);
+                    
+                    // Base
+                    this.vertices.push(down_side[i]);
+                    this.normals.push([0,-1,0]);
+                    this.vertices.push(down_side[(i+1)%this.sides]);
+                    this.normals.push([0,-1,0]);
+                    this.vertices.push([0,-1*(this.length)/2,0]);
+                    this.normals.push([0,-1,0]);
+                    this.texCoords.push(circleT[i]);
+                    this.texCoords.push(circleT[(i+1)%this.sides]);
+                    this.texCoords.push([0.25,0.25]);
+                }
+
+                // ===== Assign colors
+                for (let i=0; i < (this.sides*6)*2; i++)
+                {
+                    this.colors.push(color);
+                }
+                
+                // ===== Populate vertex and color buffers
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices.flat()), this.gl.STATIC_DRAW);
+                
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.colors.flat()), this.gl.STATIC_DRAW);
+
+                this.normalsbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.normals.flat()), this.gl.STATIC_DRAW);
+
+                this.texcoordsbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);  
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.texCoords.flat()), this.gl.STATIC_DRAW);
+            }
 
             // ===== Set texture
             setTexture(source)
@@ -572,7 +669,58 @@
 
             // ===== Function to draw the cylinder
             drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0))
-            {}
+            {
+                this.shaderprog.startUsing();
+                
+                // ===== Setup textures
+                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_Textures");
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordsbuffer);
+                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                                2, // number of elements per attribute
+                                this.gl.FLOAT,  // Type of elements
+                                false,  // 
+                                0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                0); // Offset from the begining of a single vertex to this attribute
+                this.gl.enableVertexAttribArray(this.texcoordsLocation);
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+                this.gl.uniform1i(this.textureLocation, 0);
+                
+                // ===== Normals into vertex shader
+                this.normloc = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_Normals");
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.normalsbuffer);
+                this.gl.vertexAttribPointer(this.normloc, // Attribute location
+                            3, // number of elements per attribute
+                            this.gl.FLOAT,  // Type of elements
+                            false,  // 
+                            3*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                0); // Offset from the begining of a single vertex to this attribute
+                this.gl.enableVertexAttribArray(this.normloc);
+                
+                // ===== Normals transformation matrix
+                var localT = parentMat4['*'](this.modelMat);
+                this. NormMatloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"NormalMatrix");
+                var NormMat = glm.mat3(glm.transpose(glm.inverse(localT)));
+                this.gl.uniformMatrix3fv(this.NormMatloc, false, NormMat.array);
+
+                // ===== Model transformation matrix
+                this.Matloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"MV");
+                var MV = viewMat['*'](parentMat4['*'](this.modelMat));
+                this.gl.uniformMatrix4fv(this.Matloc, false, MV.array);
+                
+                // ===== Shininess value (Higher values result in smaller, sharper highlights, while lower values create larger, more diffused highlights. Usually in the range of 1 to 100.)
+                this.Shininessloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Shininess");
+                this.gl.uniform1f(this.Shininessloc, this.Shininess);
+
+                // ===== Strength value
+                this.Strengthloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Strength");
+                this.gl.uniform1f(this.Strengthloc, this.Strength);
+                
+                this.shaderprog.stopUsing();
+
+                // the parent method does the rest
+                super.drawit(viewMat,projectionMat,parentMat4);
+            }
         }
     </script>
 
@@ -581,8 +729,90 @@
         class cone extends CGRAobject
         {
             // ===== Constructor
-            constructor(glcontext, color = [1.0, 1.0, 1.0], faces = 20)
-            {}
+            constructor(glcontext, color = [1.0, 1.0, 1.0], faces = 50)
+            {
+                // Initialize the parent class
+                super(glcontext);
+
+                // ===== Constants
+                // Number of faces (3 to inf)
+                this.sides = faces;
+                this.numvertices = this.sides*3*2;
+                this.length = 1; this.radius = 0.5;
+                
+                // ===== Calculate base
+                var base = [], baseT = [];
+                for (let i = 0; i < this.sides; i++)
+                { 
+                    let theta = i*2*Math.PI/this.sides;
+                    base.push(
+                        [this.radius*Math.cos(theta),
+                        -1*(this.length)/2,
+                        this.radius*Math.sin(theta)]);
+                    baseT.push(
+                        [this.radius*Math.cos(theta)+0.5,
+                        this.radius*Math.sin(theta)+0.5]);
+                }
+                
+                // ===== Calculate vertices and normals
+                this.vertices = [], this.normals = [], this.texCoords = [], this.colors = [];
+                for (let i = 0; i < this.sides; i++)
+                {   
+                    this.vertices.push(base[i]);
+                    this.normals.push([0,-1,0]);
+                    this.vertices.push(base[(i+1)%this.sides]);
+                    this.normals.push([0,-1,0]);
+                    this.vertices.push([0,-1*(this.length)/2,0]);
+                    this.normals.push([0,-1,0]);
+                    this.texCoords.push(baseT[i]);
+                    this.texCoords.push(baseT[(i+1)%this.sides]);
+                    this.texCoords.push([0.5,0.5]);
+
+                    this.vertices.push(base[i]);
+                    this.vertices.push(base[(i+1)%this.sides]);
+                    this.vertices.push([0,(this.length)/2,0]);
+                    
+                    var a = glm.vec3(base[(i+1)%this.sides][0] - base[i][0],
+                                    base[(i+1)%this.sides][1] - base[i][1],
+                                    base[(i+1)%this.sides][2] - base[i][2]);
+
+                    var b = glm.vec3(0 - base[i][0],
+                                    (this.length)/2 - base[i][1],
+                                    0 - base[i][2]);
+
+                    var c = glm.cross(b,a);
+
+                    this.normals.push(c.array);
+                    this.normals.push(c.array);
+                    this.normals.push(c.array);
+                    this.texCoords.push(baseT[i]);
+                    this.texCoords.push(baseT[(i+1)%this.sides]);
+                    this.texCoords.push([0.5,0.5]);
+                }
+                
+                // ===== Assign colors
+                for (let i=0; i < (this.sides*6); i++)
+                {
+                    this.colors.push(color);
+                }
+                
+                // ===== Creating and configuring buffers
+                this.vertexbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices.flat()), this.gl.STATIC_DRAW);
+                
+                this.colorbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.colors.flat()), this.gl.STATIC_DRAW);
+
+                this.normalsbuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsbuffer);    
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.normals.flat()), this.gl.STATIC_DRAW);
+
+                this.texcoordsbuffer=this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texcoordsbuffer);  
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.texCoords.flat()), this.gl.STATIC_DRAW);
+            }
 
             // ===== Set texture
             setTexture(source)
@@ -614,12 +844,63 @@
 
             // ===== Function to draw the cone
             drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0))
-            {}
+            {
+                this.shaderprog.startUsing();
+                
+                // ===== Setup textures
+                this.texcoordsLocation = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_Textures");
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.texcoordsbuffer);
+                this.gl.vertexAttribPointer(this.texcoordsLocation, // Attribute location
+                                2, // number of elements per attribute
+                                this.gl.FLOAT,  // Type of elements
+                                false,  // 
+                                0, //2*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                0); // Offset from the begining of a single vertex to this attribute
+                this.gl.enableVertexAttribArray(this.texcoordsLocation);
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureid);
+                this.texturelocation =  this.gl.getUniformLocation(this.shaderprog.shaderProgram, "uSampler");
+                this.gl.uniform1i(this.textureLocation, 0);
+                
+                // ===== Normals into vertex shader
+                this.normloc = this.gl.getAttribLocation(this.shaderprog.shaderProgram,"in_Normals");
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.normalsbuffer);
+                this.gl.vertexAttribPointer(this.normloc, // Attribute location
+                            3, // number of elements per attribute
+                            this.gl.FLOAT,  // Type of elements
+                            false,  // 
+                            3*Float32Array.BYTES_PER_ELEMENT, // size of a vertex in bytes 
+                                0); // Offset from the begining of a single vertex to this attribute
+                this.gl.enableVertexAttribArray(this.normloc);
+                
+                // ===== Normals transformation matrix
+                var localT = parentMat4['*'](this.modelMat);
+                this. NormMatloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"NormalMatrix");
+                var NormMat = glm.mat3(glm.transpose(glm.inverse(localT)));
+                this.gl.uniformMatrix3fv(this.NormMatloc, false, NormMat.array);
+
+                // ===== Model transformation matrix
+                this.Matloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"MV");
+                var MV = viewMat['*'](parentMat4['*'](this.modelMat));
+                this.gl.uniformMatrix4fv(this.Matloc, false, MV.array);
+                
+                // ===== Shininess value (Higher values result in smaller, sharper highlights, while lower values create larger, more diffused highlights. Usually in the range of 1 to 100.)
+                this.Shininessloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Shininess");
+                this.gl.uniform1f(this.Shininessloc, this.Shininess);
+
+                // ===== Strength value
+                this.Strengthloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Strength");
+                this.gl.uniform1f(this.Strengthloc, this.Strength);
+                
+                this.shaderprog.stopUsing();
+
+                // the parent method does the rest
+                super.drawit(viewMat,projectionMat,parentMat4);
+            }
         }
     </script>
 
     <!-- Discs -->
-    <script id="Disc">
+    <!-- <script id="Disc">
         class disc extends CGRAobject
         {
             // ===== Constructor
@@ -658,7 +939,7 @@
             drawit(viewMat, projectionMat,parentMat4 = glm.mat4(1.0))
             {}
         }
-    </script>
+    </script> -->
 
     <!-- Square -->
     <script id="Square">
@@ -803,6 +1084,16 @@
                     this.mySphere.setMaterials(10,10);
                     this.mySphere.setTexture("EarTex.jpg");
 
+                    this.myCylinder = new cylinder(this.gl);
+                    this.myCylinder.setShader(this.shaderprog);
+                    this.myCylinder.setMaterials(10,10);
+                    this.myCylinder.setTexture("CyTex.png");
+
+                    this.myCone = new cone(this.gl);
+                    this.myCone.setShader(this.shaderprog);
+                    this.myCone.setMaterials(10,10);
+                    this.myCone.setTexture("ConeTex.png");
+
 
                     // ===== Set camera
                     this.viewpos = glm.vec3(0, 0, 6);
@@ -902,6 +1193,43 @@
                     this.mySphere.setModelTransformation(model);
                     // ===== Draw Sphere
                     this.mySphere.drawit(this.viewM,this.projectionM);
+
+                    // ==================== Cylinder ====================
+                    // ===== Model
+                    var model = glm.mat4(glm.mat3(1.0));
+                    // ===== Translations
+                    var translation = glm.vec3(-1.0, -1.0, 0.0);
+                    model = glm.translate(model, translation);
+                    // ===== Rotation
+                    var rotation = glm.radians(this.counter);
+                    var axis = glm.vec3(1.0, 0.0, 0.0);
+                    model = glm.rotate(model, rotation, axis);
+                    var rotation = glm.radians(this.counter*2);
+                    var axis = glm.vec3(0.0, 0.0, 1.0);
+                    model = glm.rotate(model, rotation, axis);
+                    // ===== Final Transformation
+                    this.myCylinder.setModelTransformation(model);
+                    // ===== Draw Cylinder
+                    this.myCylinder.drawit(this.viewM,this.projectionM);
+
+                    // ==================== Cone ====================
+                    // ===== Model
+                    var model = glm.mat4(glm.mat3(1.0));
+                    // ===== Translations
+                    var translation = glm.vec3(1.0, -1.0, 0.0);
+                    model = glm.translate(model, translation);
+                    // ===== Rotation
+                    var rotation = glm.radians(this.counter*3);
+                    var axis = glm.vec3(1.0, 0.0, 0.0);
+                    model = glm.rotate(model, rotation, axis);
+                    var rotation = glm.radians(-this.counter*2);
+                    var axis = glm.vec3(0.0, 0.0, 1.0);
+                    model = glm.rotate(model, rotation, axis);
+                    // ===== Final Transformation
+                    this.myCone.setModelTransformation(model);
+                    // ===== Draw Cone
+                    this.myCone.drawit(this.viewM,this.projectionM);
+
                 }
             }
 
@@ -954,26 +1282,26 @@
                                 this.Neptune = new cube(this.gl);
                                 break;
                             case 3:
-                                this.Sun = new cylinder(this.gl,[1, 0.7, 0] ,[1, 1, 0], 10);
-                                this.Mercury = new cylinder(this.gl,[0.58, 0.58, 0.58] ,[0.8, 0.8, 0.8], 10);
-                                this.Venus = new cylinder(this.gl,[0.58, 0.29, 0.1] ,[1, 0.8, 0.67], 10);
-                                this.Earth = new cylinder(this.gl,[0, 0.8, 0.3], [0, 0, 1], 10);
-                                this.Mars = new cylinder(this.gl,[0.9, 0, 0] ,[1, 0.5, 0], 10);
-                                this.Jupiter = new cylinder(this.gl,[0.9, 0.4, 0] ,[0.8, 0.8, 0.8], 10);
-                                this.Saturn = new cylinder(this.gl,[0.8, 0.4, 0] ,[0.8, 0.8, 0.8], 10);
-                                this.Uranus = new cylinder(this.gl,[0.4, 0.6, 0.9] ,[0, 0.7, 1], 10);
-                                this.Neptune = new cylinder(this.gl,[0, 0, 1] ,[0, 0.5, 1], 10);
+                                this.Sun = new cylinder(this.gl,[1, 0.7, 0] , 10);
+                                this.Mercury = new cylinder(this.gl,[0.58, 0.58, 0.58] , 10);
+                                this.Venus = new cylinder(this.gl,[0.58, 0.29, 0.1], 10);
+                                this.Earth = new cylinder(this.gl,[0, 0.8, 0.3], 10);
+                                this.Mars = new cylinder(this.gl,[0.9, 0, 0] , 10);
+                                this.Jupiter = new cylinder(this.gl,[0.9, 0.4, 0] , 10);
+                                this.Saturn = new cylinder(this.gl,[0.8, 0.4, 0] , 10);
+                                this.Uranus = new cylinder(this.gl,[0.4, 0.6, 0.9] , 10);
+                                this.Neptune = new cylinder(this.gl,[0, 0, 1] , 10);
                                 break;
                             case 4:
-                                this.Sun = new cone(this.gl,[1, 0.7, 0] ,[1, 1, 0], 10);
-                                this.Mercury = new cone(this.gl,[0.58, 0.58, 0.58] ,[0.8, 0.8, 0.8], 10);
-                                this.Venus = new cone(this.gl,[0.58, 0.29, 0.1] ,[1, 0.8, 0.67], 10);
-                                this.Earth = new cone(this.gl,[0, 0.8, 0.3], [0, 0, 1], 10);
-                                this.Mars = new cone(this.gl,[0.9, 0, 0] ,[1, 0.5, 0], 10);
-                                this.Jupiter = new cone(this.gl,[0.9, 0.4, 0] ,[0.8, 0.8, 0.8], 10);
-                                this.Saturn = new cone(this.gl,[0.8, 0.4, 0] ,[0.8, 0.8, 0.8], 10);
-                                this.Uranus = new cone(this.gl,[0.4, 0.6, 0.9] ,[0, 0.7, 1], 10);
-                                this.Neptune = new coneT(this.gl,[0, 0, 1] ,[0, 0.5, 1], 10);
+                                this.Sun = new cone(this.gl,[1, 0.7, 0]);
+                                this.Mercury = new cone(this.gl,[0.58, 0.58, 0.58]);
+                                this.Venus = new cone(this.gl,[0.58, 0.29, 0.1]);
+                                this.Earth = new cone(this.gl,[0, 0.8, 0.3]);
+                                this.Mars = new cone(this.gl,[0.9, 0, 0]);
+                                this.Jupiter = new cone(this.gl,[0.9, 0.4, 0]);
+                                this.Saturn = new cone(this.gl,[0.8, 0.4, 0]);
+                                this.Uranus = new cone(this.gl,[0.4, 0.6, 0.9]);
+                                this.Neptune = new cone(this.gl,[0, 0, 1]);
                                 break;
                         }
 
@@ -1339,7 +1667,7 @@
         <script id="AR_App">
             class AR_App extends DEECapp
             {
-                counter = 0;
+                counter = 0; counter_sun = 0; speedup = 1; SunFlag = 1;
                 cubeID = 5; sphereID = 3; solarSystemID = 4;
                 ids = [];
 
@@ -1451,6 +1779,8 @@
                     //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
                     //////////////////////////////////////////////////////////////////////////
                     this.viewM = glm.lookAt(this.viewpos,glm.vec3(0,0,1),glm.vec3(0,1,0));
+
+                    window.addEventListener("keypress",(evt)=>this.keyprocess(evt),false);
                 }
                 
                 setMatrixP()
@@ -1590,7 +1920,7 @@
                         {
                             this.ids.push(markers[i].id);
                         }
-                        console.log(this.ids);
+                        // console.log(this.ids);
                         // console.log(markers);
 
                         // console.log("Markers detected = " + markers.length.toString() + "\n");
@@ -1628,12 +1958,55 @@
                     }      
                 }
 
+                keyprocess(evt)
+                    {
+                        switch (evt.keyCode)
+                        {
+                            case 27:
+                                alert("You pressed the \"Escape\" key."); 
+                                break;
+                            case 49: // 1 Stop
+                                this.speedup = 0;     
+                                break;
+                            case 50: // 2 Slow
+                                this.speedup = 0.2;
+                                break;
+                            case 51: // 3 Middle
+                                this.speedup = 1;
+                                break;
+                            case 52: // 4 Fast
+                                this.speedup = 10;
+                                break;
+                            case 114: // r
+                            this.SunFlag = 1;
+                                this.solarSystem = new solarSystem(this.gl, 1, this.SunFlag);
+                                this.solarSystem.setShader(this.shaderprog, this.shaderprogTC);
+                                break;
+                            case 116: // t
+                                this.SunFlag = 2;
+                                this.solarSystem = new solarSystem(this.gl, 2, this.SunFlag);
+                                this.solarSystem.setShader(this.shaderprog, this.shaderprogTC);
+                                break;
+                            case 121: // y
+                                this.SunFlag = 3;
+                                this.solarSystem = new solarSystem(this.gl, 3, this.SunFlag);
+                                this.solarSystem.setShader(this.shaderprog, this.shaderprogTC);
+                                break;
+                            case 117: // u
+                                this.SunFlag = 4;
+                                this.solarSystem = new solarSystem(this.gl, 4, this.SunFlag);
+                                this.solarSystem.setShader(this.shaderprog, this.shaderprogTC);
+                                break;
+                        }
+                    }
+                           
                 render()
                 {
                     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
                     this.processvideo();
                     this.counter++;
-                
+                    
+                    this.counter_sun = this.counter_sun + this.speedup;
 
                     // ==================== Background ====================
                     this.gl.disable(this.gl.DEPTH_TEST);
@@ -1692,13 +2065,13 @@
                         model = glm.rotate(model, this.AR_rotation, axis);
                     }
                     // ===== Scale
-                    var scale = glm.vec3(1.0);
+                    var scale = glm.vec3(3.0);
                     model = glm.scale(model, scale);
                     // ===== Final Transformation
                     this.solarSystem.setModelTransformation(model); 
                     // ===== Draw Cube
                     if(this.ids.includes(this.solarSystemID))
-                        this.solarSystem.drawit(this.viewM,this.projectionM, this.counter*10);
+                        this.solarSystem.drawit(this.viewM,this.projectionM, this.counter_sun);
 
 
                     // ==================== Sphere ====================
