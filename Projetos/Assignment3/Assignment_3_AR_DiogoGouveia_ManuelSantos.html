@@ -1351,6 +1351,20 @@
                         // this.SaturnDisc.setShader(shader);
                     }
 
+                    setMaterials(shiny = 50, strength = 0.4)
+                    {
+                        this.Sun.setMaterials(shiny, strength);
+                        this.Mercury.setMaterials(shiny, strength);
+                        this.Venus.setMaterials(shiny, strength);
+                        this.Earth.setMaterials(shiny, strength);
+                        this.Mars.setMaterials(shiny, strength);
+                        this.Jupiter.setMaterials(shiny, strength);
+                        this.Saturn.setMaterials(shiny, strength);
+                        this.Uranus.setMaterials(shiny, strength);
+                        this.Neptune.setMaterials(shiny, strength);
+                        // this.SaturnDisc.setMaterials(shiny, strength);
+                    }
+
                     drawit(viewM, projectM, counter, parentMat4 = glm.mat4(1.0))
                     {
                         var globalMat = parentMat4['*'](this.modelMat);
@@ -1574,6 +1588,12 @@
                         this.solarSystem = new solarSystem(this.gl, 1);
                         this.solarSystem.setShader(this.shaderprog);
 
+                        // ===== Set view position
+                        this.viewpos = glm.vec3(0, 0, 8);
+                        
+                        // ===== Set lights
+                        this.setLights();
+
                         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                         //glm.radians(45): Esse argumento especifica o campo de visão em graus. Aqui, você está usando um campo de visão de 45 graus.             //       
                         //1: A razão de aspecto (aspect ratio) da janela ou tela. No seu caso, a razão de aspecto é 1, o que significa que a janela é um quadrado.//
@@ -1587,7 +1607,7 @@
                         //glm.vec3(0, 0, -1): O ponto para o qual a câmera está direcionada.    //
                         //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
                         //////////////////////////////////////////////////////////////////////////
-                        this.viewMa = glm.lookAt(glm.vec3(0,0,5),glm.vec3(0,0,0),glm.vec3(0,1,0));           
+                        this.viewMa = glm.lookAt(this.viewpos, glm.vec3(2,0,0), glm.vec3(0,1,0));           
 
                         window.addEventListener("keypress",(evt)=>this.keyprocess(evt),false);
                     }
@@ -1633,7 +1653,41 @@
                                 break;
                         }
                     }
-                                    
+                    
+                    setLights()
+                    {
+                        // ===== Set parameters of light
+                        this.shaderprog.startUsing();
+                        // -- Ambient Light
+                        this.Ambientloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Ambient");
+                        var ambient_light = glm.vec3(0.2);
+                        this.gl.uniform3fv(this.Ambientloc, ambient_light.array);
+                        // -- Directional Light Color
+                        this.LightColorloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightColor");
+                        var color_light = glm.vec3(1.0, 1.0, 0.5);
+                        this.gl.uniform3fv(this.LightColorloc, color_light.array);
+                        // -- Directional Light Position
+                        this.LightPosloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightPosition");
+                        var light_pos = glm.vec3(0.0, 0.0, 0.0);
+                        this.gl.uniform3fv(this.LightPosloc, light_pos.array);
+                        // -- View Position
+                        this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"ViewPos");
+                        this.gl.uniform3fv(this.ViewPosloc, this.viewpos.array);
+                        
+                        // ----- Attenuations
+                        // -- Constant Attenuation
+                        this.ConstantAttenuationloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"ConstantAttenuation");
+                        this.gl.uniform1f(this.ConstantAttenuationloc, 0.01);
+                        // -- Linear Attenuation
+                        this.LinearAttenuationloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LinearAttenuation");
+                        this.gl.uniform1f(this.LinearAttenuationloc, 0.0);
+                        // -- Quadratic Attenuation
+                        this.QuadraticAttenuationloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"QuadraticAttenuation");
+                        this.gl.uniform1f(this.QuadraticAttenuationloc, 0.0);
+                        // -- Setup done
+                        this.shaderprog.stopUsing();
+                    }
+                
                     render()
                     {
                         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -1659,6 +1713,9 @@
 <!-- ============================================ AR Application ============================================ -->
 <center id="AR_Scene">
     <div id="AR_Scene">
+        <h2> 1 - Stop | 2 - Slow | 3 - Normal | 4 - Fast (Only applies to Solar System)</h2>
+        <h2> R - Spheres | T - Cubes | Y - Cylinders | U - Cones</h2>
+        
         <canvas id="AR_App" width="640" height="480"
             style="border:2px solid #000000;">
             Error: Your browser does not support the HTML canvas tag.
@@ -1668,8 +1725,9 @@
             class AR_App extends DEECapp
             {
                 counter = 0; counter_sun = 0; speedup = 1; SunFlag = 1;
-                cubeID = 5; sphereID = 3; solarSystemID = 4; cylinderID = 2; coneID = 1;
+                cubeID = 5; sphereID = 3; solarSystemID = 4; cylinderID = 2; coneID = 1; lightID = 0;
                 ids = [];
+                ambient_light = glm.vec3(0.6);
 
                 initcamera()
                 {
@@ -1744,6 +1802,8 @@
 
                     this.solarSystem = new solarSystem(this.gl, 1);
                     this.solarSystem.setShader(this.shaderprog);
+                    this.solarSystem.setMaterials(2,50);
+
 
                     this.mySphere = new sphere(this.gl);
                     this.mySphere.setShader(this.shaderprog);
@@ -1841,19 +1901,20 @@
                     this.shaderprog.startUsing();
                     // -- Ambient Light
                     this.Ambientloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Ambient");
-                    var ambient_light = glm.vec3(1.0);
-                    this.gl.uniform3fv(this.Ambientloc, ambient_light.array);
+                    // this.ambient_light = glm.vec3(0.6);
+                    console.log(this.ambient_light);
+                    this.gl.uniform3fv(this.Ambientloc, this.ambient_light.array);
                     // -- Directional Light Color
                     this.LightColorloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightColor");
-                    var color_light = glm.vec3(1.0);
-                    this.gl.uniform3fv(this.LightColorloc, color_light.array);
+                    this.color_light = glm.vec3(1.0);
+                    this.gl.uniform3fv(this.LightColorloc, this.color_light.array);
                     // -- Directional Light Position
                     this.LightPosloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightPosition");
                     // if(this.AR_translation == undefined)
                     //     var light_pos = glm.vec3(2.0, 2.0, 2.0);
                     // else
                     //     var light_pos = glm.vec3(2.0 + this.AR_translation[0], 2.0 + this.AR_translation[1], 2.0 + this.AR_translation[2]); 
-                    var light_pos = glm.vec3(2.0, 2.0, 2.0);
+                    var light_pos = glm.vec3(-50.0, 0.0, -20.0);
                     this.gl.uniform3fv(this.LightPosloc, light_pos.array);
                     // -- View Position
                     this.ViewPosloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"ViewPos");
@@ -1862,13 +1923,13 @@
                     // ----- Attenuations
                     // -- Constant Attenuation
                     this.ConstantAttenuationloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"ConstantAttenuation");
-                    this.gl.uniform1f(this.ConstantAttenuationloc, 1.0);
+                    this.gl.uniform1f(this.ConstantAttenuationloc, 0.5);
                     // -- Linear Attenuation
                     this.LinearAttenuationloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LinearAttenuation");
-                    this.gl.uniform1f(this.LinearAttenuationloc, 0.09);
+                    this.gl.uniform1f(this.LinearAttenuationloc, 0.0);
                     // -- Quadratic Attenuation
                     this.QuadraticAttenuationloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"QuadraticAttenuation");
-                    this.gl.uniform1f(this.QuadraticAttenuationloc, 0.032);
+                    this.gl.uniform1f(this.QuadraticAttenuationloc, 0.0);
                     // -- Setup done
                     this.shaderprog.stopUsing();
                 }
@@ -1976,6 +2037,13 @@
                                     this.cone_translation = translation;
                                     this.cone_rotation = this.getEulerAngles(rotation.flat());
                                 }
+                            
+                                if(this.ids.includes(this.lightID) && markers[j].id == this.lightID)
+                                {
+                                    this.ambient_light = glm.vec3(0.6);
+                                }
+
+                                // console.log(this.ambient_light.toString());
                             }
                         }
                     }      
@@ -2026,7 +2094,9 @@
                 render()
                 {
                     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+                    this.ambient_light = glm.vec3(1.0);
                     this.processvideo();
+                    this.setLights();
                     this.counter++;
                     
                     this.counter_sun = this.counter_sun + this.speedup;
