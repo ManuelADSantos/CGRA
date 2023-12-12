@@ -1420,7 +1420,7 @@
                     this.posit = new POS.Posit(modelsize,focallength);
 
                     // ===== Set camera 
-                    this.viewpos = glm.vec3(0, 0, 0);
+                    this.viewpos = glm.vec3(0, 0, 0); 
 
                     // ===== Set lights
                     this.setLights();
@@ -1461,8 +1461,8 @@
 
                     // console.log(this.camera_matrix);
                     
-                    var x0 = -320;
-                    var y0 = -240;
+                    // var x0 = -320; var y0 = -240;
+                    var x0 = -u0; var y0 = -v0;
 
                     var P_0_0 = (2*this.camera_matrix[0])/this.width;
                     var P_0_1 = (-2*this.camera_matrix[1])/this.width;
@@ -1648,15 +1648,15 @@
                         this.AR_translation = glm.vec3(0.0, 0.0, 5.0);
                     }
 
-                    console.log("==========")
-                    console.log("AR_Translation" + this.AR_translation.toString());
+                    // console.log("==========")
+                    // console.log("AR_Translation" + this.AR_translation.toString());
                     model = glm.translate(model, this.AR_translation);
                     // ===== Rotation
                     // var rotation = glm.radians(this.counter);
                     // var axis = glm.vec3(0.0, 1.0, 0.0);
                     // model = glm.rotate(model, rotation, axis);
                     // ===== Final Transformation
-                    console.log("MODEL = " + model.toString());
+                    // console.log("MODEL = " + model.toString());
                     this.myCube.setModelTransformation(model); 
                     // ===== Draw Cube 
                     this.myCube.drawit(this.viewM,this.projectionM);
@@ -1665,7 +1665,7 @@
                     var MVP_draft = this.projectionM['*'](this.viewM)['*'](glm.vec4(this.AR_translation[0], this.AR_translation[1], this.AR_translation[2], 1.0));
                     MVP_draft['/='](MVP_draft[3]);
                     // console.log("===== MVP_draft =====");
-                    console.log("MVP_DRAFT = " + MVP_draft.toString());                
+                    // console.log("MVP_DRAFT = " + MVP_draft.toString());                
                     
                 }
             }
