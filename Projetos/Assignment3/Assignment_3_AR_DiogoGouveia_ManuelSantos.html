@@ -1668,7 +1668,7 @@
             class AR_App extends DEECapp
             {
                 counter = 0; counter_sun = 0; speedup = 1; SunFlag = 1;
-                cubeID = 5; sphereID = 3; solarSystemID = 4;
+                cubeID = 5; sphereID = 3; solarSystemID = 4; cylinderID = 2; coneID = 1;
                 ids = [];
 
                 initcamera()
@@ -1749,6 +1749,17 @@
                     this.mySphere.setShader(this.shaderprog);
                     this.mySphere.setMaterials(10,10);
                     this.mySphere.setTexture("EarTex.jpg");
+
+                    this.myCylinder = new cylinder(this.gl);
+                    this.myCylinder.setShader(this.shaderprog);
+                    this.myCylinder.setMaterials(10,10);
+                    this.myCylinder.setTexture("CyTex.png");
+
+                    this.myCone = new cone(this.gl);
+                    this.myCone.setShader(this.shaderprog);
+                    this.myCone.setMaterials(10,10);
+                    this.myCone.setTexture("ConeTex.png");
+
 
                     // ===== Initalization of the Aruco detector
                     this.detector = new AR.Detector();
@@ -1953,6 +1964,18 @@
                                     this.sphere_translation = translation;
                                     this.sphere_rotation = this.getEulerAngles(rotation.flat());
                                 }
+                                
+                                if(this.ids.includes(this.cylinderID) && markers[j].id == this.cylinderID)
+                                {
+                                    this.cylinder_translation = translation;
+                                    this.cylinder_rotation = this.getEulerAngles(rotation.flat());
+                                }
+
+                                if(this.ids.includes(this.coneID) && markers[j].id == this.coneID)
+                                {
+                                    this.cone_translation = translation;
+                                    this.cone_rotation = this.getEulerAngles(rotation.flat());
+                                }
                             }
                         }
                     }      
@@ -2103,7 +2126,67 @@
                     if(this.ids.includes(this.sphereID))
                         this.mySphere.drawit(this.viewM,this.projectionM);
 
+                    
+                    // ==================== Cylinder ====================
+                    // ===== Model
+                    var model = glm.mat4(glm.mat3(1.0));
+                    // ===== Translations
+                    if (this.cylinder_translation != undefined)
+                        this.AR_translation = glm.vec3(this.cylinder_translation[0]/10, this.cylinder_translation[1]/10, this.cylinder_translation[2]/10);
+                    else
+                        this.AR_translation = glm.vec3(0.0, 0.0, 100.0);
+                    model = glm.translate(model, this.AR_translation);
+                    // ===== Rotation
+                    var referential = [glm.vec3(1.0, 0.0, 0.0), glm.vec3(0.0, 1.0, 0.0), glm.vec3(0.0, 0.0, 1.0)];
+                    for(var i=0; i<3; i++)
+                    {
+                        if (this.cylinder_rotation != undefined)
+                            this.AR_rotation = glm.radians(this.cylinder_rotation[i]);
+                        else
+                            this.AR_rotation = glm.radians(0.0);
+                        var axis = referential[i];
+                        model = glm.rotate(model, this.AR_rotation, axis);
+                    }
+                    // ===== Scale
+                    var scale = glm.vec3(5.0);
+                    model = glm.scale(model, scale);
+                    // ===== Final Transformation
+                    this.myCylinder.setModelTransformation(model);
+                    // ===== Draw Cylinder
+                    if(this.ids.includes(this.cylinderID))
+                        this.myCylinder.drawit(this.viewM,this.projectionM);
 
+
+                    // ==================== Cone ====================
+                    // ===== Model
+                    var model = glm.mat4(glm.mat3(1.0));
+                    // ===== Translations
+                    if (this.cone_translation != undefined)
+                        this.AR_translation = glm.vec3(this.cone_translation[0]/10, this.cone_translation[1]/10, this.cone_translation[2]/10);
+                    else
+                        this.AR_translation = glm.vec3(0.0, 0.0, 100.0);
+                    model = glm.translate(model, this.AR_translation);
+                    // ===== Rotation
+                    var referential = [glm.vec3(1.0, 0.0, 0.0), glm.vec3(0.0, 1.0, 0.0), glm.vec3(0.0, 0.0, 1.0)];
+                    for(var i=0; i<3; i++)
+                    {
+                        if (this.cone_rotation != undefined)
+                            this.AR_rotation = glm.radians(this.cone_rotation[i]);
+                        else
+                            this.AR_rotation = glm.radians(0.0);
+                        var axis = referential[i];
+                        model = glm.rotate(model, this.AR_rotation, axis);
+                    }
+                    // ===== Scale
+                    var scale = glm.vec3(5.0);
+                    model = glm.scale(model, scale);
+                    // ===== Final Transformation
+                    this.myCone.setModelTransformation(model);
+                    // ===== Draw Cone
+                    if(this.ids.includes(this.coneID))
+                        this.myCone.drawit(this.viewM,this.projectionM);
+
+                    
                     // Get intermediete matrix
                     // var MVP_draft = this.projectionM['*'](this.viewM)['*'](glm.vec4(this.AR_translation[0], this.AR_translation[1], this.AR_translation[2], 1.0));
                     // MVP_draft['/='](MVP_draft[3]);
