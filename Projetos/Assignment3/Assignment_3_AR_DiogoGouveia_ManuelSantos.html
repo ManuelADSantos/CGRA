@@ -1404,7 +1404,7 @@
 
                     this.background = new square(this.gl);
                     this.background.setShader(this.shaderprog_video);
-                    this.background.settexture(this.background_texture, 1);
+                    this.background.settexture(this.background_texture,1);
 
                     // ===== Instantiate cubes
                     this.myCube = new cube(this.gl, [1.0, 0, 0]);
@@ -1419,7 +1419,7 @@
                     // and of the pose estimator
                     this.posit = new POS.Posit(modelsize,focallength);
 
-                    // ===== Set camera
+                    // ===== Set camera 
                     this.viewpos = glm.vec3(0, 0, 0);
 
                     // ===== Set lights
