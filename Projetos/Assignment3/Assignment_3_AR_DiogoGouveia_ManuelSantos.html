@@ -1331,7 +1331,7 @@
 <!-- ============================================ AR Application ============================================ -->
 <center id="AR_Scene">
     <div id="AR_Scene">
-        <canvas id="AR_App" width="800" height="600"
+        <canvas id="AR_App" width="640" height="480"
             style="border:2px solid #000000;">
             Error: Your browser does not support the HTML canvas tag.
         </canvas>
@@ -1407,15 +1407,15 @@
                     this.background.settexture(this.background_texture, 1);
 
                     // ===== Instantiate cubes
-                    this.myCube = new cube(this.gl);
+                    this.myCube = new cube(this.gl, [1.0, 0, 0]);
                     this.myCube.setShader(this.shaderprog);
                     this.myCube.setMaterials(100,10);
                     this.myCube.setTexture("Diamond.jpg");
 
                     // ===== Initalization of the Aruco detector
                     this.detector = new AR.Detector();
-                    var modelsize = 35.0;
-                    var focallength = 640.0;
+                    var modelsize = 100.0;
+                    var focallength = 633.0;
                     // and of the pose estimator
                     this.posit = new POS.Posit(modelsize,focallength);
 
@@ -1431,45 +1431,58 @@
                     //0.1: O valor mais próximo em relação à câmera em coordenadas de profundidade.                                                           //
                     //1000: O valor mais distante em relação à câmera em coordenadas de profundidade.                                                         // 
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                    // this.projectionM = glm.perspective(glm.radians(45),1.33,0.1,100);
+                    //this.projectionM = glm.perspective(glm.radians(45),1.33,0.1,100);
                     this.setMatrixP();              
-                    console.log(this.projectionM);
+                    // console.log(this.projectionM);
                     
                     //////////////////////////////////////////////////////////////////////////
                     //glm.vec3(3, 3, 5): A posição da câmera no espaço 3D.                  //
                     //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
                     //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
                     //////////////////////////////////////////////////////////////////////////
-                    this.viewM = glm.lookAt(this.viewpos,glm.vec3(0,0,0),glm.vec3(0,1,0));        
-                    
+                    this.viewM = glm.lookAt(this.viewpos,glm.vec3(0,0,1),glm.vec3(0,1,0));        
                     
                 }
                 
                 setMatrixP()
                 {
-                    this.camera_matrix =[   646.1115991593342, 0, 322.18260944421985,
-                                            0, 647.008142040544, 242.61147838070056,
+                    // this.camera_matrix =[   646.1115991593342, 0, 322.18260944421985,
+                    //                         0, 647.008142040544, 242.61147838070056,
+                    //                         0, 0, 1];
+                    this.camera_matrix =[   632.9857064398133, 0, 327.6123818663444,
+                                            0, 634.2617459480339, 238.83386640292775,
                                             0, 0, 1];
 
-                    this.zfar = 1000.0; this.znear = 0.1;
-                    this.canvas.width = 640; this.canvas.height = 480;
+                    var u0 = this.camera_matrix[2];
+                    var v0 = this.camera_matrix[5];
 
-                    console.log(this.camera_matrix);
+                    this.zfar = 300.0; this.znear = 1;
+                    this.width = 640; this.height = 480;
 
-                    var P_0_0 = 2*this.camera_matrix[0]/this.canvas.width;
-                    var P_0_1 = -2*this.camera_matrix[1]/this.canvas.width;
-                    var P_0_2 = (this.canvas.width - 2*this.camera_matrix[2])/this.canvas.width;
+                    // console.log(this.camera_matrix);
+                    
+                    var x0 = -320;
+                    var y0 = -240;
 
-                    var P_1_1 = -2*this.camera_matrix[4]/this.canvas.height;
-                    var P_1_2 = (this.canvas.height - 2*this.camera_matrix[5])/this.canvas.height;
+                    var P_0_0 = (2*this.camera_matrix[0])/this.width;
+                    var P_0_1 = (-2*this.camera_matrix[1])/this.width;
+                    var P_0_2 = (this.width - 2*this.camera_matrix[2] + 2*x0)/this.width;
 
-                    var P_2_2 = -(this.zfar + this.znear)/(this.zfar - this.znear);
-                    var P_2_3 = -2*this.zfar*this.znear/(this.zfar - this.znear);
+                    var P_1_1 = (-2*this.camera_matrix[4])/this.height;
+                    var P_1_2 = (this.height - 2*this.camera_matrix[5] + 2*y0)/this.height;
 
-                    this.projectionM = glm.mat4(P_0_0, P_0_1, P_0_2, 0,
-                                                0, P_1_1, P_1_2, 0,
-                                                0, 0, P_2_2, P_2_3,
-                                                0, 0, -1, 0);
+                    var P_2_2 = (-1*this.zfar - this.znear)/(this.zfar - this.znear);
+                    var P_2_3 = (-2*this.zfar*this.znear)/(this.zfar - this.znear);
+
+                    // this.projectionM = glm.mat4(P_0_0, P_0_1, P_0_2, 0,
+                    //                             0, P_1_1, P_1_2, 0,
+                    //                             0, 0, P_2_2, P_2_3,
+                    //                             0, 0, -1, 0);
+
+                    this.projectionM = glm.mat4(P_0_0   , 0     , 0     , 0,
+                                                P_0_1   , P_1_1 , 0     , 0,
+                                                P_0_2   , P_1_2 , P_2_2 , -1,
+                                                0       , 0     , P_2_3 , 0);
                 }
 
                 setLights()
@@ -1478,7 +1491,7 @@
                     this.shaderprog.startUsing();
                     // -- Ambient Light
                     this.Ambientloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"Ambient");
-                    var ambient_light = glm.vec3(0.2);
+                    var ambient_light = glm.vec3(1.0);
                     this.gl.uniform3fv(this.Ambientloc, ambient_light.array);
                     // -- Directional Light Color
                     this.LightColorloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightColor");
@@ -1486,6 +1499,10 @@
                     this.gl.uniform3fv(this.LightColorloc, color_light.array);
                     // -- Directional Light Position
                     this.LightPosloc = this.gl.getUniformLocation(this.shaderprog.shaderProgram,"LightPosition");
+                    // if(this.AR_translation == undefined)
+                    //     var light_pos = glm.vec3(2.0, 2.0, 2.0);
+                    // else
+                    //     var light_pos = glm.vec3(2.0 + this.AR_translation[0], 2.0 + this.AR_translation[1], 2.0 + this.AR_translation[2]); 
                     var light_pos = glm.vec3(2.0, 2.0, 2.0);
                     this.gl.uniform3fv(this.LightPosloc, light_pos.array);
                     // -- View Position
@@ -1525,7 +1542,7 @@
                     if (this.video.readyState === this.video.HAVE_ENOUGH_DATA)
                     {
                         var videoSize = { width: this.video.videoWidth, height: this.video.videoHeight };
-                        var canvasSize = { width: this.canvas.width, height: this.canvas.height };
+                        var canvasSize = { width: this.width, height: this.height };
                         var renderSize = this.calculateSize(videoSize, canvasSize);
                         var xOffset = (canvasSize.width - renderSize.width) / 2;
                     
@@ -1560,7 +1577,10 @@
                                 // console.log(corners);
                 
                                 var pose = this.posit.pose(corners);
+                                // Estamos a trabalhar em milimetros
                                 var translation = pose.bestTranslation;
+                                // console.log("Translation");
+                                // console.log(translation);
                                 var rotation = pose.bestRotation;
 
                                 // console.log("Rotation");
@@ -1578,7 +1598,7 @@
                         
                                 // console.log("Translation");
                                 // txtText += "Translation = \n [" + Math.round(translation[0]*100)/100 + ", "+ Math.round(translation[1]*100)/100 +", "+ Math.round(translation[2]*100)/100 + " ]";
-                                console.log(translation);
+                                // console.log(translation);
 
                                 // testfield.innerText = txtText;
                                 // markerfield.innerText=mText;
@@ -1587,6 +1607,11 @@
                                 {
                                     this.cube_translation = translation;
                                     this.cube_rotation = rotation;
+                                }
+                                else
+                                {
+                                    this.cube_translation = undefined;
+                                    this.cube_rotation = undefined;
                                 }
 
                             }
@@ -1611,28 +1636,36 @@
                     // ===== Model
                     var model = glm.mat4(glm.mat3(1.0));
                     // ===== Translations
-                    var translation = glm.vec3(0.0, 0.0, -5.0);
+                    // var translation = glm.vec3(0.0, 0.0, -5.0);
 
                     // console.log(translation);
                     if (this.cube_translation != undefined)
                     {
-                        var AR_translation = glm.vec3(this.cube_translation[0], this.cube_translation[1], this.cube_translation[2]);
-                        // console.log(AR_translation);
+                        this.AR_translation = glm.vec3(this.cube_translation[0]/10, this.cube_translation[1]/10, this.cube_translation[2]/10);
                     }
                     else
                     {
-                        var AR_translation = glm.vec3(0.0, 0.0, -5.0);
+                        this.AR_translation = glm.vec3(0.0, 0.0, 5.0);
                     }
 
-                    model = glm.translate(model, AR_translation);
+                    console.log("==========")
+                    console.log("AR_Translation" + this.AR_translation.toString());
+                    model = glm.translate(model, this.AR_translation);
                     // ===== Rotation
-                    var rotation = glm.radians(this.counter);
-                    var axis = glm.vec3(0.0, 1.0, 0.0);
-                    model = glm.rotate(model, rotation, axis);
+                    // var rotation = glm.radians(this.counter);
+                    // var axis = glm.vec3(0.0, 1.0, 0.0);
+                    // model = glm.rotate(model, rotation, axis);
                     // ===== Final Transformation
+                    console.log("MODEL = " + model.toString());
                     this.myCube.setModelTransformation(model); 
                     // ===== Draw Cube 
                     this.myCube.drawit(this.viewM,this.projectionM);
+
+                    // Get intermediete matrix
+                    var MVP_draft = this.projectionM['*'](this.viewM)['*'](glm.vec4(this.AR_translation[0], this.AR_translation[1], this.AR_translation[2], 1.0));
+                    MVP_draft['/='](MVP_draft[3]);
+                    // console.log("===== MVP_draft =====");
+                    console.log("MVP_DRAFT = " + MVP_draft.toString());                
                     
                 }
             }
