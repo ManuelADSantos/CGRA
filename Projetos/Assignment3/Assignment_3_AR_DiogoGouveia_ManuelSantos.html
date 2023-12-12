@@ -1407,7 +1407,7 @@
                     this.background.settexture(this.background_texture,1);
 
                     // ===== Instantiate cubes
-                    this.myCube = new cube(this.gl, [1.0, 0, 0]);
+                    this.myCube = new cube(this.gl);
                     this.myCube.setShader(this.shaderprog);
                     this.myCube.setMaterials(100,10);
                     this.myCube.setTexture("Diamond.jpg");
@@ -1537,6 +1537,25 @@
                     }
                 }
 
+                getEulerAngles(mat) 
+                {
+                    let sy = Math.sqrt(mat[0] * mat[0] + mat[3] * mat[3]);
+
+                    let singular = sy < 1e-6;
+
+                    let x, y, z;
+                    if (!singular) {
+                        x = Math.atan2(mat[7], mat[8]);
+                        y = Math.atan2(-mat[6], sy);
+                        z = Math.atan2(mat[3], mat[0]);
+                    } else {
+                        x = Math.atan2(-mat[5], mat[4]);
+                        y = Math.atan2(-mat[6], sy);
+                        z = 0;
+                    }
+                    return [x * (180/Math.PI), z * (180/Math.PI), y * (180/Math.PI)]; // Returning the Euler angles in degrees
+                }
+
                 processvideo()
                 {
                     if (this.video.readyState === this.video.HAVE_ENOUGH_DATA)
@@ -1606,7 +1625,8 @@
                                 if(markers[j].id == 5)
                                 {
                                     this.cube_translation = translation;
-                                    this.cube_rotation = rotation;
+                                    // this.cube_rotation = rotation;
+                                    this.cube_rotation = this.getEulerAngles(rotation.flat());
                                 }
                                 else
                                 {
@@ -1635,10 +1655,8 @@
                     // ==================== Cube ====================
                     // ===== Model
                     var model = glm.mat4(glm.mat3(1.0));
-                    // ===== Translations
-                    // var translation = glm.vec3(0.0, 0.0, -5.0);
 
-                    // console.log(translation);
+                    // ===== Translations
                     if (this.cube_translation != undefined)
                     {
                         this.AR_translation = glm.vec3(this.cube_translation[0]/10, this.cube_translation[1]/10, this.cube_translation[2]/10);
@@ -1647,16 +1665,31 @@
                     {
                         this.AR_translation = glm.vec3(0.0, 0.0, 5.0);
                     }
-
-                    // console.log("==========")
-                    // console.log("AR_Translation" + this.AR_translation.toString());
                     model = glm.translate(model, this.AR_translation);
+                    
                     // ===== Rotation
-                    // var rotation = glm.radians(this.counter);
-                    // var axis = glm.vec3(0.0, 1.0, 0.0);
-                    // model = glm.rotate(model, rotation, axis);
+                    var referential = [glm.vec3(1.0, 0.0, 0.0), glm.vec3(0.0, 1.0, 0.0), glm.vec3(0.0, 0.0, 1.0)];
+                    for(var i=0; i<3; i++)
+                    {
+                        if (this.cube_rotation != undefined)
+                        {
+                            this.AR_rotation = glm.radians(this.cube_rotation[i]);
+                        }
+                        else
+                        {
+                            this.AR_rotation = glm.radians(0.0);
+                        }
+                        var axis = referential[i];
+                    }
+                    var rotation = glm.radians(25.0);
+                    var axis = glm.vec3(0.0, 1.0, 0.0);
+                    model = glm.rotate(model, rotation, axis);
+                    
+                    // ===== Scale
+                    var scale = glm.vec3(5.0);
+                    model = glm.scale(model, scale);
+
                     // ===== Final Transformation
-                    // console.log("MODEL = " + model.toString());
                     this.myCube.setModelTransformation(model); 
                     // ===== Draw Cube 
                     this.myCube.drawit(this.viewM,this.projectionM);
@@ -1664,7 +1697,6 @@
                     // Get intermediete matrix
                     var MVP_draft = this.projectionM['*'](this.viewM)['*'](glm.vec4(this.AR_translation[0], this.AR_translation[1], this.AR_translation[2], 1.0));
                     MVP_draft['/='](MVP_draft[3]);
-                    // console.log("===== MVP_draft =====");
                     // console.log("MVP_DRAFT = " + MVP_draft.toString());                
                     
                 }
