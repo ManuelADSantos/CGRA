@@ -1340,6 +1340,8 @@
             class AR_App extends DEECapp
             {
                 counter = 0;
+                cubeID = 5; sphereID = 3; solarSystemID = 4;
+                ids = [];
 
                 initcamera()
                 {
@@ -1412,6 +1414,14 @@
                     this.myCube.setMaterials(100,10);
                     this.myCube.setTexture("Diamond.jpg");
 
+                    this.solarSystem = new solarSystem(this.gl, 1);
+                    this.solarSystem.setShader(this.shaderprog);
+
+                    this.mySphere = new sphere(this.gl);
+                    this.mySphere.setShader(this.shaderprog);
+                    this.mySphere.setMaterials(10,10);
+                    this.mySphere.setTexture("EarTex.jpg");
+
                     // ===== Initalization of the Aruco detector
                     this.detector = new AR.Detector();
                     var modelsize = 100.0;
@@ -1434,14 +1444,13 @@
                     //this.projectionM = glm.perspective(glm.radians(45),1.33,0.1,100);
                     this.setMatrixP();              
                     // console.log(this.projectionM);
-                    
+
                     //////////////////////////////////////////////////////////////////////////
                     //glm.vec3(3, 3, 5): A posição da câmera no espaço 3D.                  //
                     //glm.vec3(0, 0, 0): O ponto para o qual a câmera está direcionada.    //
                     //glm.vec3(0, 1, 0): A orientação da "parte de cima" da câmera.         //
                     //////////////////////////////////////////////////////////////////////////
-                    this.viewM = glm.lookAt(this.viewpos,glm.vec3(0,0,1),glm.vec3(0,1,0));        
-                    
+                    this.viewM = glm.lookAt(this.viewpos,glm.vec3(0,0,1),glm.vec3(0,1,0));
                 }
                 
                 setMatrixP()
@@ -1576,7 +1585,15 @@
                         // Detect the markers 
                         var markers = this.detector.detect(imagedata); 
 
-                        var mText ="Markers detected = " + markers.length + "\n";
+                        this.ids = [];
+                        for (var i = 0; i !== markers.length; ++ i)
+                        {
+                            this.ids.push(markers[i].id);
+                        }
+                        console.log(this.ids);
+                        // console.log(markers);
+
+                        // console.log("Markers detected = " + markers.length.toString() + "\n");
                         if (markers.length > 0)
                         {
                             for (var j = 0; j !== markers.length; ++ j)
@@ -1587,17 +1604,24 @@
                                 // Estamos a trabalhar em milimetros
                                 var translation = pose.bestTranslation;
                                 var rotation = pose.bestRotation;
-
-                                if(markers[j].id == 5)
+                                
+                                if(this.ids.includes(this.cubeID) && markers[j].id == this.cubeID)
                                 {
                                     this.cube_translation = translation;
                                     // this.cube_rotation = rotation;
                                     this.cube_rotation = this.getEulerAngles(rotation.flat());
                                 }
-                                else
+
+                                if(this.ids.includes(this.solarSystemID) && markers[j].id == this.solarSystemID)
                                 {
-                                    this.cube_translation = undefined;
-                                    this.cube_rotation = undefined;
+                                    this.solarSystem_translation = translation;
+                                    this.solarSystem_rotation = this.getEulerAngles(rotation.flat());
+                                }
+
+                                if(this.ids.includes(this.sphereID) && markers[j].id == this.sphereID)   
+                                {
+                                    this.sphere_translation = translation;
+                                    this.sphere_rotation = this.getEulerAngles(rotation.flat());
                                 }
                             }
                         }
@@ -1620,48 +1644,97 @@
                     // ==================== Cube ====================
                     // ===== Model
                     var model = glm.mat4(glm.mat3(1.0));
-
                     // ===== Translations
                     if (this.cube_translation != undefined)
-                        this.AR_translation = glm.vec3(this.cube_translation[0]/10, this.cube_translation[1]/10, this.cube_translation[2]/10);
+                        var AR_translation = glm.vec3(this.cube_translation[0]/10, this.cube_translation[1]/10, this.cube_translation[2]/10);
                     else
-                        this.AR_translation = glm.vec3(0.0, 0.0, 100.0);
-                    
-                        model = glm.translate(model, this.AR_translation);
-                    
+                        var AR_translation = glm.vec3(0.0, 0.0, 100.0);
+                    model = glm.translate(model, AR_translation);
                     // ===== Rotation
-                    // var referential = [glm.vec3(1.0, 0.0, 0.0), glm.vec3(0.0, 1.0, 0.0), glm.vec3(0.0, 0.0, 1.0)];
-                    // for(var i=0; i<3; i++)
-                    // {
-                    //     if (this.cube_rotation != undefined)
-                    //         this.AR_rotation = glm.radians(this.cube_rotation[i]);
-                    //     else
-                    //         this.AR_rotation = glm.radians(0.0);
-                        
-                    //     var axis = referential[i];
-                    //     model = glm.rotate(model, this.AR_rotation, axis);
-                    // }
-
-                    // var rotation = glm.radians(this.counter);
-                    // var axis = glm.vec3(1.0, 0.0, 0.0);
-                    // var axis = glm.vec3(0.0, 1.0, 0.0);
-                    // var axis = glm.vec3(0.0, 0.0, 1.0);
-                    // model = glm.rotate(model, rotation, axis);
-                    
+                    var referential = [glm.vec3(1.0, 0.0, 0.0), glm.vec3(0.0, 1.0, 0.0), glm.vec3(0.0, 0.0, 1.0)];
+                    for(var i=0; i<3; i++)
+                    {
+                        if (this.cube_rotation != undefined)
+                            this.AR_rotation = glm.radians(this.cube_rotation[i]);
+                        else
+                            this.AR_rotation = glm.radians(0.0);
+                        var axis = referential[i];
+                        model = glm.rotate(model, this.AR_rotation, axis);
+                    }
                     // ===== Scale
                     var scale = glm.vec3(5.0);
                     model = glm.scale(model, scale);
-
                     // ===== Final Transformation
                     this.myCube.setModelTransformation(model); 
-                    // ===== Draw Cube 
-                    this.myCube.drawit(this.viewM,this.projectionM);
+                    // ===== Draw Cube
+                    if(this.ids.includes(this.cubeID))
+                        this.myCube.drawit(this.viewM,this.projectionM);
+
+
+                    // ==================== Solar System ====================
+                    // ===== Model
+                    var model = glm.mat4(glm.mat3(1.0));
+                    // ===== Translations
+                    if (this.solarSystem_translation != undefined)
+                        var AR_translation = glm.vec3(this.solarSystem_translation[0]/10, this.solarSystem_translation[1]/10, this.solarSystem_translation[2]/10);
+                    else
+                        var AR_translation = glm.vec3(0.0, 0.0, 100.0);
+                    model = glm.translate(model, AR_translation);
+                    // ===== Rotation
+                    var referential = [glm.vec3(1.0, 0.0, 0.0), glm.vec3(0.0, 1.0, 0.0), glm.vec3(0.0, 0.0, 1.0)];
+                    for(var i=0; i<3; i++)
+                    {
+                        if (this.solarSystem_rotation != undefined)
+                            this.AR_rotation = glm.radians(this.solarSystem_rotation[i]);
+                        else
+                            this.AR_rotation = glm.radians(0.0);
+                        var axis = referential[i];
+                        model = glm.rotate(model, this.AR_rotation, axis);
+                    }
+                    // ===== Scale
+                    var scale = glm.vec3(1.0);
+                    model = glm.scale(model, scale);
+                    // ===== Final Transformation
+                    this.solarSystem.setModelTransformation(model); 
+                    // ===== Draw Cube
+                    if(this.ids.includes(this.solarSystemID))
+                        this.solarSystem.drawit(this.viewM,this.projectionM, this.counter*10);
+
+
+                    // ==================== Sphere ====================
+                    // ===== Model
+                    var model = glm.mat4(glm.mat3(1.0));
+                    // ===== Translations
+                    if (this.sphere_translation != undefined)
+                        this.AR_translation = glm.vec3(this.sphere_translation[0]/10, this.sphere_translation[1]/10, this.sphere_translation[2]/10);
+                    else
+                        this.AR_translation = glm.vec3(220.0, 0.0, 0.0);
+                    model = glm.translate(model, this.AR_translation);
+                    // ===== Rotation
+                    var referential = [glm.vec3(1.0, 0.0, 0.0), glm.vec3(0.0, 1.0, 0.0), glm.vec3(0.0, 0.0, 1.0)];
+                    for(var i=0; i<3; i++)
+                    {
+                        if (this.sphere_rotation != undefined)
+                            this.AR_rotation = glm.radians(this.sphere_rotation[i]);
+                        else
+                            this.AR_rotation = glm.radians(0.0);
+                        var axis = referential[i];
+                        model = glm.rotate(model, this.AR_rotation, axis);
+                    }
+                    // ===== Scale
+                    var scale = glm.vec3(10.0);
+                    model = glm.scale(model, scale);
+                    // ===== Final Transformation
+                    this.mySphere.setModelTransformation(model); 
+                    // ===== Draw Sphere
+                    if(this.ids.includes(this.sphereID))
+                        this.mySphere.drawit(this.viewM,this.projectionM);
+
 
                     // Get intermediete matrix
-                    var MVP_draft = this.projectionM['*'](this.viewM)['*'](glm.vec4(this.AR_translation[0], this.AR_translation[1], this.AR_translation[2], 1.0));
-                    MVP_draft['/='](MVP_draft[3]);
+                    // var MVP_draft = this.projectionM['*'](this.viewM)['*'](glm.vec4(this.AR_translation[0], this.AR_translation[1], this.AR_translation[2], 1.0));
+                    // MVP_draft['/='](MVP_draft[3]);
                     // console.log("MVP_DRAFT = " + MVP_draft.toString());                
-                    
                 }
             }
 
