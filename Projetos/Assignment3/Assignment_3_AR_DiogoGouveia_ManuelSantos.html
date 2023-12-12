@@ -1553,7 +1553,7 @@
                         y = Math.atan2(-mat[6], sy);
                         z = 0;
                     }
-                    return [x * (180/Math.PI), z * (180/Math.PI), y * (180/Math.PI)]; // Returning the Euler angles in degrees
+                    return [x * (180/Math.PI), y * (180/Math.PI), z * (180/Math.PI)]; // Returning the Euler angles in degrees
                 }
 
                 processvideo()
@@ -1581,46 +1581,12 @@
                         {
                             for (var j = 0; j !== markers.length; ++ j)
                             {
-                                // console.log("=====================================");
-                                // console.log("Marker "+j + " | ID = " + markers[j].id +"\n");
                                 var corners = markers[j].corners;
 
-                                // console.log(markers[j]);
-                                
-                                // console.log("Corners");
-                                // for (var i=0; i !== corners.length; ++ i)
-                                // {
-                                //     var corner = corners[(i + 1) % corners.length];
-                                //     console.log("Corner " + i + " " + corner.x/this.back.width + " " + corner.y/this.back.height + "\n");
-                                // }
-                                // console.log(corners);
-                
                                 var pose = this.posit.pose(corners);
                                 // Estamos a trabalhar em milimetros
                                 var translation = pose.bestTranslation;
-                                // console.log("Translation");
-                                // console.log(translation);
                                 var rotation = pose.bestRotation;
-
-                                // console.log("Rotation");
-                                // for (var l=0; l<3; l++)
-                                // {
-                                //     testfield.innerText += "|";
-                                //     for (var c=0; c<3; c++)
-                                //     {
-                                //         txtText += Math.round(rotation[l][c]*100)/100;
-                                //         txtText += ", ";
-                                //     }
-                                //     txtText += "|\n";
-                                // }
-                                // console.log(rotation); 
-                        
-                                // console.log("Translation");
-                                // txtText += "Translation = \n [" + Math.round(translation[0]*100)/100 + ", "+ Math.round(translation[1]*100)/100 +", "+ Math.round(translation[2]*100)/100 + " ]";
-                                // console.log(translation);
-
-                                // testfield.innerText = txtText;
-                                // markerfield.innerText=mText;
 
                                 if(markers[j].id == 5)
                                 {
@@ -1633,7 +1599,6 @@
                                     this.cube_translation = undefined;
                                     this.cube_rotation = undefined;
                                 }
-
                             }
                         }
                     }      
@@ -1658,32 +1623,30 @@
 
                     // ===== Translations
                     if (this.cube_translation != undefined)
-                    {
                         this.AR_translation = glm.vec3(this.cube_translation[0]/10, this.cube_translation[1]/10, this.cube_translation[2]/10);
-                    }
                     else
-                    {
-                        this.AR_translation = glm.vec3(0.0, 0.0, 5.0);
-                    }
-                    model = glm.translate(model, this.AR_translation);
+                        this.AR_translation = glm.vec3(0.0, 0.0, 100.0);
+                    
+                        model = glm.translate(model, this.AR_translation);
                     
                     // ===== Rotation
-                    var referential = [glm.vec3(1.0, 0.0, 0.0), glm.vec3(0.0, 1.0, 0.0), glm.vec3(0.0, 0.0, 1.0)];
-                    for(var i=0; i<3; i++)
-                    {
-                        if (this.cube_rotation != undefined)
-                        {
-                            this.AR_rotation = glm.radians(this.cube_rotation[i]);
-                        }
-                        else
-                        {
-                            this.AR_rotation = glm.radians(0.0);
-                        }
-                        var axis = referential[i];
-                    }
-                    var rotation = glm.radians(25.0);
-                    var axis = glm.vec3(0.0, 1.0, 0.0);
-                    model = glm.rotate(model, rotation, axis);
+                    // var referential = [glm.vec3(1.0, 0.0, 0.0), glm.vec3(0.0, 1.0, 0.0), glm.vec3(0.0, 0.0, 1.0)];
+                    // for(var i=0; i<3; i++)
+                    // {
+                    //     if (this.cube_rotation != undefined)
+                    //         this.AR_rotation = glm.radians(this.cube_rotation[i]);
+                    //     else
+                    //         this.AR_rotation = glm.radians(0.0);
+                        
+                    //     var axis = referential[i];
+                    //     model = glm.rotate(model, this.AR_rotation, axis);
+                    // }
+
+                    // var rotation = glm.radians(this.counter);
+                    // var axis = glm.vec3(1.0, 0.0, 0.0);
+                    // var axis = glm.vec3(0.0, 1.0, 0.0);
+                    // var axis = glm.vec3(0.0, 0.0, 1.0);
+                    // model = glm.rotate(model, rotation, axis);
                     
                     // ===== Scale
                     var scale = glm.vec3(5.0);
